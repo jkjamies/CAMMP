@@ -1,9 +1,9 @@
+.DS_Store
 .gradle
 .intellijPlatform
 build
 .kotlin
-.idea/libraries
-.idea/modules
-.idea/workspace.xml
-.idea/misc.xml
-.idea/kotlinc.xml
+.idea
+*.iml
+out/
+.qodana
