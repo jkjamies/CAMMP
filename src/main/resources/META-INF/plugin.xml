@@ -12,6 +12,6 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="org.jetbrains.plugins.template.toolWindow.ComposeSamplesToolWindowFactory"
                     icon="org.jetbrains.plugins.template.ComposeIcons.ComposeToolWindow"
-                    id="ComposeSamples"/>
+                    id="CAMMP"/>
     </extensions>
 </idea-plugin>
