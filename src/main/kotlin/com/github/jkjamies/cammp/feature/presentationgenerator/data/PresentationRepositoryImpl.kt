@@ -32,6 +32,7 @@ class PresentationRepositoryImpl(
         val pkgDir = kotlinDir.resolve(pkg.replace('.', '/')).also { if (!it.exists()) it.createDirectories() }
         val folder = sanitizedName.replaceFirstChar { it.lowercase() }
         val targetDir = pkgDir.resolve(folder).also { if (!it.exists()) it.createDirectories() }
+        val screenPackage = "$pkg.$folder"
 
         val useCaseFqns = p.selectedUseCases.distinct().sorted()
         val imports = if (useCaseFqns.isNotEmpty()) useCaseFqns.joinToString(separator = "\n") { fqn -> "import $fqn" } + "\n" else ""
@@ -41,6 +42,33 @@ class PresentationRepositoryImpl(
                 "private val ${simple.replaceFirstChar { it.lowercase() }}: $simple"
             }
         } else ""
+
+        if (p.useFlowStateHolder) {
+            val moduleName = deriveModuleNameForFlowHolder(pkg)
+            val fileName = "${moduleName}FlowStateHolder.kt"
+            val target = pkgDir.resolve(fileName)
+            val existed = target.exists()
+            val raw = templateRepo.getTemplateText("templates/presentationGenerator/FlowStateHolder.kt")
+            val content = replaceTokens(
+                raw,
+                mapOf(
+                    "PACKAGE" to pkg,
+                    "FLOW_NAME" to "${moduleName}FlowStateHolder",
+                    "SCREEN_NAME" to moduleName,
+                    "MODULE_NAME" to moduleName,
+                )
+            )
+            fs.writeText(target, content, overwriteIfExists = p.overwrite)
+            val status = if (existed && !p.overwrite) {
+                skipped.add(fileName)
+                "exists"
+            } else {
+                created.add(fileName)
+                "created"
+            }
+            outputs.add(target)
+            resultsLines += "- $fileName: $target ($status)"
+        }
 
         val files = buildList {
             val screenTemplatePath = if (p.diKoin) {
@@ -53,7 +81,7 @@ class PresentationRepositoryImpl(
                     fileName = "$sanitizedName.kt",
                     templatePath = screenTemplatePath,
                     tokens = mapOf(
-                        "PACKAGE" to pkg,
+                        "PACKAGE" to screenPackage,
                         "SCREEN_NAME" to sanitizedName,
                     )
                 )
@@ -68,12 +96,13 @@ class PresentationRepositoryImpl(
                     fileName = "${sanitizedName}ViewModel.kt",
                     templatePath = viewModelTemplatePath,
                     tokens = mapOf(
-                        "PACKAGE" to pkg,
+                        "PACKAGE" to screenPackage,
                         "SCREEN_NAME" to sanitizedName,
                         "IMPORTS" to imports,
                         "CONSTRUCTOR_PARAMS" to constructorParams,
                         "VIEW_MODEL_INTENT_HANDLER" to if (p.patternMVI) {
-                            templateRepo.getTemplateText("templates/presentationGenerator/helpers/MviViewModelIntentHandler.kt")
+                            val mvi = templateRepo.getTemplateText("templates/presentationGenerator/helpers/MviViewModelIntentHandler.kt")
+                            replaceTokens(mvi, mapOf("SCREEN_NAME" to sanitizedName))
                         } else ""
                     )
                 )
@@ -83,7 +112,7 @@ class PresentationRepositoryImpl(
                     fileName = "${sanitizedName}UiState.kt",
                     templatePath = "templates/presentationGenerator/UiState.kt",
                     tokens = mapOf(
-                        "PACKAGE" to pkg,
+                        "PACKAGE" to screenPackage,
                         "SCREEN_NAME" to sanitizedName,
                     )
                 )
@@ -94,22 +123,8 @@ class PresentationRepositoryImpl(
                         fileName = "${sanitizedName}Intent.kt",
                         templatePath = "templates/presentationGenerator/Intent.kt",
                         tokens = mapOf(
-                            "PACKAGE" to pkg,
+                            "PACKAGE" to screenPackage,
                             "SCREEN_NAME" to sanitizedName,
-                        )
-                    )
-                )
-            }
-            if (p.useFlowStateHolder) {
-                val moduleName = deriveModuleNameForFlowHolder(pkg)
-                add(
-                    RenderSpec(
-                        fileName = "${sanitizedName}FlowStateHolder.kt",
-                        templatePath = "templates/presentationGenerator/FlowStateHolder.kt",
-                        tokens = mapOf(
-                            "PACKAGE" to pkg,
-                            "SCREEN_NAME" to sanitizedName,
-                            "MODULE_NAME" to moduleName,
                         )
                     )
                 )
@@ -117,10 +132,10 @@ class PresentationRepositoryImpl(
             if (p.useScreenStateHolder) {
                 add(
                     RenderSpec(
-                        fileName = "${sanitizedName}ScreenStateHolder.kt",
+                        fileName = "${sanitizedName}StateHolder.kt",
                         templatePath = "templates/presentationGenerator/ScreenStateHolder.kt",
                         tokens = mapOf(
-                            "PACKAGE" to pkg,
+                            "PACKAGE" to screenPackage,
                             "SCREEN_NAME" to sanitizedName,
                         )
                     )
@@ -146,15 +161,16 @@ class PresentationRepositoryImpl(
         }
 
         if (p.includeNavigation) {
-            val basePkg = pkg.substringBeforeLast('.').substringBeforeLast('.')
-            val navDir = p.moduleDir.resolve("src/main/kotlin").resolve(basePkg.replace('.', '/')).resolve("navigation").also { if (!it.exists()) it.createDirectories() }
+            val navDir = pkgDir.resolve("navigation").also { if (!it.exists()) it.createDirectories() }
+            val navPkg = "$pkg.navigation"
+            val navHostName = "${deriveModuleNameForFlowHolder(pkg)}NavigationHost"
 
             run {
-                val fileName = "NavigationHost.kt"
+                val fileName = "${navHostName}.kt"
                 val target = navDir.resolve(fileName)
                 val existed = target.exists()
                 val raw = templateRepo.getTemplateText("templates/presentationGenerator/navigation/NavigationHost.kt")
-                val content = replaceTokens(raw, mapOf("PACKAGE" to "$basePkg.navigation"))
+                val content = replaceTokens(raw, mapOf("PACKAGE" to navPkg, "NAV_HOST_NAME" to navHostName))
                 fs.writeText(target, content, overwriteIfExists = p.overwrite)
                 val status = if (existed && !p.overwrite) {
                     skipped.add("navigation/$fileName")
@@ -175,8 +191,9 @@ class PresentationRepositoryImpl(
                 val content = replaceTokens(
                     raw,
                     mapOf(
-                        "PACKAGE" to basePkg,
+                        "PACKAGE" to pkg,
                         "SCREEN_NAME" to sanitizedName,
+                        "SCREEN_FOLDER" to folder,
                         "ROUTE" to sanitizedName,
                     )
                 )
@@ -201,7 +218,7 @@ class PresentationRepositoryImpl(
                 if (diPackage.isNotBlank()) {
                     if (!p.diKoinAnnotations) {
                         val viewModelSimpleName = "${sanitizedName}ViewModel"
-                        val viewModelFqn = "$pkg.${sanitizedName}ViewModel"
+                        val viewModelFqn = "$screenPackage.${sanitizedName}ViewModel"
                         val mergeOutcome = diRepo.mergeViewModelModule(
                             diDir = diDir,
                             diPackage = diPackage,
@@ -247,7 +264,7 @@ class PresentationRepositoryImpl(
 
     private fun replaceTokens(text: String, tokens: Map<String, String>): String {
         var out = text
-        tokens.forEach { (k, v) -> out = out.replace("{{${k}}}", v) }
+        tokens.forEach { (k, v) -> out = out.replace("\${${k}}", v) }
         tokens.forEach { (k, v) -> out = out.replace("/*${k}*/", v) }
         return out
     }

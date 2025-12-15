@@ -48,8 +48,8 @@ class ComposeSamplesToolWindowFactory : ToolWindowFactory, DumbAware {
     override fun shouldBeAvailable(project: Project) = true
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        weatherApp(project, toolWindow)
-        chatApp(project, toolWindow)
+//        weatherApp(project, toolWindow)
+//        chatApp(project, toolWindow)
         cleanArchitecture(project, toolWindow)
     }
 
@@ -118,25 +118,6 @@ class ComposeSamplesToolWindowFactory : ToolWindowFactory, DumbAware {
             GenerateModulesScreen(state = state, onIntent = vm::handleIntent, onBrowseRoot = onBrowseRoot)
         }
 
-        toolWindow.addComposeTab("Presentation Generator") {
-            val state by presentationVm.state.collectAsState()
-            val onBrowseDir: () -> Unit = {
-                val selected = chooseDirectoryPath(project, state.directory)
-                if (selected != null) {
-                    presentationVm.handleIntent(PresentationIntent.SetDirectory(selected))
-                    refreshUseCases(project)?.let { presentationVm.handleIntent(PresentationIntent.SetUseCasesByModule(it)) }
-                }
-            }
-
-            LaunchedEffect(Unit) {
-                if (state.useCasesByModule.isEmpty()) {
-                    refreshUseCases(project)?.let { presentationVm.handleIntent(PresentationIntent.SetUseCasesByModule(it)) }
-                }
-            }
-
-            PresentationGeneratorScreen(state = state, onIntent = presentationVm::handleIntent, onBrowseDirectory = onBrowseDir)
-        }
-
         toolWindow.addComposeTab("Repository Generator") {
             val state by repositoryVm.state.collectAsState()
             val onBrowseDataDir: () -> Unit = {
@@ -157,6 +138,25 @@ class ComposeSamplesToolWindowFactory : ToolWindowFactory, DumbAware {
                 }
             }
             UseCaseGeneratorScreen(state = state, onIntent = useCaseVm::handleIntent, onBrowseDomainDir = onBrowseDomainDir)
+        }
+
+        toolWindow.addComposeTab("Presentation Generator") {
+            val state by presentationVm.state.collectAsState()
+            val onBrowseDir: () -> Unit = {
+                val selected = chooseDirectoryPath(project, state.directory)
+                if (selected != null) {
+                    presentationVm.handleIntent(PresentationIntent.SetDirectory(selected))
+                    refreshUseCases(project)?.let { presentationVm.handleIntent(PresentationIntent.SetUseCasesByModule(it)) }
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                if (state.useCasesByModule.isEmpty()) {
+                    refreshUseCases(project)?.let { presentationVm.handleIntent(PresentationIntent.SetUseCasesByModule(it)) }
+                }
+            }
+
+            PresentationGeneratorScreen(state = state, onIntent = presentationVm::handleIntent, onBrowseDirectory = onBrowseDir)
         }
     }
 }
