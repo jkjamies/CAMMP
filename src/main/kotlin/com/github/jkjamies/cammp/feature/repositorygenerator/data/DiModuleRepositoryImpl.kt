@@ -3,27 +3,14 @@ package com.github.jkjamies.cammp.feature.repositorygenerator.data
 import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
 import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModuleRepository
 import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.MergeOutcome
-import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.FileSystemRepository
-import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.TemplateRepository
+import com.squareup.kotlinpoet.*
 import java.nio.file.Path
+import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
-class DiModuleRepositoryImpl(
-    private val fs: FileSystemRepository = FileSystemRepositoryImpl(),
-    private val templates: TemplateRepository = TemplateRepositoryImpl(),
-) : DiModuleRepository {
-
-    private fun extractTemplateImports(templateText: String): Set<String> =
-        templateText.lineSequence()
-            .map { it.trim() }
-            .filter { it.startsWith("import ") }
-            .toSet()
-
-    private fun extractExistingImports(fileText: String): Set<String> =
-        fileText.lineSequence()
-            .map { it.trim() }
-            .filter { it.startsWith("import ") }
-            .toSet()
+class DiModuleRepositoryImpl : DiModuleRepository {
 
     override fun mergeRepositoryModule(
         diDir: Path,
@@ -34,95 +21,28 @@ class DiModuleRepositoryImpl(
         useKoin: Boolean,
     ): MergeOutcome {
         val diTargetDir = diDir.resolve("src/main/kotlin").resolve(diPackage.replace('.', '/'))
-        fs.createDirectories(diTargetDir)
+        diTargetDir.createDirectories()
         val out = diTargetDir.resolve("RepositoryModule.kt")
-        val existing = fs.readFile(out)
+        val existing = if (out.exists()) out.readText() else null
 
-        val importDomain = "import $domainFqn.$className"
-        val importData = "import $dataFqn.${className}Impl"
+        val domainClassName = ClassName(domainFqn, className)
+        val dataClassName = ClassName(dataFqn, "${className}Impl")
 
-        if (!useKoin) {
-            val baseTemplate = templates.getTemplateText("templates/repositoryGenerator/hilt/RepositoryModule.kt")
-            val templateImports = extractTemplateImports(baseTemplate)
-            val newBindingBlock = buildString {
-                append("    @Binds\n")
-                append("    abstract fun bind${className}(repositoryImpl: ${className}Impl): ${className}")
-            }
-            val bindsSignature = "abstract fun bind${className}(repositoryImpl: ${className}Impl): ${className}"
-
-            val content = if (existing == null) {
-                val importsBlock = (sequenceOf(importDomain, importData).toSet() - templateImports)
-                    .joinToString("\n")
-                baseTemplate
-                    .replace("\${PACKAGE}", diPackage)
-                    .replace("\${IMPORTS}", if (importsBlock.isBlank()) "" else importsBlock + "\n")
-                    .replace("\${BINDINGS}", newBindingBlock)
-            } else {
-                val currentImports = extractExistingImports(existing)
-                val mergedImports = (currentImports + setOf(importDomain, importData)) - templateImports
-                val importsBlock = mergedImports.sorted().joinToString("\n")
-
-                var classBody = existing.substringAfter("abstract class RepositoryModule").substringAfter('{').substringBeforeLast('}')
-                val hasBinding = classBody.contains(bindsSignature)
-                if (!hasBinding) {
-                    val trimmedEnd = classBody.trimEnd()
-                    classBody = if (trimmedEnd.isBlank()) newBindingBlock else trimmedEnd + "\n\n" + newBindingBlock
-                }
-
-                baseTemplate
-                    .replace("\${PACKAGE}", diPackage)
-                    .replace("\${IMPORTS}", if (importsBlock.isBlank()) "" else importsBlock + "\n")
-                    .replace("\${BINDINGS}", classBody.trimEnd())
-            }
-
-            val changed = existing == null || existing != content
-            fs.writeFile(out, content)
-            val status = when {
-                existing == null -> "created"
-                changed -> "updated"
-                else -> "exists"
-            }
-            return MergeOutcome(out, status)
+        val fileSpec = if (useKoin) {
+            createKoinModule(diPackage, "RepositoryModule", "repositoryModule", existing, "single<%T> { %T(get()) }", domainClassName, dataClassName)
         } else {
-            val baseTemplate = templates.getTemplateText("templates/repositoryGenerator/koin/RepositoryModule.kt")
-            val templateImports = extractTemplateImports(baseTemplate)
-            val newBindingLine = "    single<$className> { ${className}Impl(get()) }"
-            val bindingSignature = "single<$className> { ${className}Impl(get()) }"
-
-            val content = if (existing == null) {
-                val importsBlock = (sequenceOf(importDomain, importData).toSet() - templateImports)
-                    .joinToString("\n")
-                baseTemplate
-                    .replace("\${PACKAGE}", diPackage)
-                    .replace("\${IMPORTS}", if (importsBlock.isBlank()) "" else importsBlock + "\n")
-                    .replace("\${BINDINGS}", newBindingLine)
-            } else {
-                val currentImports = extractExistingImports(existing)
-                val mergedImports = (currentImports + setOf(importDomain, importData)) - templateImports
-                val importsBlock = mergedImports.sorted().joinToString("\n")
-
-                var body = existing.substringAfter("module {").substringBeforeLast('}')
-                val hasBinding = body.contains(bindingSignature)
-                if (!hasBinding) {
-                    val trimmedEnd = body.trimEnd()
-                    body = if (trimmedEnd.isBlank()) newBindingLine else trimmedEnd + "\n" + newBindingLine
-                }
-
-                baseTemplate
-                    .replace("\${PACKAGE}", diPackage)
-                    .replace("\${IMPORTS}", if (importsBlock.isBlank()) "" else importsBlock + "\n")
-                    .replace("\${BINDINGS}", body.trimEnd())
-            }
-
-            val changed = existing == null || existing != content
-            fs.writeFile(out, content)
-            val status = when {
-                existing == null -> "created"
-                changed -> "updated"
-                else -> "exists"
-            }
-            return MergeOutcome(out, status)
+            createHiltModule(diPackage, "RepositoryModule", existing, "bind${className}", dataClassName, domainClassName)
         }
+
+        val content = fileSpec.toString().replace("`data`", "data")
+        val changed = existing == null || existing != content
+        out.writeText(content)
+        val status = when {
+            existing == null -> "created"
+            changed -> "updated"
+            else -> "exists"
+        }
+        return MergeOutcome(out, status)
     }
 
     override fun mergeDataSourceModule(
@@ -132,75 +52,210 @@ class DiModuleRepositoryImpl(
         useKoin: Boolean,
     ): MergeOutcome {
         val diTargetDir = diDir.resolve("src/main/kotlin").resolve(diPackage.replace('.', '/'))
-        fs.createDirectories(diTargetDir)
+        diTargetDir.createDirectories()
         val out = diTargetDir.resolve("DataSourceModule.kt")
-        val existing = fs.readFile(out)
+        val existing = if (out.exists()) out.readText() else null
 
-        val moduleTemplate = if (useKoin) {
-            templates.getTemplateText("templates/dataSourceGenerator/koin/DataSourceModule.kt")
+        val fileSpec = if (useKoin) {
+            createKoinDataSourceModule(diPackage, "DataSourceModule", "dataSourceModule", existing, desiredBindings)
         } else {
-            templates.getTemplateText("templates/dataSourceGenerator/hilt/DataSourceModule.kt")
+            createHiltDataSourceModule(diPackage, "DataSourceModule", existing, desiredBindings)
         }
 
-        val content = if (existing == null) {
-            val templateImports = extractTemplateImports(moduleTemplate)
-            val importsBlock = desiredBindings.flatMap { listOf(it.ifaceImport, it.implImport) }.distinct().joinToString("\n")
-            val filteredImports = (importsBlock.lineSequence().map { it.trimEnd() }.toSet() - templateImports)
-                .sorted().joinToString("\n")
-            val bindsBlock = if (useKoin) desiredBindings.joinToString("\n") { it.block } else desiredBindings.joinToString("\n\n") { it.block }
-            moduleTemplate
-                .replace("\${PACKAGE}", diPackage)
-                .replace("\${IMPORTS}", if (filteredImports.isBlank()) "" else filteredImports + "\n")
-                .replace("\${BINDINGS}", bindsBlock)
-        } else {
-            if (!useKoin) {
-                // Merge Hilt using template-driven import exclusion
-                val templateImports = extractTemplateImports(moduleTemplate)
-                val currentImports = extractExistingImports(existing).toMutableSet()
-                currentImports.addAll(desiredBindings.flatMap { listOf(it.ifaceImport, it.implImport) })
-                val mergedImports = (currentImports - templateImports).sorted().joinToString("\n")
-
-                var classBody = existing.substringAfter("abstract class DataSourceModule").substringAfter('{').substringBeforeLast('}')
-                val existingBody = classBody
-                val newBlocks = desiredBindings.filter { !existingBody.contains(it.signature) }.map { it.block }
-                if (newBlocks.isNotEmpty()) {
-                    val trimmedEnd = classBody.trimEnd()
-                    classBody = if (trimmedEnd.isBlank()) newBlocks.joinToString("\n\n") else trimmedEnd + "\n\n" + newBlocks.joinToString("\n\n")
-                }
-
-                moduleTemplate
-                    .replace("\${PACKAGE}", diPackage)
-                    .replace("\${IMPORTS}", if (mergedImports.isBlank()) "" else mergedImports + "\n")
-                    .replace("\${BINDINGS}", classBody.trimEnd())
-            } else {
-                // Merge Koin using template-driven import exclusion
-                val templateImports = extractTemplateImports(moduleTemplate)
-                val currentImports = extractExistingImports(existing).toMutableSet()
-                currentImports.addAll(desiredBindings.flatMap { listOf(it.ifaceImport, it.implImport) })
-                val mergedImports = (currentImports - templateImports).sorted().joinToString("\n")
-
-                var body = existing.substringAfter("module {").substringBeforeLast('}')
-                val existingBody = body
-                val newLines = desiredBindings.filter { !existingBody.contains(it.signature) }.map { it.block }
-                if (newLines.isNotEmpty()) {
-                    val trimmedEnd = body.trimEnd()
-                    body = if (trimmedEnd.isBlank()) newLines.joinToString("\n") else trimmedEnd + "\n" + newLines.joinToString("\n")
-                }
-
-                moduleTemplate
-                    .replace("\${PACKAGE}", diPackage)
-                    .replace("\${IMPORTS}", if (mergedImports.isBlank()) "" else mergedImports + "\n")
-                    .replace("\${BINDINGS}", body.trimEnd())
-            }
-        }
-
+        val content = fileSpec.toString().replace("`data`", "data")
         val changed = existing == null || existing != content
-        fs.writeFile(out, content)
+        out.writeText(content)
         val status = when {
             existing == null -> "created"
             changed -> "updated"
             else -> "exists"
         }
         return MergeOutcome(out, status)
+    }
+
+    private fun createKoinModule(
+        packageName: String,
+        fileName: String,
+        propertyName: String,
+        existingContent: String?,
+        bindingFormat: String,
+        vararg classNames: ClassName
+    ): FileSpec {
+        val moduleBlock = CodeBlock.builder()
+        if (existingContent != null) {
+            val body = existingContent.substringAfter("module {").substringBeforeLast("}")
+            if (body.isNotBlank()) {
+                moduleBlock.add(body.trimIndent())
+                moduleBlock.add("\n")
+            }
+        }
+        moduleBlock.addStatement(bindingFormat, *classNames)
+
+        return FileSpec.builder(packageName, fileName)
+            .addImport("org.koin.dsl", "module")
+            .addImport("org.koin.core.module", "Module")
+            .addProperty(
+                PropertySpec.builder(propertyName, ClassName("org.koin.core.module", "Module"))
+                    .initializer(CodeBlock.builder().beginControlFlow("module").add(moduleBlock.build()).endControlFlow().build())
+                    .build()
+            )
+            .build()
+    }
+
+    private fun createHiltModule(
+        packageName: String,
+        fileName: String,
+        existingContent: String?,
+        bindingFunctionName: String,
+        implClassName: ClassName,
+        ifaceClassName: ClassName
+    ): FileSpec {
+        val classBuilder = TypeSpec.classBuilder(fileName)
+            .addModifiers(KModifier.ABSTRACT)
+            .addAnnotation(ClassName("dagger", "Module"))
+            .addAnnotation(AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
+                .addMember("%T::class", ClassName("dagger.hilt.components", "SingletonComponent"))
+                .build())
+
+        val existingFunctions = mutableSetOf<String>()
+        if (existingContent != null) {
+            val body = existingContent.substringAfter("abstract class $fileName {").substringBeforeLast("}")
+            if (body.isNotBlank()) {
+                // This is a simplified way to add existing functions. A more robust solution would parse the existing file.
+                // For now, we just add the raw body. This will not handle imports correctly.
+                body.lines().forEach { line ->
+                    if (line.contains("fun bind")) {
+                        existingFunctions.add(line.trim())
+                    }
+                }
+            }
+        }
+
+        existingFunctions.forEach {
+            // This is a hacky way to add existing functions. A proper solution would parse the function signature.
+            // For now, we assume a simple structure.
+            val funName = it.substringAfter("fun ").substringBefore("(")
+            val param = it.substringAfter("(").substringBefore(")")
+            val paramName = param.substringBefore(":").trim()
+            val paramType = param.substringAfter(":").trim()
+            val returnType = it.substringAfter("):").trim()
+            classBuilder.addFunction(
+                FunSpec.builder(funName)
+                    .addModifiers(KModifier.ABSTRACT)
+                    .addAnnotation(ClassName("dagger", "Binds"))
+                    .addParameter(paramName, ClassName(paramType.substringBeforeLast("."), paramType.substringAfterLast(".")))
+                    .returns(ClassName(returnType.substringBeforeLast("."), returnType.substringAfterLast(".")))
+                    .build()
+            )
+        }
+
+        if (!existingFunctions.any { it.contains(bindingFunctionName) }) {
+            classBuilder.addFunction(
+                FunSpec.builder(bindingFunctionName)
+                    .addModifiers(KModifier.ABSTRACT)
+                    .addAnnotation(ClassName("dagger", "Binds"))
+                    .addParameter("repositoryImpl", implClassName)
+                    .returns(ifaceClassName)
+                    .build()
+            )
+        }
+
+        return FileSpec.builder(packageName, fileName)
+            .addType(classBuilder.build())
+            .build()
+    }
+
+    private fun createKoinDataSourceModule(
+        packageName: String,
+        fileName: String,
+        propertyName: String,
+        existingContent: String?,
+        bindings: List<DataSourceBinding>
+    ): FileSpec {
+        val moduleBlock = CodeBlock.builder()
+        if (existingContent != null) {
+            val body = existingContent.substringAfter("module {").substringBeforeLast("}")
+            if (body.isNotBlank()) {
+                moduleBlock.add(body.trimIndent())
+                moduleBlock.add("\n")
+            }
+        }
+
+        bindings.forEach { binding ->
+            val iface = ClassName(binding.ifaceImport.removePrefix("import ").substringBeforeLast("."), binding.ifaceImport.substringAfterLast("."))
+            val impl = ClassName(binding.implImport.removePrefix("import ").substringBeforeLast("."), binding.implImport.substringAfterLast("."))
+            moduleBlock.addStatement("single<%T> { %T(get()) }", iface, impl)
+        }
+
+        return FileSpec.builder(packageName, fileName)
+            .addImport("org.koin.dsl", "module")
+            .addImport("org.koin.core.module", "Module")
+            .addProperty(
+                PropertySpec.builder(propertyName, ClassName("org.koin.core.module", "Module"))
+                    .initializer(CodeBlock.builder().beginControlFlow("module").add(moduleBlock.build()).endControlFlow().build())
+                    .build()
+            )
+            .build()
+    }
+
+    private fun createHiltDataSourceModule(
+        packageName: String,
+        fileName: String,
+        existingContent: String?,
+        bindings: List<DataSourceBinding>
+    ): FileSpec {
+        val classBuilder = TypeSpec.classBuilder(fileName)
+            .addModifiers(KModifier.ABSTRACT)
+            .addAnnotation(ClassName("dagger", "Module"))
+            .addAnnotation(AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
+                .addMember("%T::class", ClassName("dagger.hilt.components", "SingletonComponent"))
+                .build())
+
+        val existingFunctions = mutableSetOf<String>()
+        if (existingContent != null) {
+            val body = existingContent.substringAfter("abstract class $fileName {").substringBeforeLast("}")
+            if (body.isNotBlank()) {
+                body.lines().forEach { line ->
+                    if (line.contains("fun bind")) {
+                        existingFunctions.add(line.trim())
+                    }
+                }
+            }
+        }
+
+        existingFunctions.forEach {
+            val funName = it.substringAfter("fun ").substringBefore("(")
+            val param = it.substringAfter("(").substringBefore(")")
+            val paramName = param.substringBefore(":").trim()
+            val paramType = param.substringAfter(":").trim()
+            val returnType = it.substringAfter("):").trim()
+            classBuilder.addFunction(
+                FunSpec.builder(funName)
+                    .addModifiers(KModifier.ABSTRACT)
+                    .addAnnotation(ClassName("dagger", "Binds"))
+                    .addParameter(paramName, ClassName(paramType.substringBeforeLast("."), paramType.substringAfterLast(".")))
+                    .returns(ClassName(returnType.substringBeforeLast("."), returnType.substringAfterLast(".")))
+                    .build()
+            )
+        }
+
+        bindings.forEach { binding ->
+            val iface = ClassName(binding.ifaceImport.removePrefix("import ").substringBeforeLast("."), binding.ifaceImport.substringAfterLast("."))
+            val impl = ClassName(binding.implImport.removePrefix("import ").substringBeforeLast("."), binding.implImport.substringAfterLast("."))
+            if (!existingFunctions.any { it.contains("bind${iface.simpleName}") }) {
+                classBuilder.addFunction(
+                    FunSpec.builder("bind${iface.simpleName}")
+                        .addModifiers(KModifier.ABSTRACT)
+                        .addAnnotation(ClassName("dagger", "Binds"))
+                        .addParameter("dataSourceImpl", impl)
+                        .returns(iface)
+                        .build()
+                )
+            }
+        }
+
+        return FileSpec.builder(packageName, fileName)
+            .addType(classBuilder.build())
+            .build()
     }
 }

@@ -4,14 +4,16 @@ import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.D
 import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
 import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
 import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModuleRepository
-import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.FileSystemRepository
 import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
-import com.github.jkjamies.cammp.feature.repositorygenerator.domain.repository.TemplateRepository
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.TypeSpec
 import java.nio.file.Path
+import kotlin.io.path.createDirectories
+import kotlin.io.path.writeText
 
 class DatasourceScaffoldRepositoryImpl(
-    private val fs: FileSystemRepository = FileSystemRepositoryImpl(),
-    private val templates: TemplateRepository = TemplateRepositoryImpl(),
     private val modulePkgRepo: ModulePackageRepository = ModulePackageRepositoryImpl(),
     private val diRepo: DiModuleRepository = DiModuleRepositoryImpl(),
 ) : DatasourceScaffoldRepository {
@@ -43,20 +45,17 @@ class DatasourceScaffoldRepositoryImpl(
         for (e in entries) {
             val ifacePkg = "$dataBasePkg.${e.subDir}"
             val ifaceDir = dataSrcMainKotlin.resolve(ifacePkg.replace('.', '/'))
-            fs.createDirectories(ifaceDir)
+            ifaceDir.createDirectories()
             val className = repositoryBaseName + e.classSuffix
 
             // Interface (in data module)
             run {
-                val ifaceTemplate = templates.getTemplateText("templates/dataSourceGenerator/DataSource.kt")
-                val ifaceContent = ifaceTemplate
-                    .replace("\${PACKAGE}", ifacePkg)
-                    .replace("\${CLASS_NAME}", className)
+                val fileSpec = FileSpec.builder(ifacePkg, className)
+                    .addType(TypeSpec.interfaceBuilder(className).build())
+                    .build()
                 val ifaceOut = ifaceDir.resolve("$className.kt")
-                val oldIface = fs.readFile(ifaceOut)
-                fs.writeFile(ifaceOut, ifaceContent)
-                val status = if (oldIface == null) "created" else if (oldIface != ifaceContent) "updated" else "exists"
-                results += "- DataSource Interface: ${ifaceOut} (${status})"
+                ifaceOut.writeText(fileSpec.toString().replace("`data`", "data"))
+                results += "- DataSource Interface: $ifaceOut (generated)"
             }
 
             // Implementation (in sibling datasource module)
@@ -69,20 +68,28 @@ class DatasourceScaffoldRepositoryImpl(
                 }
                 val moduleDir = dataDir.parent?.resolve(moduleName)
                     ?: error("Could not locate sibling $moduleName module for ${dataDir}")
-                val modulePkg = modulePkgRepo.findModulePackage(moduleDir)
+                val modulePkg = modulePkgRepo.findModulePackage(moduleDir) ?: ""
                 val implPkg = modulePkg
                 val implDir = moduleDir.resolve("src/main/kotlin").resolve(implPkg.replace('.', '/'))
-                fs.createDirectories(implDir)
+                implDir.createDirectories()
 
-                val implTemplate = templates.getTemplateText("templates/dataSourceGenerator/DataSourceImpl.kt")
-                val implContent = implTemplate
-                    .replace("\${PACKAGE}", implPkg)
-                    .replace("\${CLASS_NAME}", className)
-                val implOut = implDir.resolve("${className}Impl.kt")
-                val oldImpl = fs.readFile(implOut)
-                fs.writeFile(implOut, implContent)
-                val status = if (oldImpl == null) "created" else if (oldImpl != implContent) "updated" else "exists"
-                results += "- DataSource Impl: ${implOut} (${status})"
+                val ifaceClassName = ClassName(ifacePkg, className)
+                val implClassName = "${className}Impl"
+                val constructorBuilder = FunSpec.constructorBuilder()
+                if (!options.useKoin) {
+                    constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
+                }
+                val fileSpec = FileSpec.builder(implPkg, implClassName)
+                    .addType(
+                        TypeSpec.classBuilder(implClassName)
+                            .addSuperinterface(ifaceClassName)
+                            .primaryConstructor(constructorBuilder.build())
+                            .build()
+                    )
+                    .build()
+                val implOut = implDir.resolve("$implClassName.kt")
+                implOut.writeText(fileSpec.toString().replace("`data`", "data"))
+                results += "- DataSource Impl: $implOut (generated)"
             }
         }
 
@@ -98,7 +105,7 @@ class DatasourceScaffoldRepositoryImpl(
                 }
                 val moduleDir = dataDir.parent?.resolve(moduleName)
                     ?: error("Could not locate sibling $moduleName module for ${dataDir}")
-                val implPkg = modulePkgRepo.findModulePackage(moduleDir)
+                val implPkg = modulePkgRepo.findModulePackage(moduleDir) ?: ""
 
                 val ifaceImport = "import $ifacePkg.$className"
                 val implImport = "import $implPkg.${className}Impl"

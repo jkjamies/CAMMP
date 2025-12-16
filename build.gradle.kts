@@ -38,6 +38,8 @@ repositories {
 }
 
 dependencies {
+    implementation(libs.kotlinpoet)
+
     testImplementation(libs.junit)
     testImplementation(libs.opentest4j)
     testImplementation(libs.hamcrest)

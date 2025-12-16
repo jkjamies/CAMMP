@@ -2,22 +2,17 @@ package com.github.jkjamies.cammp.feature.usecasegenerator.data
 
 import com.github.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseDiModuleRepository
 import com.github.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseMergeOutcome
-import com.github.jkjamies.cammp.feature.usecasegenerator.domain.repository.TemplateRepository
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.PropertySpec
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
-class UseCaseDiModuleRepositoryImpl(
-    private val templates: TemplateRepository = TemplateRepositoryImpl(),
-) : UseCaseDiModuleRepository {
-
-    private fun extractTemplateImports(templateText: String): Set<String> =
-        templateText.lineSequence().map { it.trim() }.filter { it.startsWith("import ") }.toSet()
-
-    private fun extractExistingImports(fileText: String): Set<String> =
-        fileText.lineSequence().map { it.trim() }.filter { it.startsWith("import ") }.toSet()
+class UseCaseDiModuleRepositoryImpl : UseCaseDiModuleRepository {
 
     override fun mergeUseCaseModule(
         diDir: Path,
@@ -27,9 +22,7 @@ class UseCaseDiModuleRepositoryImpl(
         repositoryFqns: List<String>,
         useKoin: Boolean,
     ): UseCaseMergeOutcome {
-        // Only Koin path is supported for UseCase DI modules. Hilt path is intentionally skipped.
         if (!useKoin) {
-            // No file writes; report a no-op outcome using the expected path for consistency.
             val diTargetDir = diDir.resolve("src/main/kotlin").resolve(diPackage.replace('.', '/'))
             val out = diTargetDir.resolve("UseCaseModule.kt")
             return UseCaseMergeOutcome(out, "skipped")
@@ -51,44 +44,61 @@ class UseCaseDiModuleRepositoryImpl(
         useCaseFqn: String,
         repositoryFqns: List<String>,
     ): UseCaseMergeOutcome {
-        val baseTemplate = templates.getTemplateText("templates/usecaseGenerator/koin/UseCaseModule.kt")
-        val templateImports = extractTemplateImports(baseTemplate)
-        val dynamicImports = buildSet {
-            add("import $useCaseFqn")
-            repositoryFqns.forEach { add("import $it") }
+        val useCaseClassName = ClassName(useCaseFqn.substringBeforeLast('.'), useCaseSimpleName)
+        val repositoryClassNames = repositoryFqns.map { fqn ->
+            ClassName(fqn.substringBeforeLast('.'), fqn.substringAfterLast('.'))
         }
-        val bindingLine = buildString {
-            append("    single { ")
-            append(useCaseSimpleName)
-            append("(")
-            append(repositoryFqns.joinToString(", ") { "get()" })
-            append(") }")
-        }
-        val signature = "single { $useCaseSimpleName("
 
-        val content = if (existing == null) {
-            val importsBlock = (dynamicImports - templateImports).sorted().joinToString("\n")
-            baseTemplate
-                .replace("\${PACKAGE}", diPackage)
-                .replace("\${IMPORTS}", if (importsBlock.isBlank()) "" else importsBlock + "\n")
-                .replace("\${BINDINGS}", bindingLine)
-        } else {
-            val currentImports = extractExistingImports(existing).toMutableSet()
-            currentImports.addAll(dynamicImports)
-            val importsBlock = (currentImports - templateImports).sorted().joinToString("\n")
-
-            var body = existing.substringAfter("module {").substringBeforeLast('}')
-            if (!body.contains(signature)) {
-                val trimmed = body.trimEnd()
-                body = if (trimmed.isBlank()) bindingLine else trimmed + "\n" + bindingLine
+        val newBinding = CodeBlock.builder()
+            .add("single { %T(", useCaseClassName)
+            .apply {
+                if (repositoryClassNames.isNotEmpty()) {
+                    add(repositoryClassNames.joinToString(", ") { "get()" })
+                }
             }
+            .add(") }")
+            .build()
 
-            baseTemplate
-                .replace("\${PACKAGE}", diPackage)
-                .replace("\${IMPORTS}", if (importsBlock.isBlank()) "" else importsBlock + "\n")
-                .replace("\${BINDINGS}", body.trimEnd())
+        val fileSpecBuilder = FileSpec.builder(diPackage, "UseCaseModule")
+            .addImport("org.koin.dsl", "module")
+
+        val moduleBlockBuilder = CodeBlock.builder().beginControlFlow("module")
+
+        if (existing != null) {
+            // Parse existing imports
+            existing.lineSequence()
+                .filter { it.trim().startsWith("import ") }
+                .map { it.trim().removePrefix("import ").trim() }
+                .forEach { importLine ->
+                    if (!importLine.contains(" as ")) { // Simple import handling
+                        val pkg = importLine.substringBeforeLast('.', "")
+                        val name = importLine.substringAfterLast('.')
+                        if (pkg.isNotEmpty() && (pkg != "org.koin.dsl" || name != "module")) {
+                            fileSpecBuilder.addImport(pkg, name)
+                        }
+                    }
+                }
+
+            // Extract existing body
+            val body = existing.substringAfter("module {", "").substringBeforeLast("}", "")
+            if (body.isNotBlank()) {
+                // trimIndent() helps preserve relative indentation while removing common leading whitespace
+                moduleBlockBuilder.add(CodeBlock.of("%L\n", body.trimIndent()))
+            }
         }
 
+        moduleBlockBuilder.addStatement("%L", newBinding)
+        moduleBlockBuilder.endControlFlow()
+
+        val fileSpec = fileSpecBuilder
+            .addProperty(
+                PropertySpec.builder("useCaseModule", ClassName("org.koin.core.module", "Module"))
+                    .initializer(moduleBlockBuilder.build())
+                    .build()
+            )
+            .build()
+
+        val content = fileSpec.toString()
         val changed = existing == null || existing != content
         out.writeText(content)
         val status = when {
