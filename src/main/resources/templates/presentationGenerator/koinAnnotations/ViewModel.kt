@@ -1,7 +1,10 @@
 package ${PACKAGE}
 
 import androidx.lifecycle.ViewModel
-import org.koin.androidx.viewmodel.annotation.KoinViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import org.koin.android.annotation.KoinViewModel
 ${IMPORTS}
 
 @KoinViewModel

@@ -33,8 +33,14 @@ class CleanArchitectureGenerator(
     operator fun invoke(p: CleanArchitectureParams): Result<CleanArchitectureResult> = runCatching {
         require(p.projectBasePath.isDirectory()) { "Project base path does not exist or is not a directory: ${p.projectBasePath}" }
 
+        val featureName = p.feature.split('-')
+            .mapIndexed { index, s -> if (index > 0) s.replaceFirstChar { it.titlecase() } else s }
+            .joinToString("")
+            .replaceFirstChar { it.lowercase() }
+        val featureDirName = p.feature // Keep original for directory structure
+
         val rootDir = p.projectBasePath.resolve(p.root).also { if (!it.exists()) it.createDirectories() }
-        val featureDir = rootDir.resolve(p.feature).also { if (!it.exists()) it.createDirectories() }
+        val featureDir = rootDir.resolve(featureDirName).also { if (!it.exists()) it.createDirectories() }
 
         val modules = buildList {
             add("domain")
@@ -58,13 +64,13 @@ class CleanArchitectureGenerator(
                 skipped += m
             } else {
                 moduleDir.createDirectories()
-                scaffoldModuleBuildFile(moduleDir, p, m)
-                scaffoldModuleSourceSkeleton(moduleDir, p, m)
+                scaffoldModuleBuildFile(moduleDir, p, m, featureName)
+                scaffoldModuleSourceSkeleton(moduleDir, p, m, featureName)
                 created += m
             }
         }
 
-        val settingsUpdated = settingsRepo.ensureIncludes(p.projectBasePath, p.root, p.feature, modules)
+        val settingsUpdated = settingsRepo.ensureIncludes(p.projectBasePath, p.root, featureDirName, modules)
         settingsRepo.ensureIncludeBuild(p.projectBasePath, "build-logic")
         settingsRepo.ensureVersionCatalogPluginAliases(p.projectBasePath, p.orgCenter, modules)
         val buildLogicCreated = scaffoldBuildLogic(p.projectBasePath, p.orgCenter, modules, p)
@@ -104,7 +110,7 @@ class CleanArchitectureGenerator(
         return out
     }
 
-    private fun scaffoldModuleBuildFile(moduleDir: Path, p: CleanArchitectureParams, moduleName: String) {
+    private fun scaffoldModuleBuildFile(moduleDir: Path, p: CleanArchitectureParams, moduleName: String, featureName: String) {
         val templatePath = when (moduleName) {
             "domain" -> "templates/cleanArchitecture/module/domain.gradle.kts"
             "data" -> "templates/cleanArchitecture/module/data.gradle.kts"
@@ -117,7 +123,7 @@ class CleanArchitectureGenerator(
         }
         val raw = templateRepo.getTemplateText(templatePath)
         val safeOrg = sanitizeOrgCenter(p.orgCenter)
-        val namespace = "com.$safeOrg.${p.root}.${p.feature}.$moduleName"
+        val namespace = "com.$safeOrg.${p.root}.$featureName.$moduleName"
         val content = raw
             .replace("\${'$'}{NAMESPACE}", namespace)
             .replace("NAMESPACE", namespace)
@@ -125,9 +131,9 @@ class CleanArchitectureGenerator(
         fs.writeText(moduleDir.resolve("build.gradle.kts"), content)
     }
 
-    private fun scaffoldModuleSourceSkeleton(moduleDir: Path, p: CleanArchitectureParams, moduleName: String) {
+    private fun scaffoldModuleSourceSkeleton(moduleDir: Path, p: CleanArchitectureParams, moduleName: String, featureName: String) {
         val safeOrg = sanitizeOrgCenter(p.orgCenter)
-        val pkg = "com.$safeOrg.${p.root}.${p.feature}.$moduleName"
+        val pkg = "com.$safeOrg.${p.root}.$featureName.$moduleName"
         val srcMainKotlin = moduleDir.resolve("src/main/kotlin").also { if (!it.exists()) it.createDirectories() }
         moduleDir.resolve("src/test/kotlin").also { if (!it.exists()) it.createDirectories() }
         val pkgDir = srcMainKotlin.resolve(pkg.replace('.', '/')).also { if (!it.exists()) it.createDirectories() }
@@ -162,13 +168,13 @@ class CleanArchitectureGenerator(
                 if (p.diKoin && p.diKoinAnnotations) {
                     val template = templateRepo.getTemplateText("templates/cleanArchitecture/koinAnnotations/AnnotationsModule.kt")
                     val diPackage = pkg // di module's package
-                    val scanBase = "com.${sanitizeOrgCenter(p.orgCenter)}.${p.root}.${p.feature}"
-                    val featureName = p.feature.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    val scanBase = "com.${sanitizeOrgCenter(p.orgCenter)}.${p.root}.$featureName"
+                    val featureTitleCase = featureName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
                     val content = template
                         .replace("\${DI_PACKAGE}", diPackage)
                         .replace("\${PACKAGE_NAME}", scanBase)
-                        .replace("\${FEATURE_NAME}", featureName)
-                    val out = pkgDir.resolve("${featureName}AnnotationsModule.kt")
+                        .replace("\${FEATURE_NAME}", featureTitleCase)
+                    val out = pkgDir.resolve("${featureTitleCase}AnnotationsModule.kt")
                     if (!out.exists()) fs.writeText(out, content) else fs.writeText(out, content) // overwrite to keep in sync
                 }
             }
