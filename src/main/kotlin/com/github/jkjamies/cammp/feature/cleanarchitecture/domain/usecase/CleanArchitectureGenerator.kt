@@ -209,12 +209,24 @@ class CleanArchitectureGenerator(
         val srcMainKotlin = buildLogicDir.resolve("src/main/kotlin").also { if (!it.exists()) it.createDirectories() }
         val basePkg = srcMainKotlin.resolve("com/${safeOrg.replace('.', '/')}/convention").also { if (!it.exists()) it.createDirectories() }
         val helpersDir = basePkg.resolve("helpers").also { if (!it.exists()) it.createDirectories() }
+        val coreDir = basePkg.resolve("core").also { if (!it.exists()) it.createDirectories() }
 
         // helpers
         listOf("AndroidLibraryDefaults.kt", "StandardTestDependencies.kt", "TestOptions.kt").forEach { fname ->
             val raw = templateRepo.getTemplateText("templates/cleanArchitecture/buildLogic/conventionPlugins/helpers/$fname")
             val rewritten = raw.replace(Regex("(?m)^package\\s+.*$"), "package com.$safeOrg.convention.helpers")
             val target = helpersDir.resolve(fname)
+            if (!target.exists()) {
+                fs.writeText(target, rewritten)
+                changed = true
+            }
+        }
+
+        // core
+        listOf("Aliases.kt", "Dependencies.kt").forEach { fname ->
+            val raw = templateRepo.getTemplateText("templates/cleanArchitecture/buildLogic/conventionPlugins/core/$fname")
+            val rewritten = raw.replace(Regex("(?m)^package\\s+.*$"), "package com.$safeOrg.convention.core")
+            val target = coreDir.resolve(fname)
             if (!target.exists()) {
                 fs.writeText(target, rewritten)
                 changed = true

@@ -1,37 +1,22 @@
 package com.${PACKAGE}.convention.helpers
 
+import com.${PACKAGE}.convention.core.Aliases.Dependencies.LibsUnitTest
+import com.${PACKAGE}.convention.core.dependencies
+import com.${PACKAGE}.convention.core.libsCatalog
 import org.gradle.api.Project
-import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.kotlin.dsl.dependencies
 
 /**
  * Separated from AndroidLibraryDefaults for reuse and clarity.
  */
 internal fun Project.addStandardTestDependencies() {
-    val catalogsExt = rootProject.extensions.findByType(VersionCatalogsExtension::class.java)
-    val catalogs = catalogsExt?.named("libs") ?: return
+    val libs = libsCatalog()
+    val deps = libs.dependencies(this)
 
-    dependencies {
-        catalogs.findLibrary("kotest-runner").ifPresent {
-            add("testImplementation", it)
-        }
-        catalogs.findLibrary("kotest-assertion").ifPresent {
-            add("testImplementation", it)
-        }
-        catalogs.findLibrary("kotest-property").ifPresent {
-            add("testImplementation", it)
-        }
-        catalogs.findLibrary("junit-vintage-engine").ifPresent {
-            add("testImplementation", it)
-        }
-        catalogs.findLibrary("mockk").ifPresent {
-            add("testImplementation", it)
-        }
-        catalogs.findLibrary("coroutines-test").ifPresent {
-            add("testImplementation", it)
-        }
-        catalogs.findLibrary("turbine").ifPresent {
-            add("testImplementation", it)
-        }
-    }
+    deps.testImplementation(LibsUnitTest.KOTEST_RUNNER)
+    deps.testImplementation(LibsUnitTest.KOTEST_ASSERTION)
+    deps.testImplementation(LibsUnitTest.KOTEST_PROPERTY)
+    deps.testImplementation(LibsUnitTest.JUNIT_VINTAGE_ENGINE)
+    deps.testImplementation(LibsUnitTest.MOCKK)
+    deps.testImplementation(LibsUnitTest.COROUTINES_TEST)
+    deps.testImplementation(LibsUnitTest.TURBINE)
 }

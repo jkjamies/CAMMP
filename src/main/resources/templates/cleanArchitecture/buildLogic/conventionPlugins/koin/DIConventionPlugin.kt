@@ -1,33 +1,37 @@
 package com.${PACKAGE}.convention
 
 import com.${PACKAGE}.convention.helpers.configureAndroidLibraryDefaults
+import com.${PACKAGE}.convention.core.Aliases.PluginAliases
+import com.${PACKAGE}.convention.core.Aliases.Dependencies.LibsCommon
+import com.${PACKAGE}.convention.core.dependencies
+import com.${PACKAGE}.convention.core.libsCatalog
+import com.${PACKAGE}.convention.core.plugins
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.getByType
 
-class DiConventionPlugin : Plugin<Project> {
-    override fun apply(target: Project) = with(target) {
-        val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
-        val androidLibraryPluginId = libs.findPlugin("library").get().get().pluginId
-        val kotlinAndroidPluginId = libs.findPlugin("kotlin").get().get().pluginId
-        val parcelizePluginId = libs.findPlugin("parcelize").get().get().pluginId
-        val kotlinSerializationPluginId = libs.findPlugin("kotlin-serialization").get().get().pluginId
+internal class DiConventionPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        with(target) {
+            val libs = libsCatalog()
 
-        pluginManager.apply(androidLibraryPluginId)
-        pluginManager.apply(kotlinAndroidPluginId)
-        pluginManager.apply(parcelizePluginId)
-        pluginManager.apply(kotlinSerializationPluginId)
+            // Apply plugins using Plugins DSL
+            libs.plugins(this).applyAll(
+                PluginAliases.ANDROID_LIBRARY,
+                PluginAliases.KOTLIN_ANDROID,
+                PluginAliases.PARCELIZE,
+                PluginAliases.KOTLIN_SERIALIZATION
+            )
 
-        configureAndroidLibraryDefaults()
+            // Apply Jacoco script
+            apply { from(rootProject.file("scripts/jacoco.gradle")) }
 
-        val koinAndroid = libs.findLibrary("koin-android").orNull
-        val kotlinxSerialization = libs.findLibrary("kotlinx-serialization").orNull
+            // Configure Android library defaults
+            configureAndroidLibraryDefaults()
 
-        dependencies {
-            koinAndroid?.let { addProvider("implementation", it) }
-            kotlinxSerialization?.let { addProvider("implementation", it) }
+            // Add dependencies via Dependencies DSL with shared libs
+            val deps = libs.dependencies(this)
+            deps.implementation(LibsCommon.KOIN)
+            deps.implementation(LibsCommon.KOTLINX_SERIALIZATION)
         }
     }
 }

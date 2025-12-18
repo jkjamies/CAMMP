@@ -1,37 +1,76 @@
 package com.${PACKAGE}.convention
 
+import com.${PACKAGE}.convention.core.Aliases.PluginAliases
+import com.${PACKAGE}.convention.core.Aliases.Dependencies.LibsCommon
+import com.android.build.api.dsl.LibraryExtension
+import com.${PACKAGE}.convention.core.Aliases.Dependencies.LibsAndroidTest
+import com.${PACKAGE}.convention.core.Aliases.Dependencies.LibsCompose
+import com.${PACKAGE}.convention.core.Aliases.Dependencies.LibsCoroutines
+import com.${PACKAGE}.convention.core.dependencies
+import com.${PACKAGE}.convention.core.libsCatalog
+import com.${PACKAGE}.convention.core.plugins
 import com.${PACKAGE}.convention.helpers.configureAndroidLibraryDefaults
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.VersionCatalogsExtension
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.configure
 
-class PresentationConventionPlugin : Plugin<Project> {
-    override fun apply(target: Project) = with(target) {
-        val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
-        val androidLibraryPluginId = libs.findPlugin("library").get().get().pluginId
-        val kotlinAndroidPluginId = libs.findPlugin("kotlin").get().get().pluginId
-        val kspPluginId = libs.findPlugin("ksp").get().get().pluginId
-        val hiltPluginId = libs.findPlugin("hilt").get().get().pluginId
-        val parcelizePluginId = libs.findPlugin("parcelize").get().get().pluginId
-        val kotlinSerializationPluginId = libs.findPlugin("kotlin-serialization").get().get().pluginId
+internal class PresentationConventionPlugin : Plugin<Project> {
+    override fun apply(target: Project) {
+        with(target) {
+            val libs = libsCatalog()
 
-        pluginManager.apply(androidLibraryPluginId)
-        pluginManager.apply(kotlinAndroidPluginId)
-        pluginManager.apply(kspPluginId)
-        pluginManager.apply(hiltPluginId)
-        pluginManager.apply(parcelizePluginId)
-        pluginManager.apply(kotlinSerializationPluginId)
+            // Apply plugins via Plugins DSL
+            libs.plugins(this).applyAll(
+                PluginAliases.ANDROID_LIBRARY,
+                PluginAliases.KOTLIN_ANDROID,
+                PluginAliases.KSP,
+                PluginAliases.HILT,
+                PluginAliases.PARCELIZE,
+                PluginAliases.KOTLIN_SERIALIZATION,
+                PluginAliases.COMPOSE_COMPILER
+            )
 
-        configureAndroidLibraryDefaults()
+            // Apply Jacoco script
+            apply { from(rootProject.file("scripts/jacoco.gradle")) }
 
-        val hiltAndroid = libs.findLibrary("hilt").get()
-        val hiltCompiler = libs.findLibrary("hilt-compiler").get()
+            // Configure Android library defaults
+            configureAndroidLibraryDefaults()
 
-        dependencies {
-            addProvider("implementation", hiltAndroid)
-            addProvider("ksp", hiltCompiler)
+            // Additional Android library configuration for presentation layer
+            extensions.configure<LibraryExtension> {
+                buildFeatures { compose = true }
+                packaging {
+                    resources {
+                        excludes += "META-INF/*"
+                        excludes += "draftv4/schema"
+                        excludes += "draftv3/schema"
+                        excludes += "google/protobuf/*"
+                    }
+                }
+            }
+
+            // Add dependencies via Dependencies DSL with shared libs
+            val deps = libs.dependencies(this)
+            deps.implementation(LibsCommon.HILT)
+            deps.implementation(LibsCommon.KOTLINX_SERIALIZATION)
+            deps.implementation(LibsCoroutines.ANDROID)
+            deps.implementation(LibsCoroutines.CORE)
+            deps.implementation(LibsCompose.MATERIAL3_ANDROID)
+            deps.implementation(LibsCommon.CORE_KTX)
+            deps.implementation(LibsCompose.UI)
+            deps.implementation(LibsCompose.NAVIGATION)
+            deps.implementation(LibsCompose.HILT_NAVIGATION)
+            deps.implementation(LibsCompose.TOOLING)
+            deps.implementation(LibsCompose.PREVIEW)
+            deps.ksp(LibsCommon.HILT_COMPILER)
+
+            // Instrumented test dependencies via DSL
+            deps.androidTestImplementation(LibsAndroidTest.ANDROIDX_TEST_RUNNER)
+            deps.androidTestImplementation(LibsAndroidTest.COMPOSE_UI_TEST)
+            deps.androidTestImplementation(LibsAndroidTest.MOCKK_ANDROID)
+            deps.androidTestImplementation(LibsAndroidTest.COROUTINES)
+            deps.androidTestImplementation(LibsAndroidTest.ESPRESSO)
+            deps.androidTestImplementation(LibsAndroidTest.NAV_TEST)
         }
     }
 }

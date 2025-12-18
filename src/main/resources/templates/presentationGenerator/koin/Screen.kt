@@ -1,7 +1,7 @@
 package ${PACKAGE}
 
 import androidx.compose.runtime.Composable
-import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ${SCREEN_NAME}(
