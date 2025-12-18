@@ -15,10 +15,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.jetbrains.jewel.ui.component.Checkbox
 import org.jetbrains.jewel.ui.component.DefaultButton
-import org.jetbrains.jewel.ui.component.RadioButton
 import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.TextField
 
@@ -135,14 +135,19 @@ fun PresentationGeneratorScreen(state: PresentationUiState, onIntent: (Presentat
         }
 
         Spacer(Modifier.height(8.dp))
-        val isValid = state.directory.isNotBlank() && state.screenName.isNotBlank()
+        val isPresentationModule = state.directory.trimEnd('/', '\\').substringAfterLast('/').substringAfterLast('\\').contains("presentation", ignoreCase = true)
+        val isValid = state.directory.isNotBlank() && state.screenName.isNotBlank() && isPresentationModule
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             DefaultButton(onClick = { onIntent(PresentationIntent.Generate) }, enabled = isValid && !state.isGenerating) {
                 Text(if (state.isGenerating) "Generating…" else "Generate")
             }
         }
 
-        state.errorMessage?.let { Text("Error: $it") }
+        val inlineError = if (!isPresentationModule && state.directory.isNotBlank()) "Selected directory must be a presentation module" else null
+        val errorText = state.errorMessage ?: inlineError
+        if (errorText != null) {
+            Text("Error: $errorText", color = Color(0xFFD32F2F))
+        }
         state.lastMessage?.let { msg ->
             val lines = msg.lineSequence().toList()
             if (lines.isNotEmpty()) {
