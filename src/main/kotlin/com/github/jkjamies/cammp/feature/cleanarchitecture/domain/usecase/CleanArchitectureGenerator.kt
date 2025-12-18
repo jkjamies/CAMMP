@@ -125,8 +125,7 @@ class CleanArchitectureGenerator(
         val safeOrg = sanitizeOrgCenter(p.orgCenter)
         val namespace = "com.$safeOrg.${p.root}.$featureName.$moduleName"
         val content = raw
-            .replace("\${'$'}{NAMESPACE}", namespace)
-            .replace("NAMESPACE", namespace)
+            .replace(Regex("\\$\\{\\s*NAMESPACE\\s*}"), namespace)
             .let { replacePackageTokens(it, safeOrg) }
         fs.writeText(moduleDir.resolve("build.gradle.kts"), content)
     }
