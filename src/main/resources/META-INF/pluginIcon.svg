@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 16 16">
+  <!-- Moon -->
+  <path d="M 6,5.5 A 1.75 1.75 0 0 0 6,9 A 2.75 2.75 0 0 1 6,5.5 Z" fill="#6E6E6E"/>
+
+  <!-- Tent -->
+  <!-- Left triangle fill -->
+  <path d="M 8,7.5 L 4.5,14 L 8,14 Z" fill="#AAAAAA" stroke="none"/>
+  <!-- Tent outline and middle line -->
+  <path d="M 8,7.5 L 4.5,14 H 11.5 Z" fill="none" stroke="#888888" stroke-width="0.5" stroke-linejoin="round"/>
+  <line x1="8" y1="7.5" x2="8" y2="14" stroke="#888888" stroke-width="0.5"/>
+
+  <!-- Tree -->
+  <rect x="12.5" y="11" width="1" height="3" fill="#6E6E6E"/>
+  <path d="M 13,6 C 11,6 11,11 13,11 C 15,11 15,6 13,6 Z" fill="#999999"/>
+</svg>
