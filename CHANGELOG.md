@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Gradle Version Update 9.0.0 -> 9.2.1
+- org.gradle.toolchains.foojay-resolver-convention from 0.8.0 to 1.0.0
+- org.jetbrains.changelog from 2.2.1 to 2.5.0
+- [actions/upload-artifact](https://github.com/actions/upload-artifact) from 4 to 6
+- [actions/checkout](https://github.com/actions/checkout) from 4 to 6
+- [org.jetbrains.jewel:jewel-int-ui-standalone](https://github.com/JetBrains/intellij-community) from 0.29.0-251.27828 to 0.32.1-253.28294.285
+
 ## [0.0.2-alpha] - 2025-12-20
 
 ### Added
