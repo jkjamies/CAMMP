@@ -5,7 +5,7 @@ opentest4j = "1.3.0"
 hamcrest = "2.2"
 kotlinpoet = "2.2.0"
 # Has to be in sync with IntelliJ Platform
-composeuitest = "1.8.0-alpha04"
+composeuitest = "1.11.0-alpha01"
 jewelstandalone = "0.29.0-251.27828"
 skikoAwtRuntimeAll = "0.9.22"
 
