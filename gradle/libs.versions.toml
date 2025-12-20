@@ -10,7 +10,7 @@ jewelstandalone = "0.29.0-251.27828"
 skikoAwtRuntimeAll = "0.9.22"
 
 # plugins
-changelog = "2.2.1"
+changelog = "2.5.0"
 intelliJPlatform = "2.10.5"
 kotlin = "2.1.20"
 
