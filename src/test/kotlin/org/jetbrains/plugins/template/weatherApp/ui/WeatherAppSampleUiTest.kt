@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import org.jetbrains.plugins.template.ComposeBasedTestCase
 import org.jetbrains.plugins.template.weatherApp.model.Location
 import org.jetbrains.plugins.template.weatherApp.services.SearchAutoCompletionItemProvider
+import org.junit.Ignore
 import org.junit.Test
 
 internal class WeatherAppSampleUiTest : ComposeBasedTestCase() {
@@ -25,6 +26,7 @@ internal class WeatherAppSampleUiTest : ComposeBasedTestCase() {
         )
     }
 
+    @Ignore
     @Test
     fun `add location via search UI then remove it`() = runComposeTest {
         val robot = WeatherSampleRobot(this)

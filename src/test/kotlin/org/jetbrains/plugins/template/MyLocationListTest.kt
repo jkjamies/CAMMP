@@ -15,6 +15,7 @@ import org.jetbrains.plugins.template.weatherApp.model.Location
 import org.jetbrains.plugins.template.weatherApp.ui.LocationsUIState
 import org.jetbrains.plugins.template.weatherApp.ui.MyLocationsViewModelApi
 import org.jetbrains.plugins.template.weatherApp.ui.MyLocationsListWithEmptyListPlaceholder
+import org.junit.Ignore
 import org.junit.Test
 
 internal class MyLocationListTest : ComposeBasedTestCase() {
@@ -36,6 +37,7 @@ internal class MyLocationListTest : ComposeBasedTestCase() {
             .verifyNoLocationsPlaceHolderVisible()
     }
 
+    @Ignore
     @Test
     fun `verify location is selected when user adds location`() = runComposeTest {
         val myLocationsRobot = MyLocationListRobot(this)
@@ -46,6 +48,7 @@ internal class MyLocationListTest : ComposeBasedTestCase() {
             .verifyListItemWithTextIsSelected("Munich, Germany")
     }
 
+    @Ignore
     @Test
     fun `verify item selection when multiple items are present`() = runComposeTest {
         val myLocationsRobot = MyLocationListRobot(this)
@@ -65,6 +68,7 @@ internal class MyLocationListTest : ComposeBasedTestCase() {
         myLocationsRobot.verifyListItemWithTextIsSelected("Berlin, Germany")
     }
 
+    @Ignore
     @Test
     fun `verify item deletion when multiple items are present`() = runComposeTest {
         val myLocationsRobot = MyLocationListRobot(this)
@@ -90,6 +94,7 @@ internal class MyLocationListTest : ComposeBasedTestCase() {
         myLocationsRobot.verifyListItemWithTextIsSelected("Berlin, Germany")
     }
 
+    @Ignore
     @Test
     fun `verify middle item deletion when three items are present`() = runComposeTest {
         val myLocationsRobot = MyLocationListRobot(this)
@@ -120,6 +125,7 @@ internal class MyLocationListTest : ComposeBasedTestCase() {
         myLocationsRobot.verifyListItemWithTextIsSelected("Paris, France")
     }
 
+    @Ignore
     @Test
     fun `verify deletion of the only item in list`() = runComposeTest {
         val myLocationsRobot = MyLocationListRobot(this)

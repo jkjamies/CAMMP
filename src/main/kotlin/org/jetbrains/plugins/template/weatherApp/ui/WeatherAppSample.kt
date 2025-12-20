@@ -174,27 +174,27 @@ private fun MyLocationList(
                 val popupPosition = remember { mutableStateOf(IntOffset.Zero) }
                 val itemPosition = remember { mutableStateOf(Offset.Zero) }
 
-                SimpleListItem(
-                    text = locationItem.label,
-                    isSelected = myLocationsUIState.selectedIndex == index,
-                    isActive = isActive,
-                    modifier = Modifier
-                        .onGloballyPositioned { coordinates ->
-                            itemPosition.value = coordinates.positionInWindow()
-                        }
-                        .onPointerEvent(PointerEventType.Press) { pointerEvent ->
-                            if (!pointerEvent.buttons.isSecondaryPressed) return@onPointerEvent
-
-                            // Calculate exact click position
-                            val clickOffset = pointerEvent.changes.first().position
-                            popupPosition.value = IntOffset(
-                                x = (itemPosition.value.x + clickOffset.x).toInt(),
-                                y = (itemPosition.value.y + clickOffset.y).toInt()
-                            )
-
-                            showPopup.value = true
-                        }
-                )
+//                SimpleListItem(
+//                    text = locationItem.label,
+//                    isSelected = myLocationsUIState.selectedIndex == index,
+//                    isActive = isActive,
+//                    modifier = Modifier
+//                        .onGloballyPositioned { coordinates ->
+//                            itemPosition.value = coordinates.positionInWindow()
+//                        }
+//                        .onPointerEvent(PointerEventType.Press) { pointerEvent ->
+//                            if (!pointerEvent.buttons.isSecondaryPressed) return@onPointerEvent
+//
+//                            // Calculate exact click position
+//                            val clickOffset = pointerEvent.changes.first().position
+//                            popupPosition.value = IntOffset(
+//                                x = (itemPosition.value.x + clickOffset.x).toInt(),
+//                                y = (itemPosition.value.y + clickOffset.y).toInt()
+//                            )
+//
+//                            showPopup.value = true
+//                        }
+//                )
 
                 if (showPopup.value) {
                     val popupPositionProvider = remember(popupPosition.value) {

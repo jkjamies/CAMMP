@@ -23,8 +23,8 @@ import org.jetbrains.jewel.ui.component.TextField
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GenerateModulesScreen(
-    state: com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesUiState,
-    onIntent: (com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesIntent) -> Unit,
+    state: GenerateModulesUiState,
+    onIntent: (GenerateModulesIntent) -> Unit,
     onBrowseRoot: () -> Unit,
 ) {
     val rootState: TextFieldState = rememberTextFieldState()
@@ -72,7 +72,7 @@ fun GenerateModulesScreen(
         }
 
         Text("Platform:")
-        FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             RadioWithLabel(
                 label = "Android",
                 selected = state.platformAndroid,

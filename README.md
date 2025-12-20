@@ -12,7 +12,16 @@
 > Click the <kbd>Use this template</kbd> button and clone it in IntelliJ IDEA.
 
 <!-- Plugin description -->
+**CAMMP (Clean Architecture Multi-Module Plugin)** is a powerful Android Studio plugin designed to accelerate modern Android development by automating the creation of Clean Architecture components.
 
+It provides a suite of generators to scaffold boilerplate code, ensuring consistency and adherence to best practices:
+
+*   **Clean Architecture Generator**: Instantly scaffolds a full feature module structure (domain, data, di, presentation, dataSource) with proper Gradle configurations and dependency wiring.
+*   **Repository Generator**: Creates repository interfaces (Domain) and implementations (Data), including optional data sources (Remote/Local) and Dependency Injection (Hilt or Koin) modules.
+*   **Use Case Generator**: Generates Use Case classes in the Domain layer, automatically injecting required repositories and setting up DI bindings.
+*   **Presentation Generator**: Scaffolds UI components including ViewModels, Screens (Compose), UI State, Intents (MVI), and Navigation destinations, with support for both MVI and MVVM patterns.
+
+CAMMP supports both **Hilt** and **Koin** (including Koin Annotations) for Dependency Injection, making it versatile for various project setups.
 <!-- Plugin description end -->
 
 **IntelliJ Platform Plugin Template** is a repository that provides a pure template to make it easier to create a new plugin project (check the [Creating a repository from a template][gh:template] article).
