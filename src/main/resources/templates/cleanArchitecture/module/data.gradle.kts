@@ -8,4 +8,5 @@ android {
 
 dependencies {
     // Add module-specific dependencies here as needed
+    ${DEPENDENCIES}
 }

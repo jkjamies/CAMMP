@@ -64,7 +64,7 @@ class CleanArchitectureGenerator(
                 skipped += m
             } else {
                 moduleDir.createDirectories()
-                scaffoldModuleBuildFile(moduleDir, p, m, featureName)
+                scaffoldModuleBuildFile(moduleDir, p, m, featureName, modules)
                 scaffoldModuleSourceSkeleton(moduleDir, p, m, featureName)
                 created += m
             }
@@ -110,7 +110,7 @@ class CleanArchitectureGenerator(
         return out
     }
 
-    private fun scaffoldModuleBuildFile(moduleDir: Path, p: CleanArchitectureParams, moduleName: String, featureName: String) {
+    private fun scaffoldModuleBuildFile(moduleDir: Path, p: CleanArchitectureParams, moduleName: String, featureName: String, enabledModules: List<String>) {
         val templatePath = when (moduleName) {
             "domain" -> "templates/cleanArchitecture/module/domain.gradle.kts"
             "data" -> "templates/cleanArchitecture/module/data.gradle.kts"
@@ -124,8 +124,42 @@ class CleanArchitectureGenerator(
         val raw = templateRepo.getTemplateText(templatePath)
         val safeOrg = sanitizeOrgCenter(p.orgCenter)
         val namespace = "com.$safeOrg.${p.root}.$featureName.$moduleName"
+
+        val projectPrefix = buildString {
+            append(':')
+            val rootSegments = p.root.replace('\\', '/').split('/').filter { it.isNotBlank() }
+            if (rootSegments.isNotEmpty()) {
+                append(rootSegments.joinToString(":"))
+                append(':')
+            }
+            append(p.feature)
+        }
+
+        val dependencies = buildString {
+            when (moduleName) {
+                "data" -> {
+                    appendLine("    implementation(project(\"$projectPrefix:domain\"))")
+                }
+                "domain" -> {
+                    // domain pulls nothing
+                }
+                "di" -> {
+                    enabledModules.filter { it != "di" }.forEach { dep ->
+                        appendLine("    implementation(project(\"$projectPrefix:$dep\"))")
+                    }
+                }
+                "presentation" -> {
+                    appendLine("    implementation(project(\"$projectPrefix:domain\"))")
+                }
+                "dataSource", "remoteDataSource", "localDataSource" -> {
+                    appendLine("    implementation(project(\"$projectPrefix:data\"))")
+                }
+            }
+        }
+
         val content = raw
             .replace(Regex("\\$\\{\\s*NAMESPACE\\s*}"), namespace)
+            .replace(Regex("\\$\\{\\s*DEPENDENCIES\\s*}"), dependencies.trimEnd())
             .let { replacePackageTokens(it, safeOrg) }
         fs.writeText(moduleDir.resolve("build.gradle.kts"), content)
     }
