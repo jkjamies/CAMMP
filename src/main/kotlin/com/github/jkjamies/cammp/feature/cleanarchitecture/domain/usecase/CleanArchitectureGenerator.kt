@@ -73,6 +73,7 @@ class CleanArchitectureGenerator(
         val settingsUpdated = settingsRepo.ensureIncludes(p.projectBasePath, p.root, featureDirName, modules)
         settingsRepo.ensureIncludeBuild(p.projectBasePath, "build-logic")
         settingsRepo.ensureVersionCatalogPluginAliases(p.projectBasePath, p.orgCenter, modules)
+        val appDependencyUpdated = settingsRepo.ensureAppDependency(p.projectBasePath, p.root, featureDirName)
         val buildLogicCreated = scaffoldBuildLogic(p.projectBasePath, p.orgCenter, modules, p)
 
         val msg = if (created.isEmpty()) {
@@ -84,7 +85,7 @@ class CleanArchitectureGenerator(
         CleanArchitectureResult(
             created = created,
             skipped = skipped,
-            settingsUpdated = settingsUpdated,
+            settingsUpdated = settingsUpdated || appDependencyUpdated,
             buildLogicCreated = buildLogicCreated,
             message = msg,
         )

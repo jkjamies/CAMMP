@@ -108,4 +108,44 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
         }
         return false
     }
+
+    override fun ensureAppDependency(projectBase: Path, root: String, feature: String): Boolean {
+        val appBuild = projectBase.resolve("app/build.gradle.kts")
+        if (!appBuild.exists()) return false
+        var text = appBuild.readText()
+        
+        val rootSegments = root.replace('\\', '/').split('/')
+            .filter { it.isNotBlank() }
+        val projectPath = buildString {
+            append(':')
+            if (rootSegments.isNotEmpty()) {
+                append(rootSegments.joinToString(":"))
+                append(':')
+            }
+            append(feature)
+            append(":di")
+        }
+        
+        val dependencyLine = "implementation(project(\"$projectPath\"))"
+        
+        if (text.contains(dependencyLine)) return false
+        
+        // Try to insert into dependencies block
+        val dependenciesRegex = Regex("(?s)dependencies\\s*\\{(.*?)\\}")
+        val match = dependenciesRegex.find(text)
+        
+        if (match != null) {
+            val updated = text.replace(dependenciesRegex) { mr ->
+                val content = mr.groups[1]?.value ?: ""
+                "dependencies {$content\n    $dependencyLine\n}"
+            }
+            appBuild.writeText(updated)
+            return true
+        } else {
+            // If no dependencies block, append one
+            text += "\n\ndependencies {\n    $dependencyLine\n}"
+            appBuild.writeText(text)
+            return true
+        }
+    }
 }
