@@ -4,15 +4,20 @@
 
 ## [Unreleased]
 
+## [0.0.2-alpha] - 2025-12-20
+
 ### Added
+
 - Added plugin logo.
 
 ### Changed
+
 - Updated licensing information.
 
 ## [0.0.1] - 2025-12-20
 
 Initial Alpha Release
 
-[Unreleased]: https://github.com/jkjamies/CAMMP/compare/v0.0.2...HEAD
+[Unreleased]: https://github.com/jkjamies/CAMMP/compare/v0.0.2-alpha...HEAD
+[0.0.2-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.1...v0.0.2-alpha
 [0.0.1]: https://github.com/jkjamies/CAMMP/commits/v0.0.1
