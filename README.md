@@ -1,5 +1,13 @@
 # IntelliJ Platform Plugin Template
 
+CAMMP
+
+[![Version](https://img.shields.io/jetbrains/plugin/v/29447)](https://plugins.jetbrains.com/plugin/29447)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/29447)](https://plugins.jetbrains.com/plugin/29447)
+[![Build](https://github.com/jkjamies/CAMMP/workflows/Build/badge.svg)][gh:buildCAMMP]
+
+JetBrains Platform Plugin Template
+
 [![official JetBrains project](https://jb.gg/badges/official.svg)][jb:github]
 [![Twitter Follow](https://img.shields.io/badge/follow-%40JBPlatform-1DA1F2?logo=twitter)](https://twitter.com/JBPlatform)
 [![Build](https://github.com/JetBrains/intellij-platform-plugin-template/workflows/Build/badge.svg)][gh:build]
@@ -7,6 +15,7 @@
 
 ![IntelliJ Platform Plugin Template][file:intellij-platform-plugin-template-dark]
 ![IntelliJ Platform Plugin Template][file:intellij-platform-plugin-template-light]
+
 
 > [!NOTE]
 > Click the <kbd>Use this template</kbd> button and clone it in IntelliJ IDEA.
@@ -517,6 +526,7 @@ That approach gives more possibilities for testing and debugging pre-releases, f
 
 [gh:actions]: https://help.github.com/en/actions
 [gh:build]: https://github.com/JetBrains/intellij-platform-plugin-template/actions?query=workflow%3ABuild
+[gh:buildCAMMP]: https://github.com/jkjamies/CAMMP/actions?query=workflow%3ABuild
 [gh:code-samples]: https://github.com/JetBrains/intellij-sdk-code-samples
 [gh:dependabot]: https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/keeping-your-dependencies-updated-automatically
 [gh:dependabot-pr]: https://github.com/JetBrains/intellij-platform-plugin-template/pull/73
