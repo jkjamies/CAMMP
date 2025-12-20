@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 ${IMPORTS}
 
-class ${SCREEN_NAME}ViewModel(
+internal class ${SCREEN_NAME}ViewModel(
     ${CONSTRUCTOR_PARAMS}
 ) : ViewModel() {
 

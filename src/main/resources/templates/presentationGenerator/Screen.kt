@@ -10,7 +10,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
  * You can wire intents and state once your ViewModel is implemented.
  */
 @Composable
-fun ${SCREEN_NAME}() {
+internal fun ${SCREEN_NAME}() {
     val viewModel: ${SCREEN_NAME}ViewModel = hiltViewModel()
     val state by viewModel.state.collectAsState()
     // TODO: Render UI using state and dispatch intents to viewModel.onIntent(...)

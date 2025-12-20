@@ -194,7 +194,6 @@ class PresentationRepositoryImpl(
                         "PACKAGE" to pkg,
                         "SCREEN_NAME" to sanitizedName,
                         "SCREEN_FOLDER" to folder,
-                        "ROUTE" to sanitizedName,
                     )
                 )
                 fs.writeText(target, content, overwriteIfExists = p.overwrite)

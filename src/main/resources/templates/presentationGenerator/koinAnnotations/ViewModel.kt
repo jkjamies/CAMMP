@@ -8,7 +8,7 @@ import org.koin.android.annotation.KoinViewModel
 ${IMPORTS}
 
 @KoinViewModel
-class ${SCREEN_NAME}ViewModel(
+internal class ${SCREEN_NAME}ViewModel(
     ${CONSTRUCTOR_PARAMS}
 ) : ViewModel() {
 
