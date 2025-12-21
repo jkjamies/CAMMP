@@ -15,13 +15,12 @@ import kotlinx.coroutines.launch
 
 class UseCaseViewModel(
     initial: UseCaseUiState = UseCaseUiState(),
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val generator: UseCaseGenerator = UseCaseGenerator(),
+    private val loadRepositories: LoadRepositories = LoadRepositories()
 ) {
     private val _state = MutableStateFlow(initial)
     val state: StateFlow<UseCaseUiState> = _state.asStateFlow()
-
-    private val generator = UseCaseGenerator()
-    private val loadRepositories = LoadRepositories()
 
     fun handleIntent(intent: UseCaseIntent) {
         val s = _state.value

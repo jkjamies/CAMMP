@@ -2,6 +2,7 @@ package com.jkjamies.cammp.feature.repositorygenerator.presentation
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryGenerator
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
+import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType
 import java.nio.file.Paths
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,13 +13,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class RepositoryViewModel(initial: RepositoryUiState = RepositoryUiState()) {
+class RepositoryViewModel(
+    initial: RepositoryUiState = RepositoryUiState(),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val generator: RepositoryGenerator = RepositoryGenerator(),
+    private val loadDataSourcesByType: LoadDataSourcesByType = LoadDataSourcesByType()
+) {
     private val _state = MutableStateFlow(initial)
     val state: StateFlow<RepositoryUiState> = _state.asStateFlow()
-
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val generator = RepositoryGenerator()
-    private val loadDataSourcesByType = com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType()
 
     fun handleIntent(intent: RepositoryIntent) {
         val s = _state.value
