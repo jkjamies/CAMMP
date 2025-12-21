@@ -3,10 +3,8 @@ package com.jkjamies.cammp.feature.repositorygenerator.presentation
 import app.cash.turbine.test
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryGenerator
-import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -18,17 +16,15 @@ import kotlinx.coroutines.test.setMain
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class RepositoryViewModelTest : BehaviorSpec({
-    isolationMode = IsolationMode.InstancePerLeaf
 
     val testDispatcher = StandardTestDispatcher()
 
-    beforeSpec {
+    beforeTest {
         Dispatchers.setMain(testDispatcher)
     }
 
-    afterSpec {
+    afterTest {
         Dispatchers.resetMain()
-        clearAllMocks()
     }
 
     Given("a repository view model") {
@@ -210,8 +206,6 @@ class RepositoryViewModelTest : BehaviorSpec({
         }
 
         When("Generate fails") {
-            viewModel.handleIntent(RepositoryIntent.SetName("ValidRepo"))
-            viewModel.handleIntent(RepositoryIntent.SetDomainPackage("/path/to/data"))
             coEvery { mockGenerator(any()) } returns Result.failure(Exception("Failure"))
             
             viewModel.handleIntent(RepositoryIntent.Generate)

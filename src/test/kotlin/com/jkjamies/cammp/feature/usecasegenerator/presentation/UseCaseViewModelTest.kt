@@ -3,10 +3,8 @@ package com.jkjamies.cammp.feature.usecasegenerator.presentation
 import app.cash.turbine.test
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.LoadRepositories
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.UseCaseGenerator
-import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -19,17 +17,15 @@ import java.nio.file.Path
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UseCaseViewModelTest : BehaviorSpec({
-    isolationMode = IsolationMode.InstancePerLeaf
 
     val testDispatcher = StandardTestDispatcher()
 
-    beforeSpec {
+    beforeTest {
         Dispatchers.setMain(testDispatcher)
     }
 
-    afterSpec {
+    afterTest {
         Dispatchers.resetMain()
-        clearAllMocks()
     }
 
     Given("a use case view model") {
@@ -63,9 +59,9 @@ class UseCaseViewModelTest : BehaviorSpec({
         When("package name is set with valid domain module") {
             val path = "/path/to/domain"
             every { mockLoadRepositories(path) } returns listOf("Repo1", "Repo2")
-
+            
             viewModel.handleIntent(UseCaseIntent.SetDomainPackage(path))
-
+            
             Then("state should update package name and load repositories") {
                 viewModel.state.test {
                     testDispatcher.scheduler.runCurrent()
@@ -79,7 +75,7 @@ class UseCaseViewModelTest : BehaviorSpec({
         When("package name is set with invalid module") {
             val path = "/path/to/invalid"
             viewModel.handleIntent(UseCaseIntent.SetDomainPackage(path))
-
+            
             Then("state should update package name but clear repositories") {
                 viewModel.state.test {
                     val state = awaitItem()
@@ -98,7 +94,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                     state.sync shouldBe true
                 }
             }
-
+            
             viewModel.handleIntent(UseCaseIntent.SetAsync(true))
             Then("Async should be true and Sync false") {
                 viewModel.state.test {
@@ -128,7 +124,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                     state.selectedRepositories shouldBe setOf("UserRepo")
                 }
             }
-
+            
             viewModel.handleIntent(UseCaseIntent.ToggleRepository("UserRepo", false))
             Then("Selected repositories should be empty") {
                 viewModel.state.test {
@@ -152,11 +148,11 @@ class UseCaseViewModelTest : BehaviorSpec({
         When("Generate is called with valid state") {
             viewModel.handleIntent(UseCaseIntent.SetName("ValidUseCase"))
             viewModel.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
-
+            
             coEvery { mockGenerator(any()) } returns Result.success(Path.of("out/UseCase.kt"))
-
+            
             viewModel.handleIntent(UseCaseIntent.Generate)
-
+            
             Then("success path should be set") {
                 viewModel.state.test {
                     testDispatcher.scheduler.runCurrent()
@@ -168,12 +164,10 @@ class UseCaseViewModelTest : BehaviorSpec({
         }
 
         When("Generate fails") {
-            viewModel.handleIntent(UseCaseIntent.SetName("ValidUseCase"))
-            viewModel.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
             coEvery { mockGenerator(any()) } returns Result.failure(Exception("Failure"))
-
+            
             viewModel.handleIntent(UseCaseIntent.Generate)
-
+            
             Then("error message should be set") {
                 viewModel.state.test {
                     testDispatcher.scheduler.runCurrent()
