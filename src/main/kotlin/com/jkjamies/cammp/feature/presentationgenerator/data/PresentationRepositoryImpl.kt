@@ -9,6 +9,7 @@ import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.UiStat
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenStateHolderRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FlowStateHolderRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.IntentRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.NavigationRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
@@ -25,6 +26,7 @@ class PresentationRepositoryImpl(
     private val screenStateHolderRepo: ScreenStateHolderRepository = ScreenStateHolderRepositoryImpl(),
     private val flowStateHolderRepo: FlowStateHolderRepository = FlowStateHolderRepositoryImpl(),
     private val intentRepo: IntentRepository = IntentRepositoryImpl(),
+    private val navigationRepo: NavigationRepository = NavigationRepositoryImpl(),
 ) : PresentationRepository {
 
     override fun generate(params: PresentationParams): PresentationResult {
@@ -186,46 +188,39 @@ class PresentationRepositoryImpl(
             val navHostName = "${deriveModuleNameForFlowHolder(pkg)}NavigationHost"
 
             run {
-                val fileName = "${navHostName}.kt"
-                val target = navDir.resolve(fileName)
-                val existed = target.exists()
-                val raw = templateRepo.getTemplateText("templates/presentationGenerator/navigation/NavigationHost.kt")
-                val content = replaceTokens(raw, mapOf("PACKAGE" to navPkg, "NAV_HOST_NAME" to navHostName))
-                fs.writeText(target, content, overwriteIfExists = false)
-                val status = if (existed) {
-                    skipped.add("navigation/$fileName")
-                    "exists"
+                val result = navigationRepo.generateNavigationHost(
+                    targetDir = navDir,
+                    packageName = navPkg,
+                    navHostName = navHostName
+                )
+                
+                if (result.status == GenerationStatus.CREATED) {
+                    created.add("navigation/${result.fileName}")
+                    resultsLines += "- NavigationHost: ${result.path} (created)"
                 } else {
-                    created.add("navigation/$fileName")
-                    "created"
+                    skipped.add("navigation/${result.fileName}")
+                    resultsLines += "- NavigationHost: ${result.path} (exists)"
                 }
-                outputs.add(target)
-                resultsLines += "- NavigationHost: ${target} (${status})"
+                outputs.add(result.path)
             }
 
             run {
-                val fileName = "${sanitizedName}Destination.kt"
-                val target = navDir.resolve("destination").also { if (!it.exists()) it.createDirectories() }.resolve(fileName)
-                val existed = target.exists()
-                val raw = templateRepo.getTemplateText("templates/presentationGenerator/navigation/destination/Destination.kt")
-                val content = replaceTokens(
-                    raw,
-                    mapOf(
-                        "PACKAGE" to pkg,
-                        "SCREEN_NAME" to sanitizedName,
-                        "SCREEN_FOLDER" to folder,
-                    )
+                val destDir = navDir.resolve("destination").also { if (!it.exists()) it.createDirectories() }
+                val result = navigationRepo.generateDestination(
+                    targetDir = destDir,
+                    packageName = pkg,
+                    screenName = sanitizedName,
+                    screenFolder = folder
                 )
-                fs.writeText(target, content, overwriteIfExists = false)
-                val status = if (existed) {
-                    skipped.add("navigation/destinations/$fileName")
-                    "exists"
+                
+                if (result.status == GenerationStatus.CREATED) {
+                    created.add("navigation/destinations/${result.fileName}")
+                    resultsLines += "- Destination: ${result.path} (created)"
                 } else {
-                    created.add("navigation/destinations/$fileName")
-                    "created"
+                    skipped.add("navigation/destinations/${result.fileName}")
+                    resultsLines += "- Destination: ${result.path} (exists)"
                 }
-                outputs.add(target)
-                resultsLines += "- Destination: ${target} (${status})"
+                outputs.add(result.path)
             }
         }
 
