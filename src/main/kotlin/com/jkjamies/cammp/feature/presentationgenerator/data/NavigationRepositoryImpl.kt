@@ -119,7 +119,7 @@ class NavigationRepositoryImpl(
             |//@Serializable
             |//internal data class ${screenName}Destination(val id: String)
             |
-            |// example if navigation host doesn't need o pass a value
+            |// example if navigation host doesn't need to pass a value
             |//internal fun NavGraphBuilder.${screenName}() {
             |//    composable<${screenName}Destination> { backStackEntry ->
             |//        val arguments = backStackEntry.toRoute<${screenName}Destination>()
