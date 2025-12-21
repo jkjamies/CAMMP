@@ -14,6 +14,10 @@ class RepositoryGenerationRepositoryImplTest : BehaviorSpec({
         val dataDir = tempDir.resolve("data")
         val domainDir = tempDir.resolve("domain")
 
+        afterSpec {
+            tempDir.toFile().deleteRecursively()
+        }
+
         When("generating domain layer") {
             val params = RepositoryParams(
                 dataDir = dataDir,
