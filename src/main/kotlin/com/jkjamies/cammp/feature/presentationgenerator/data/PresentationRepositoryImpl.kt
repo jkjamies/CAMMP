@@ -13,6 +13,7 @@ import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.Naviga
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
@@ -61,15 +62,7 @@ class PresentationRepositoryImpl(
                 packageName = pkg,
                 flowName = "${moduleName}FlowStateHolder"
             )
-            
-            if (result.status == GenerationStatus.CREATED) {
-                created.add(result.fileName)
-                resultsLines += "- ${result.fileName}: ${result.path} (created)"
-            } else {
-                skipped.add(result.fileName)
-                resultsLines += "- ${result.fileName}: ${result.path} (exists)"
-            }
-            outputs.add(result.path)
+            processResult(result, created, skipped, outputs, resultsLines)
         }
 
         val files = buildList {
@@ -135,15 +128,7 @@ class PresentationRepositoryImpl(
                 packageName = screenPackage,
                 screenName = sanitizedName
             )
-            
-            if (result.status == GenerationStatus.CREATED) {
-                created.add(result.fileName)
-                resultsLines += "- ${result.fileName}: ${result.path} (created)"
-            } else {
-                skipped.add(result.fileName)
-                resultsLines += "- ${result.fileName}: ${result.path} (exists)"
-            }
-            outputs.add(result.path)
+            processResult(result, created, skipped, outputs, resultsLines)
         }
 
         // Generate Intent using KotlinPoet if needed
@@ -153,15 +138,7 @@ class PresentationRepositoryImpl(
                 packageName = screenPackage,
                 screenName = sanitizedName
             )
-            
-            if (result.status == GenerationStatus.CREATED) {
-                created.add(result.fileName)
-                resultsLines += "- ${result.fileName}: ${result.path} (created)"
-            } else {
-                skipped.add(result.fileName)
-                resultsLines += "- ${result.fileName}: ${result.path} (exists)"
-            }
-            outputs.add(result.path)
+            processResult(result, created, skipped, outputs, resultsLines)
         }
 
         // Generate ScreenStateHolder using KotlinPoet if needed
@@ -171,15 +148,7 @@ class PresentationRepositoryImpl(
                 packageName = screenPackage,
                 screenName = sanitizedName
             )
-            
-            if (result.status == GenerationStatus.CREATED) {
-                created.add(result.fileName)
-                resultsLines += "- ${result.fileName}: ${result.path} (created)"
-            } else {
-                skipped.add(result.fileName)
-                resultsLines += "- ${result.fileName}: ${result.path} (exists)"
-            }
-            outputs.add(result.path)
+            processResult(result, created, skipped, outputs, resultsLines)
         }
 
         if (p.includeNavigation) {
@@ -254,6 +223,23 @@ class PresentationRepositoryImpl(
             message = (sequenceOf(title) + resultsLines.asSequence()).joinToString("\n"),
             outputPaths = outputs
         )
+    }
+
+    private fun processResult(
+        result: FileGenerationResult,
+        created: MutableList<String>,
+        skipped: MutableList<String>,
+        outputs: MutableList<Path>,
+        resultsLines: MutableList<String>
+    ) {
+        if (result.status == GenerationStatus.CREATED) {
+            created.add(result.fileName)
+            resultsLines += "- ${result.fileName}: ${result.path} (created)"
+        } else {
+            skipped.add(result.fileName)
+            resultsLines += "- ${result.fileName}: ${result.path} (exists)"
+        }
+        outputs.add(result.path)
     }
 
     private fun sanitizeScreenName(raw: String): String {
