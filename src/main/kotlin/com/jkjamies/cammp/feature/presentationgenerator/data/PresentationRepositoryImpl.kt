@@ -5,8 +5,15 @@ import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.Module
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationDiModuleRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.TemplateRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.UiStateRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenStateHolderRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FlowStateHolderRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.IntentRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.NavigationRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
@@ -16,6 +23,11 @@ class PresentationRepositoryImpl(
     private val templateRepo: TemplateRepository = TemplateRepositoryImpl(),
     private val modulePkgRepo: ModulePackageRepository = ModulePackageRepositoryImpl(),
     private val diRepo: PresentationDiModuleRepository = PresentationDiModuleRepositoryImpl(),
+    private val uiStateRepo: UiStateRepository = UiStateRepositoryImpl(),
+    private val screenStateHolderRepo: ScreenStateHolderRepository = ScreenStateHolderRepositoryImpl(),
+    private val flowStateHolderRepo: FlowStateHolderRepository = FlowStateHolderRepositoryImpl(),
+    private val intentRepo: IntentRepository = IntentRepositoryImpl(),
+    private val navigationRepo: NavigationRepository = NavigationRepositoryImpl(),
 ) : PresentationRepository {
 
     override fun generate(params: PresentationParams): PresentationResult {
@@ -45,29 +57,12 @@ class PresentationRepositoryImpl(
 
         if (p.useFlowStateHolder) {
             val moduleName = deriveModuleNameForFlowHolder(pkg)
-            val fileName = "${moduleName}FlowStateHolder.kt"
-            val target = pkgDir.resolve(fileName)
-            val existed = target.exists()
-            val raw = templateRepo.getTemplateText("templates/presentationGenerator/FlowStateHolder.kt")
-            val content = replaceTokens(
-                raw,
-                mapOf(
-                    "PACKAGE" to pkg,
-                    "FLOW_NAME" to "${moduleName}FlowStateHolder",
-                    "SCREEN_NAME" to moduleName,
-                    "MODULE_NAME" to moduleName,
-                )
+            val result = flowStateHolderRepo.generateFlowStateHolder(
+                targetDir = pkgDir,
+                packageName = pkg,
+                flowName = "${moduleName}FlowStateHolder"
             )
-            fs.writeText(target, content, overwriteIfExists = p.overwrite)
-            val status = if (existed && !p.overwrite) {
-                skipped.add(fileName)
-                "exists"
-            } else {
-                created.add(fileName)
-                "created"
-            }
-            outputs.add(target)
-            resultsLines += "- $fileName: $target ($status)"
+            processResult(result, created, skipped, outputs, resultsLines)
         }
 
         val files = buildList {
@@ -107,40 +102,6 @@ class PresentationRepositoryImpl(
                     )
                 )
             )
-            add(
-                RenderSpec(
-                    fileName = "${sanitizedName}UiState.kt",
-                    templatePath = "templates/presentationGenerator/UiState.kt",
-                    tokens = mapOf(
-                        "PACKAGE" to screenPackage,
-                        "SCREEN_NAME" to sanitizedName,
-                    )
-                )
-            )
-            if (p.patternMVI) {
-                add(
-                    RenderSpec(
-                        fileName = "${sanitizedName}Intent.kt",
-                        templatePath = "templates/presentationGenerator/Intent.kt",
-                        tokens = mapOf(
-                            "PACKAGE" to screenPackage,
-                            "SCREEN_NAME" to sanitizedName,
-                        )
-                    )
-                )
-            }
-            if (p.useScreenStateHolder) {
-                add(
-                    RenderSpec(
-                        fileName = "${sanitizedName}StateHolder.kt",
-                        templatePath = "templates/presentationGenerator/ScreenStateHolder.kt",
-                        tokens = mapOf(
-                            "PACKAGE" to screenPackage,
-                            "SCREEN_NAME" to sanitizedName,
-                        )
-                    )
-                )
-            }
         }
 
         files.forEach { spec ->
@@ -148,8 +109,8 @@ class PresentationRepositoryImpl(
             val existed = target.exists()
             val raw = templateRepo.getTemplateText(spec.templatePath)
             val content = replaceTokens(raw, spec.tokens)
-            fs.writeText(target, content, overwriteIfExists = p.overwrite)
-            val status = if (existed && !p.overwrite) {
+            fs.writeText(target, content, overwriteIfExists = false)
+            val status = if (existed) {
                 skipped.add(spec.fileName)
                 "exists"
             } else {
@@ -160,52 +121,59 @@ class PresentationRepositoryImpl(
             resultsLines += "- ${spec.fileName}: ${target} (${status})"
         }
 
+        // Generate UiState using KotlinPoet
+        run {
+            val result = uiStateRepo.generateUiState(
+                targetDir = targetDir,
+                packageName = screenPackage,
+                screenName = sanitizedName
+            )
+            processResult(result, created, skipped, outputs, resultsLines)
+        }
+
+        // Generate Intent using KotlinPoet if needed
+        if (p.patternMVI) {
+            val result = intentRepo.generateIntent(
+                targetDir = targetDir,
+                packageName = screenPackage,
+                screenName = sanitizedName
+            )
+            processResult(result, created, skipped, outputs, resultsLines)
+        }
+
+        // Generate ScreenStateHolder using KotlinPoet if needed
+        if (p.useScreenStateHolder) {
+            val result = screenStateHolderRepo.generateScreenStateHolder(
+                targetDir = targetDir,
+                packageName = screenPackage,
+                screenName = sanitizedName
+            )
+            processResult(result, created, skipped, outputs, resultsLines)
+        }
+
         if (p.includeNavigation) {
             val navDir = pkgDir.resolve("navigation").also { if (!it.exists()) it.createDirectories() }
             val navPkg = "$pkg.navigation"
             val navHostName = "${deriveModuleNameForFlowHolder(pkg)}NavigationHost"
 
             run {
-                val fileName = "${navHostName}.kt"
-                val target = navDir.resolve(fileName)
-                val existed = target.exists()
-                val raw = templateRepo.getTemplateText("templates/presentationGenerator/navigation/NavigationHost.kt")
-                val content = replaceTokens(raw, mapOf("PACKAGE" to navPkg, "NAV_HOST_NAME" to navHostName))
-                fs.writeText(target, content, overwriteIfExists = p.overwrite)
-                val status = if (existed && !p.overwrite) {
-                    skipped.add("navigation/$fileName")
-                    "exists"
-                } else {
-                    created.add("navigation/$fileName")
-                    "created"
-                }
-                outputs.add(target)
-                resultsLines += "- NavigationHost: ${target} (${status})"
+                val result = navigationRepo.generateNavigationHost(
+                    targetDir = navDir,
+                    packageName = navPkg,
+                    navHostName = navHostName
+                )
+                processResult(result, created, skipped, outputs, resultsLines, "navigation/${result.fileName}")
             }
 
             run {
-                val fileName = "${sanitizedName}Destination.kt"
-                val target = navDir.resolve("destination").also { if (!it.exists()) it.createDirectories() }.resolve(fileName)
-                val existed = target.exists()
-                val raw = templateRepo.getTemplateText("templates/presentationGenerator/navigation/destination/Destination.kt")
-                val content = replaceTokens(
-                    raw,
-                    mapOf(
-                        "PACKAGE" to pkg,
-                        "SCREEN_NAME" to sanitizedName,
-                        "SCREEN_FOLDER" to folder,
-                    )
+                val destDir = navDir.resolve("destination").also { if (!it.exists()) it.createDirectories() }
+                val result = navigationRepo.generateDestination(
+                    targetDir = destDir,
+                    packageName = pkg,
+                    screenName = sanitizedName,
+                    screenFolder = folder
                 )
-                fs.writeText(target, content, overwriteIfExists = p.overwrite)
-                val status = if (existed && !p.overwrite) {
-                    skipped.add("navigation/destinations/$fileName")
-                    "exists"
-                } else {
-                    created.add("navigation/destinations/$fileName")
-                    "created"
-                }
-                outputs.add(target)
-                resultsLines += "- Destination: ${target} (${status})"
+                processResult(result, created, skipped, outputs, resultsLines, "navigation/destinations/${result.fileName}")
             }
         }
 
@@ -239,6 +207,25 @@ class PresentationRepositoryImpl(
             message = (sequenceOf(title) + resultsLines.asSequence()).joinToString("\n"),
             outputPaths = outputs
         )
+    }
+
+    private fun processResult(
+        result: FileGenerationResult,
+        created: MutableList<String>,
+        skipped: MutableList<String>,
+        outputs: MutableList<Path>,
+        resultsLines: MutableList<String>,
+        relativePath: String? = null
+    ) {
+        val name = relativePath ?: result.fileName
+        if (result.status == GenerationStatus.CREATED) {
+            created.add(name)
+            resultsLines += "- $name: ${result.path} (created)"
+        } else {
+            skipped.add(name)
+            resultsLines += "- $name: ${result.path} (exists)"
+        }
+        outputs.add(result.path)
     }
 
     private fun sanitizeScreenName(raw: String): String {

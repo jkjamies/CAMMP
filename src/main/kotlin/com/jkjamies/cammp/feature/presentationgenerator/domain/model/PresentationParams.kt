@@ -19,6 +19,4 @@ data class PresentationParams(
     val useScreenStateHolder: Boolean = false,
     // Selected use cases to inject into ViewModel (FQNs or simple names depending on UI)
     val selectedUseCases: List<String> = emptyList(),
-    // Overwrite existing generated files
-    val overwrite: Boolean = false,
 )
