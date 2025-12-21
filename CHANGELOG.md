@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- Repository Generator Testing
+- UseCase Generator Testing
+
 ### Changed
 
 - The following were converted from template-based to KotlinPoet generation
