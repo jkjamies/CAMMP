@@ -48,6 +48,12 @@ dependencies {
     // Workaround for running tests on Windows and Linux
     // It provides necessary Skiko runtime native binaries
     testImplementation(libs.skikoAwtRuntimeAll)
+    
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.property)
+    testImplementation(libs.mockk)
+    testImplementation(libs.turbine)
 
     intellijPlatform {
         create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
@@ -144,6 +150,10 @@ tasks {
 
     publishPlugin {
         dependsOn(patchChangelog)
+    }
+    
+    test {
+        useJUnitPlatform()
     }
 }
 
