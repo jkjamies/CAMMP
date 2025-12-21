@@ -162,15 +162,7 @@ class PresentationRepositoryImpl(
                     packageName = navPkg,
                     navHostName = navHostName
                 )
-                
-                if (result.status == GenerationStatus.CREATED) {
-                    created.add("navigation/${result.fileName}")
-                    resultsLines += "- NavigationHost: ${result.path} (created)"
-                } else {
-                    skipped.add("navigation/${result.fileName}")
-                    resultsLines += "- NavigationHost: ${result.path} (exists)"
-                }
-                outputs.add(result.path)
+                processResult(result, created, skipped, outputs, resultsLines, "navigation/${result.fileName}")
             }
 
             run {
@@ -181,15 +173,7 @@ class PresentationRepositoryImpl(
                     screenName = sanitizedName,
                     screenFolder = folder
                 )
-                
-                if (result.status == GenerationStatus.CREATED) {
-                    created.add("navigation/destinations/${result.fileName}")
-                    resultsLines += "- Destination: ${result.path} (created)"
-                } else {
-                    skipped.add("navigation/destinations/${result.fileName}")
-                    resultsLines += "- Destination: ${result.path} (exists)"
-                }
-                outputs.add(result.path)
+                processResult(result, created, skipped, outputs, resultsLines, "navigation/destinations/${result.fileName}")
             }
         }
 
@@ -230,14 +214,16 @@ class PresentationRepositoryImpl(
         created: MutableList<String>,
         skipped: MutableList<String>,
         outputs: MutableList<Path>,
-        resultsLines: MutableList<String>
+        resultsLines: MutableList<String>,
+        relativePath: String? = null
     ) {
+        val name = relativePath ?: result.fileName
         if (result.status == GenerationStatus.CREATED) {
-            created.add(result.fileName)
-            resultsLines += "- ${result.fileName}: ${result.path} (created)"
+            created.add(name)
+            resultsLines += "- $name: ${result.path} (created)"
         } else {
-            skipped.add(result.fileName)
-            resultsLines += "- ${result.fileName}: ${result.path} (exists)"
+            skipped.add(name)
+            resultsLines += "- $name: ${result.path} (exists)"
         }
         outputs.add(result.path)
     }
