@@ -66,7 +66,6 @@ class PresentationViewModel(initial: PresentationUiState = PresentationUiState()
                 useFlowStateHolder = s.useFlowStateHolder,
                 useScreenStateHolder = s.useScreenStateHolder,
                 selectedUseCases = s.selectedUseCases.toList().sorted(),
-                overwrite = false,
             )
             generator(params)
         }.fold(

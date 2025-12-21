@@ -6,6 +6,11 @@
 
 ### Changed
 
+- The following were converted from template-based to KotlinPoet generation
+  - Intent (MVI)
+  - UiState
+  - ScreenStateHolder
+  - FlowStateHolder
 - Gradle Version Update 9.0.0 -> 9.2.1
 - org.gradle.toolchains.foojay-resolver-convention from 0.8.0 to 1.0.0
 - org.jetbrains.changelog from 2.2.1 to 2.5.0
