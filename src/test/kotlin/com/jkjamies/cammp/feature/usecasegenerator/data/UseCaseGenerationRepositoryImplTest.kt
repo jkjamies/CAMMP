@@ -17,6 +17,10 @@ class UseCaseGenerationRepositoryImplTest : BehaviorSpec({
         val tempDir = Files.createTempDirectory("usecase_gen_test")
         val domainDir = tempDir.resolve("domain")
 
+        afterSpec {
+            tempDir.toFile().deleteRecursively()
+        }
+
         every { mockModulePkgRepo.findModulePackage(any()) } returns "com.example.domain"
 
         When("generating use case with Hilt") {
