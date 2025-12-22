@@ -14,9 +14,13 @@ import com.squareup.kotlinpoet.asClassName
 import java.nio.file.Path
 import kotlin.io.path.exists
 
+/**
+ * Implementation of [FlowStateHolderRepository] that generates Flow State Holder classes using KotlinPoet.
+ */
 class FlowStateHolderRepositoryImpl(
     private val fs: FileSystemRepository = FileSystemRepositoryImpl()
 ) : FlowStateHolderRepository {
+
     override fun generateFlowStateHolder(
         targetDir: Path,
         packageName: String,

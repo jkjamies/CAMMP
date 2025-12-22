@@ -4,12 +4,13 @@ import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FileSy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ModulePackageRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationDiModuleRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.TemplateRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.UiStateRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenStateHolderRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FlowStateHolderRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.IntentRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.NavigationRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ViewModelRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
@@ -18,9 +19,25 @@ import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 
+/**
+ * Orchestrates the generation of presentation layer files.
+ *
+ * This repository coordinates with other more specialized repositories to generate the various
+ * components of a screen, such as the ViewModel, Screen, UIState, etc.
+ *
+ * @param fs The [FileSystemRepository] for file operations.
+ * @param modulePkgRepo The [ModulePackageRepository] for inferring package names.
+ * @param diRepo The [PresentationDiModuleRepository] for DI module generation.
+ * @param uiStateRepo The [UiStateRepository] for UI state generation.
+ * @param screenStateHolderRepo The [ScreenStateHolderRepository] for screen state holder generation.
+ * @param flowStateHolderRepo The [FlowStateHolderRepository] for flow state holder generation.
+ * @param intentRepo The [IntentRepository] for MVI intent generation.
+ * @param navigationRepo The [NavigationRepository] for navigation component generation.
+ * @param screenRepo The [ScreenRepository] for screen composable generation.
+ * @param viewModelRepo The [ViewModelRepository] for ViewModel generation.
+ */
 class PresentationRepositoryImpl(
     private val fs: FileSystemRepository = FileSystemRepositoryImpl(),
-    private val templateRepo: TemplateRepository = TemplateRepositoryImpl(),
     private val modulePkgRepo: ModulePackageRepository = ModulePackageRepositoryImpl(),
     private val diRepo: PresentationDiModuleRepository = PresentationDiModuleRepositoryImpl(),
     private val uiStateRepo: UiStateRepository = UiStateRepositoryImpl(),
@@ -28,6 +45,8 @@ class PresentationRepositoryImpl(
     private val flowStateHolderRepo: FlowStateHolderRepository = FlowStateHolderRepositoryImpl(),
     private val intentRepo: IntentRepository = IntentRepositoryImpl(),
     private val navigationRepo: NavigationRepository = NavigationRepositoryImpl(),
+    private val screenRepo: ScreenRepository = ScreenRepositoryImpl(),
+    private val viewModelRepo: ViewModelRepository = ViewModelRepositoryImpl(),
 ) : PresentationRepository {
 
     override fun generate(params: PresentationParams): PresentationResult {
@@ -47,13 +66,6 @@ class PresentationRepositoryImpl(
         val screenPackage = "$pkg.$folder"
 
         val useCaseFqns = p.selectedUseCases.distinct().sorted()
-        val imports = if (useCaseFqns.isNotEmpty()) useCaseFqns.joinToString(separator = "\n") { fqn -> "import $fqn" } + "\n" else ""
-        val constructorParams = if (useCaseFqns.isNotEmpty()) {
-            useCaseFqns.joinToString(separator = ",\n    ") { fqn ->
-                val simple = fqn.substringAfterLast('.')
-                "private val ${simple.replaceFirstChar { it.lowercase() }}: $simple"
-            }
-        } else ""
 
         if (p.useFlowStateHolder) {
             val moduleName = deriveModuleNameForFlowHolder(pkg)
@@ -65,63 +77,27 @@ class PresentationRepositoryImpl(
             processResult(result, created, skipped, outputs, resultsLines)
         }
 
-        val files = buildList {
-            val screenTemplatePath = if (p.diKoin) {
-                "templates/presentationGenerator/koin/Screen.kt"
-            } else {
-                "templates/presentationGenerator/hilt/Screen.kt"
-            }
-            add(
-                RenderSpec(
-                    fileName = "$sanitizedName.kt",
-                    templatePath = screenTemplatePath,
-                    tokens = mapOf(
-                        "PACKAGE" to screenPackage,
-                        "SCREEN_NAME" to sanitizedName,
-                    )
-                )
-            )
-            val viewModelTemplatePath = when {
-                p.diKoin && p.diKoinAnnotations -> "templates/presentationGenerator/koinAnnotations/ViewModel.kt"
-                p.diKoin -> "templates/presentationGenerator/koin/ViewModel.kt"
-                else -> "templates/presentationGenerator/hilt/ViewModel.kt"
-            }
-            add(
-                RenderSpec(
-                    fileName = "${sanitizedName}ViewModel.kt",
-                    templatePath = viewModelTemplatePath,
-                    tokens = mapOf(
-                        "PACKAGE" to screenPackage,
-                        "SCREEN_NAME" to sanitizedName,
-                        "IMPORTS" to imports,
-                        "CONSTRUCTOR_PARAMS" to constructorParams,
-                        "VIEW_MODEL_INTENT_HANDLER" to if (p.patternMVI) {
-                            val mvi = templateRepo.getTemplateText("templates/presentationGenerator/helpers/MviViewModelIntentHandler.kt")
-                            replaceTokens(mvi, mapOf("SCREEN_NAME" to sanitizedName))
-                        } else ""
-                    )
-                )
-            )
-        }
+        val screenResult = screenRepo.generateScreen(
+            targetDir = targetDir,
+            packageName = screenPackage,
+            screenName = sanitizedName,
+            diHilt = p.diHilt,
+            diKoin = p.diKoin
+        )
+        processResult(screenResult, created, skipped, outputs, resultsLines)
 
-        files.forEach { spec ->
-            val target = targetDir.resolve(spec.fileName)
-            val existed = target.exists()
-            val raw = templateRepo.getTemplateText(spec.templatePath)
-            val content = replaceTokens(raw, spec.tokens)
-            fs.writeText(target, content, overwriteIfExists = false)
-            val status = if (existed) {
-                skipped.add(spec.fileName)
-                "exists"
-            } else {
-                created.add(spec.fileName)
-                "created"
-            }
-            outputs.add(target)
-            resultsLines += "- ${spec.fileName}: ${target} (${status})"
-        }
+        val viewModelResult = viewModelRepo.generateViewModel(
+            targetDir = targetDir,
+            packageName = screenPackage,
+            screenName = sanitizedName,
+            diHilt = p.diHilt,
+            diKoin = p.diKoin,
+            diKoinAnnotations = p.diKoinAnnotations,
+            patternMVI = p.patternMVI,
+            useCaseFqns = useCaseFqns
+        )
+        processResult(viewModelResult, created, skipped, outputs, resultsLines)
 
-        // Generate UiState using KotlinPoet
         run {
             val result = uiStateRepo.generateUiState(
                 targetDir = targetDir,
@@ -131,7 +107,6 @@ class PresentationRepositoryImpl(
             processResult(result, created, skipped, outputs, resultsLines)
         }
 
-        // Generate Intent using KotlinPoet if needed
         if (p.patternMVI) {
             val result = intentRepo.generateIntent(
                 targetDir = targetDir,
@@ -141,7 +116,6 @@ class PresentationRepositoryImpl(
             processResult(result, created, skipped, outputs, resultsLines)
         }
 
-        // Generate ScreenStateHolder using KotlinPoet if needed
         if (p.useScreenStateHolder) {
             val result = screenStateHolderRepo.generateScreenStateHolder(
                 targetDir = targetDir,
@@ -177,25 +151,27 @@ class PresentationRepositoryImpl(
             }
         }
 
-        if (p.diKoin) {
+        if (p.diKoin && !p.diKoinAnnotations) {
             val diDir = p.moduleDir.parent?.resolve("di")
             if (diDir != null && diDir.exists()) {
-                val diExisting = modulePkgRepo.findModulePackage(diDir)
-                val diPackage = diExisting?.let { truncateAt(it, ".di") } ?: diExisting ?: ""
+                val diPackage = if (pkg.endsWith(".presentation")) {
+                    pkg.replace(".presentation", ".di")
+                } else {
+                    val found = modulePkgRepo.findModulePackage(diDir)
+                    found ?: "$pkg.di"
+                }
+
                 if (diPackage.isNotBlank()) {
-                    if (!p.diKoinAnnotations) {
-                        val viewModelSimpleName = "${sanitizedName}ViewModel"
-                        val viewModelFqn = "$screenPackage.${sanitizedName}ViewModel"
-                        val mergeOutcome = diRepo.mergeViewModelModule(
-                            diDir = diDir,
-                            diPackage = diPackage,
-                            viewModelSimpleName = viewModelSimpleName,
-                            viewModelFqn = viewModelFqn,
-                            dependencyCount = useCaseFqns.size,
-                            useKoin = true,
-                        )
-                        resultsLines += "- DI ViewModel: ${mergeOutcome.outPath} (${mergeOutcome.status})"
-                    }
+                    val viewModelSimpleName = "${sanitizedName}ViewModel"
+                    val viewModelFqn = "$screenPackage.${sanitizedName}ViewModel"
+                    val mergeOutcome = diRepo.mergeViewModelModule(
+                        diDir = diDir,
+                        diPackage = diPackage,
+                        viewModelSimpleName = viewModelSimpleName,
+                        viewModelFqn = viewModelFqn,
+                        dependencyCount = useCaseFqns.size,
+                    )
+                    resultsLines += "- DI ViewModel: ${mergeOutcome.outPath} (${mergeOutcome.status})"
                 }
             }
         }
@@ -247,22 +223,4 @@ class PresentationRepositoryImpl(
         }
         return parts.lastOrNull()?.replaceFirstChar { it.uppercase() } ?: "App"
     }
-
-    private fun replaceTokens(text: String, tokens: Map<String, String>): String {
-        var out = text
-        tokens.forEach { (k, v) -> out = out.replace("\${${k}}", v) }
-        tokens.forEach { (k, v) -> out = out.replace("/*${k}*/", v) }
-        return out
-    }
-
-    private fun truncateAt(pkg: String, marker: String): String {
-        val idx = pkg.indexOf(marker)
-        return if (idx >= 0) pkg.substring(0, idx) else pkg
-    }
-
-    private data class RenderSpec(
-        val fileName: String,
-        val templatePath: String,
-        val tokens: Map<String, String>,
-    )
 }

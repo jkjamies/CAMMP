@@ -9,6 +9,9 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
+/**
+ * Implementation of [FileSystemRepository] using `java.nio.file`.
+ */
 class FileSystemRepositoryImpl : FileSystemRepository {
     override fun exists(path: Path): Boolean = path.exists()
     override fun isDirectory(path: Path): Boolean = path.isDirectory()

@@ -5,6 +5,10 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import java.nio.file.Path
 
+/**
+ * Implementation of [ModulePackageRepository] that uses IntelliJ's Virtual File System (VFS)
+ * to find the most appropriate package name within a module.
+ */
 class ModulePackageRepositoryImpl : ModulePackageRepository {
     override fun findModulePackage(moduleDir: Path): String? {
         val vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(moduleDir.toString())

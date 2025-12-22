@@ -15,9 +15,13 @@ import com.squareup.kotlinpoet.asTypeName
 import java.nio.file.Path
 import kotlin.io.path.exists
 
+/**
+ * Implementation of [UiStateRepository] that generates UI State data classes using KotlinPoet.
+ */
 class UiStateRepositoryImpl(
     private val fs: FileSystemRepository = FileSystemRepositoryImpl()
 ) : UiStateRepository {
+
     override fun generateUiState(
         targetDir: Path,
         packageName: String,

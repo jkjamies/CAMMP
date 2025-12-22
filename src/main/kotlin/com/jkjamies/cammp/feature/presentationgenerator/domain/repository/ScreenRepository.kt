@@ -4,20 +4,24 @@ import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerat
 import java.nio.file.Path
 
 /**
- * Repository for generating Screen State Holder files.
+ * Repository for generating Screen Composable files.
  */
-interface ScreenStateHolderRepository {
+interface ScreenRepository {
     /**
-     * Generates a Screen State Holder class.
+     * Generates a Screen Composable function.
      *
      * @param targetDir The directory where the file should be generated.
-     * @param packageName The package name.
+     * @param packageName The package name for the generated file.
      * @param screenName The name of the screen.
+     * @param diHilt Whether to use Hilt.
+     * @param diKoin Whether to use Koin.
      * @return The result of the file generation.
      */
-    fun generateScreenStateHolder(
+    fun generateScreen(
         targetDir: Path,
         packageName: String,
-        screenName: String
+        screenName: String,
+        diHilt: Boolean,
+        diKoin: Boolean
     ): FileGenerationResult
 }

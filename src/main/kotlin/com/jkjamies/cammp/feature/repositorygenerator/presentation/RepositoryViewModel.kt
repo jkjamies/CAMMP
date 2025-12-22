@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 class RepositoryViewModel(
     initial: RepositoryUiState = RepositoryUiState(),
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
     private val generator: RepositoryGenerator = RepositoryGenerator(),
     private val loadDataSourcesByType: LoadDataSourcesByType = LoadDataSourcesByType()
 ) {
@@ -43,7 +43,7 @@ class RepositoryViewModel(
                     selectedDataSources = s.selectedDataSources.toList().sorted(),
                 )
                 _state.update { it.copy(isGenerating = true, errorMessage = null, lastGeneratedMessage = null) }
-                scope.launch(Dispatchers.IO) {
+                scope.launch {
                     val result = generator(params)
                     val message = result.getOrNull()
                     val error = result.exceptionOrNull()?.message
@@ -62,7 +62,7 @@ class RepositoryViewModel(
                 _state.update { it.copy(domainPackage = newPath) }
                 val err = validateDataPath(newPath)
                 if (err == null && newPath.isNotBlank()) {
-                    scope.launch(Dispatchers.IO) {
+                    scope.launch {
                         val map = loadDataSourcesByType(newPath)
                         _state.update { current ->
                             val allowed = current.selectedDataSources.filter { fqn ->
