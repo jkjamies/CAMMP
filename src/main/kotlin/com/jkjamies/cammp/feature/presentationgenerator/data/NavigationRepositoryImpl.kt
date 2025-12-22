@@ -14,6 +14,9 @@ import com.squareup.kotlinpoet.TypeSpec
 import java.nio.file.Path
 import kotlin.io.path.exists
 
+/**
+ * Implementation of [NavigationRepository] that generates Navigation components using KotlinPoet.
+ */
 class NavigationRepositoryImpl(
     private val fs: FileSystemRepository = FileSystemRepositoryImpl()
 ) : NavigationRepository {

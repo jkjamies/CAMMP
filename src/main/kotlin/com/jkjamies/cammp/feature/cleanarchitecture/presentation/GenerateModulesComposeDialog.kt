@@ -72,7 +72,7 @@ fun GenerateModulesScreen(
         }
 
         Text("Platform:")
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
             RadioWithLabel(
                 label = "Android",
                 selected = state.platformAndroid,
@@ -86,13 +86,15 @@ fun GenerateModulesScreen(
             RadioWithLabel(
                 label = "Kotlin Multiplatform (KMP)",
                 selected = state.platformKmp,
-                enabled = true,
+                enabled = false,
                 onClick = {
-                    if (!state.platformKmp) {
-                        onIntent(GenerateModulesIntent.SetPlatformKmp(true))
-                    }
+                    // no-op
+//                    if (!state.platformKmp) {
+//                        onIntent(GenerateModulesIntent.SetPlatformKmp(true))
+//                    }
                 }
             )
+            Text("(Coming Soon)")
         }
 
         Text("Data:")

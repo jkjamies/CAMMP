@@ -10,9 +10,13 @@ import com.squareup.kotlinpoet.TypeSpec
 import java.nio.file.Path
 import kotlin.io.path.exists
 
+/**
+ * Implementation of [ScreenStateHolderRepository] that generates Screen State Holder classes using KotlinPoet.
+ */
 class ScreenStateHolderRepositoryImpl(
     private val fs: FileSystemRepository = FileSystemRepositoryImpl()
 ) : ScreenStateHolderRepository {
+
     override fun generateScreenStateHolder(
         targetDir: Path,
         packageName: String,

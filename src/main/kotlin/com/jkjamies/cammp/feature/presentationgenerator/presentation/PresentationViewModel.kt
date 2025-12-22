@@ -1,18 +1,24 @@
 package com.jkjamies.cammp.feature.presentationgenerator.presentation
 
+import com.jkjamies.cammp.feature.presentationgenerator.data.PresentationRepositoryImpl
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
+import com.jkjamies.cammp.feature.presentationgenerator.domain.usecase.PresentationGenerator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import com.jkjamies.cammp.feature.presentationgenerator.data.PresentationRepositoryImpl
-import com.jkjamies.cammp.feature.presentationgenerator.domain.usecase.PresentationGenerator
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
+import kotlinx.coroutines.launch
 
-class PresentationViewModel(initial: PresentationUiState = PresentationUiState()) {
+class PresentationViewModel(
+    initial: PresentationUiState = PresentationUiState(),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    private val generator: PresentationGenerator = PresentationGenerator(PresentationRepositoryImpl())
+) {
     private val _state = MutableStateFlow(initial)
     val state: StateFlow<PresentationUiState> = _state.asStateFlow()
-
-    private val generator = PresentationGenerator(PresentationRepositoryImpl())
 
     fun handleIntent(intent: PresentationIntent) {
         when (intent) {
@@ -53,43 +59,40 @@ class PresentationViewModel(initial: PresentationUiState = PresentationUiState()
         }
         _state.update { it.copy(isGenerating = true, errorMessage = null, lastMessage = null, lastCreated = emptyList(), lastSkipped = emptyList()) }
 
-        kotlin.runCatching {
-            val params = PresentationParams(
-                moduleDir = java.nio.file.Paths.get(s.directory),
-                screenName = s.screenName,
-                patternMVI = s.patternMVI,
-                patternMVVM = s.patternMVVM,
-                diHilt = s.diHilt,
-                diKoin = s.diKoin,
-                diKoinAnnotations = s.diKoinAnnotations,
-                includeNavigation = s.includeNavigation,
-                useFlowStateHolder = s.useFlowStateHolder,
-                useScreenStateHolder = s.useScreenStateHolder,
-                selectedUseCases = s.selectedUseCases.toList().sorted(),
-            )
-            generator(params)
-        }.fold(
-            onSuccess = { result ->
-                result.fold(
-                    onSuccess = { r ->
-                        _state.update {
-                            it.copy(
-                                isGenerating = false,
-                                lastMessage = r.message,
-                                lastCreated = r.created,
-                                lastSkipped = r.skipped,
-                                errorMessage = null,
-                            )
-                        }
-                    },
-                    onFailure = { t ->
-                        _state.update { it.copy(isGenerating = false, errorMessage = t.message ?: t.toString()) }
-                    }
+        scope.launch {
+            val result = kotlin.runCatching {
+                val params = PresentationParams(
+                    moduleDir = java.nio.file.Paths.get(s.directory),
+                    screenName = s.screenName,
+                    patternMVI = s.patternMVI,
+                    patternMVVM = s.patternMVVM,
+                    diHilt = s.diHilt,
+                    diKoin = s.diKoin,
+                    diKoinAnnotations = s.diKoinAnnotations,
+                    includeNavigation = s.includeNavigation,
+                    useFlowStateHolder = s.useFlowStateHolder,
+                    useScreenStateHolder = s.useScreenStateHolder,
+                    selectedUseCases = s.selectedUseCases.toList().sorted(),
                 )
-            },
-            onFailure = { t ->
-                _state.update { it.copy(isGenerating = false, errorMessage = t.message ?: t.toString()) }
-            }
-        )
+                generator(params)
+            }.getOrThrow()
+
+            result.fold(
+                onSuccess = { r ->
+                    _state.update {
+                        it.copy(
+                            isGenerating = false,
+                            lastMessage = r.message,
+                            lastCreated = r.created,
+                            lastSkipped = r.skipped,
+                            errorMessage = null,
+                        )
+                    }
+                },
+                onFailure = { t ->
+                    _state.update { it.copy(isGenerating = false, errorMessage = t.message ?: t.toString()) }
+                }
+            )
+        }
     }
 }

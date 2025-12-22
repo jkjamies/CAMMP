@@ -10,35 +10,33 @@ import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
-import java.nio.file.Path
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
+import java.nio.file.Paths
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalStdlibApi::class)
 class UseCaseViewModelTest : BehaviorSpec({
     isolationMode = IsolationMode.InstancePerLeaf
-
+    
     val testDispatcher = StandardTestDispatcher()
+    val testScope = TestScope(testDispatcher)
 
-    beforeSpec {
-        Dispatchers.setMain(testDispatcher)
-    }
+    val mockGenerator = mockk<UseCaseGenerator>()
+    val mockLoadRepositories = mockk<LoadRepositories>()
+    
+    val viewModel = UseCaseViewModel(
+        generator = mockGenerator,
+        loadRepositories = mockLoadRepositories,
+        scope = testScope
+    )
 
     afterSpec {
-        Dispatchers.resetMain()
         clearAllMocks()
     }
 
     Given("a use case view model") {
-        val mockGenerator = mockk<UseCaseGenerator>()
-        val mockLoadRepositories = mockk<LoadRepositories>()
-        val viewModel = UseCaseViewModel(
-            generator = mockGenerator,
-            loadRepositories = mockLoadRepositories
-        )
 
         When("initialized") {
             Then("state should be empty") {
@@ -68,10 +66,16 @@ class UseCaseViewModelTest : BehaviorSpec({
 
             Then("state should update package name and load repositories") {
                 viewModel.state.test {
-                    testDispatcher.scheduler.runCurrent()
-                    val state = awaitItem()
-                    state.domainPackage shouldBe path
-                    state.availableRepositories shouldBe listOf("Repo1", "Repo2")
+                    // Initial state
+                    val loadingState = awaitItem()
+                    loadingState.domainPackage shouldBe path
+
+                    testScope.advanceUntilIdle()
+
+                    // Final state
+                    val finalState = awaitItem()
+                    finalState.domainPackage shouldBe path
+                    finalState.availableRepositories shouldBe listOf("Repo1", "Repo2")
                 }
             }
         }
@@ -150,24 +154,33 @@ class UseCaseViewModelTest : BehaviorSpec({
         }
 
         When("Generate is called with valid state") {
+            every { mockLoadRepositories(any()) } returns emptyList()
             viewModel.handleIntent(UseCaseIntent.SetName("ValidUseCase"))
             viewModel.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
 
-            coEvery { mockGenerator(any()) } returns Result.success(Path.of("out/UseCase.kt"))
+            coEvery { mockGenerator(any()) } returns Result.success(Paths.get("out/UseCase.kt"))
 
             viewModel.handleIntent(UseCaseIntent.Generate)
 
             Then("success path should be set") {
                 viewModel.state.test {
-                    testDispatcher.scheduler.runCurrent()
-                    val state = awaitItem()
-                    state.lastGeneratedPath shouldBe "out/UseCase.kt"
-                    state.errorMessage shouldBe null
+                    // Initial state (isGenerating = true)
+                    val loadingState = awaitItem()
+                    loadingState.isGenerating shouldBe true
+
+                    testScope.advanceUntilIdle()
+
+                    // Final state
+                    val finalState = awaitItem()
+                    finalState.isGenerating shouldBe false
+                    finalState.lastGeneratedPath shouldBe "out/UseCase.kt"
+                    finalState.errorMessage shouldBe null
                 }
             }
         }
 
         When("Generate fails") {
+            every { mockLoadRepositories(any()) } returns emptyList()
             viewModel.handleIntent(UseCaseIntent.SetName("ValidUseCase"))
             viewModel.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
             coEvery { mockGenerator(any()) } returns Result.failure(Exception("Failure"))
@@ -176,9 +189,16 @@ class UseCaseViewModelTest : BehaviorSpec({
 
             Then("error message should be set") {
                 viewModel.state.test {
-                    testDispatcher.scheduler.runCurrent()
-                    val state = awaitItem()
-                    state.errorMessage shouldBe "Failure"
+                    // Initial state (isGenerating = true)
+                    val loadingState = awaitItem()
+                    loadingState.isGenerating shouldBe true
+
+                    testScope.advanceUntilIdle()
+
+                    // Final state
+                    val finalState = awaitItem()
+                    finalState.isGenerating shouldBe false
+                    finalState.errorMessage shouldBe "Failure"
                 }
             }
         }

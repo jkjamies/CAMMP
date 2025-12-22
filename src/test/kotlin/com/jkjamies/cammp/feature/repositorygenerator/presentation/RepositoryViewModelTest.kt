@@ -10,34 +10,32 @@ import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalStdlibApi::class)
 class RepositoryViewModelTest : BehaviorSpec({
     isolationMode = IsolationMode.InstancePerLeaf
-
+    
     val testDispatcher = StandardTestDispatcher()
+    val testScope = TestScope(testDispatcher)
 
-    beforeSpec {
-        Dispatchers.setMain(testDispatcher)
-    }
+    val mockGenerator = mockk<RepositoryGenerator>()
+    val mockLoadDataSources = mockk<LoadDataSourcesByType>()
+    
+    val viewModel = RepositoryViewModel(
+        generator = mockGenerator,
+        loadDataSourcesByType = mockLoadDataSources,
+        scope = testScope
+    )
 
     afterSpec {
-        Dispatchers.resetMain()
         clearAllMocks()
     }
 
     Given("a repository view model") {
-        val mockGenerator = mockk<RepositoryGenerator>()
-        val mockLoadDataSources = mockk<LoadDataSourcesByType>()
-        val viewModel = RepositoryViewModel(
-            generator = mockGenerator,
-            loadDataSourcesByType = mockLoadDataSources
-        )
 
         When("initialized") {
             Then("state should be empty") {
@@ -67,13 +65,17 @@ class RepositoryViewModelTest : BehaviorSpec({
             
             Then("state should update package name and load datasources") {
                 viewModel.state.test {
-                    // Skip initial state if needed, but here we expect the update
-                    // Since flow is hot, we might miss emission if not careful, but turbine usually catches up
-                    // However, with StandardTestDispatcher, we need to run current
-                    testDispatcher.scheduler.runCurrent()
-                    val state = awaitItem()
-                    state.domainPackage shouldBe path
-                    state.dataSourcesByType shouldBe mapOf("Remote" to listOf("com.example.RemoteDS"))
+                    // Initial state has the path but empty datasources (before loading)
+                    val loadingState = awaitItem()
+                    loadingState.domainPackage shouldBe path
+
+                    // Advance past the coroutine
+                    testScope.advanceUntilIdle()
+
+                    // Final state has loaded datasources
+                    val finalState = awaitItem()
+                    finalState.domainPackage shouldBe path
+                    finalState.dataSourcesByType shouldBe mapOf("Remote" to listOf("com.example.RemoteDS"))
                 }
             }
         }
@@ -192,6 +194,7 @@ class RepositoryViewModelTest : BehaviorSpec({
         }
 
         When("Generate is called with valid state") {
+            every { mockLoadDataSources(any()) } returns emptyMap()
             viewModel.handleIntent(RepositoryIntent.SetName("ValidRepo"))
             viewModel.handleIntent(RepositoryIntent.SetDomainPackage("/path/to/data"))
             
@@ -201,15 +204,23 @@ class RepositoryViewModelTest : BehaviorSpec({
             
             Then("success message should be set") {
                 viewModel.state.test {
-                    testDispatcher.scheduler.runCurrent()
-                    val state = awaitItem()
-                    state.lastGeneratedMessage shouldBe "Success"
-                    state.errorMessage shouldBe null
+                    // Initial state (isGenerating = true)
+                    val loadingState = awaitItem()
+                    loadingState.isGenerating shouldBe true
+
+                    testScope.advanceUntilIdle()
+
+                    // Final state
+                    val finalState = awaitItem()
+                    finalState.isGenerating shouldBe false
+                    finalState.lastGeneratedMessage shouldBe "Success"
+                    finalState.errorMessage shouldBe null
                 }
             }
         }
 
         When("Generate fails") {
+            every { mockLoadDataSources(any()) } returns emptyMap()
             viewModel.handleIntent(RepositoryIntent.SetName("ValidRepo"))
             viewModel.handleIntent(RepositoryIntent.SetDomainPackage("/path/to/data"))
             coEvery { mockGenerator(any()) } returns Result.failure(Exception("Failure"))
@@ -218,9 +229,16 @@ class RepositoryViewModelTest : BehaviorSpec({
             
             Then("error message should be set") {
                 viewModel.state.test {
-                    testDispatcher.scheduler.runCurrent()
-                    val state = awaitItem()
-                    state.errorMessage shouldBe "Failure"
+                    // Initial state (isGenerating = true)
+                    val loadingState = awaitItem()
+                    loadingState.isGenerating shouldBe true
+
+                    testScope.advanceUntilIdle()
+
+                    // Final state
+                    val finalState = awaitItem()
+                    finalState.isGenerating shouldBe false
+                    finalState.errorMessage shouldBe "Failure"
                 }
             }
         }

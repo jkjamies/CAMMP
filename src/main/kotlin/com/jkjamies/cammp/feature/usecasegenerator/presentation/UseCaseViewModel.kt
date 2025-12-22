@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 class UseCaseViewModel(
     initial: UseCaseUiState = UseCaseUiState(),
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
     private val generator: UseCaseGenerator = UseCaseGenerator(),
     private val loadRepositories: LoadRepositories = LoadRepositories()
 ) {
@@ -41,7 +41,7 @@ class UseCaseViewModel(
                     repositories = s.selectedRepositories.toList().sorted(),
                 )
                 _state.update { it.copy(isGenerating = true, errorMessage = null, lastGeneratedPath = null) }
-                scope.launch(Dispatchers.IO) {
+                scope.launch {
                     val result = generator(params)
                     val path = result.getOrNull()?.toString()
                     val error = result.exceptionOrNull()?.message
@@ -60,7 +60,7 @@ class UseCaseViewModel(
                 val err = validateDomainPath(newPath)
                 _state.update { it.copy(domainPackage = newPath, errorMessage = err) }
                 if (err == null && newPath.isNotBlank()) {
-                    scope.launch(Dispatchers.IO) {
+                    scope.launch {
                         val repos = loadRepositories(newPath)
                         _state.update { current ->
                             val selected = current.selectedRepositories.filter { it in repos }.toSet()

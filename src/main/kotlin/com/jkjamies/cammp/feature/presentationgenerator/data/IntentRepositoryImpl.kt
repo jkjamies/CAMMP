@@ -10,9 +10,13 @@ import com.squareup.kotlinpoet.TypeSpec
 import java.nio.file.Path
 import kotlin.io.path.exists
 
+/**
+ * Implementation of [IntentRepository] that generates MVI Intent interfaces using KotlinPoet.
+ */
 class IntentRepositoryImpl(
     private val fs: FileSystemRepository = FileSystemRepositoryImpl()
 ) : IntentRepository {
+
     override fun generateIntent(
         targetDir: Path,
         packageName: String,
