@@ -8,9 +8,11 @@
 
 - Repository Generator Testing
 - UseCase Generator Testing
+- Presentation Generator Testing
 
 ### Changed
 
+- All generators now have better optimized IO threading via coroutines
 - The following were converted from template-based to KotlinPoet generation
   - Intent (MVI)
   - UiState
@@ -18,12 +20,18 @@
   - FlowStateHolder
   - NavigationHost
   - Destination
+  - Screen
+  - ViewModel & ViewModelModule
+- kotest from 5.9.1 to 6.0.7
+- app.cash.turbine:turbine from 1.1.0 to 1.2.1
+- io.mockk:mockk from 1.13.12 to 1.14.7
+- org.hamcrest:hamcrest from 2.2 to 3.0
 - Gradle Version Update 9.0.0 -> 9.2.1
 - org.gradle.toolchains.foojay-resolver-convention from 0.8.0 to 1.0.0
 - org.jetbrains.changelog from 2.2.1 to 2.5.0
 - [actions/upload-artifact](https://github.com/actions/upload-artifact) from 4 to 6
 - [actions/checkout](https://github.com/actions/checkout) from 4 to 6
-- [org.jetbrains.jewel:jewel-int-ui-standalone](https://github.com/JetBrains/intellij-community) from 0.29.0-251.27828 to 0.32.1-253.28294.285
+- [org.jetbrains.jewel:jewel-int-ui-standalone](https://github.com/JetBrains/intellij-community) from 0.29.0-251.27828 to 0.33.0-253.29795
 
 ## [0.0.2-alpha] - 2025-12-20
 
