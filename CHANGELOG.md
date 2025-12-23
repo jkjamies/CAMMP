@@ -6,6 +6,7 @@
 
 ### Added
 
+- Welcome | Get Started Screen Added
 - Repository Generator Testing
 - UseCase Generator Testing
 - Presentation Generator Testing
