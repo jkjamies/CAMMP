@@ -19,6 +19,7 @@ import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseGenerator
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseUiState
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseIntent
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseViewModel
+import com.jkjamies.cammp.feature.welcome.presentation.WelcomeScreen
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
@@ -106,6 +107,10 @@ class ComposeSamplesToolWindowFactory : ToolWindowFactory, DumbAware {
 
         val useCaseInitial = UseCaseUiState(domainPackage = project.basePath ?: "")
         val useCaseVm = UseCaseViewModel(useCaseInitial)
+
+        toolWindow.addComposeTab("Welcome") {
+            WelcomeScreen()
+        }
 
         toolWindow.addComposeTab("Clean Architecture") {
             val state by vm.state.collectAsState()
