@@ -43,6 +43,7 @@ class PresentationViewModel(
                 if (intent.selected) sel += intent.fqn else sel -= intent.fqn
                 current.copy(selectedUseCases = sel)
             }
+
             is PresentationIntent.Generate -> generate()
         }
     }
@@ -57,7 +58,15 @@ class PresentationViewModel(
             _state.update { it.copy(errorMessage = "Screen name is required") }
             return
         }
-        _state.update { it.copy(isGenerating = true, errorMessage = null, lastMessage = null, lastCreated = emptyList(), lastSkipped = emptyList()) }
+        _state.update {
+            it.copy(
+                isGenerating = true,
+                errorMessage = null,
+                lastMessage = null,
+                lastCreated = emptyList(),
+                lastSkipped = emptyList()
+            )
+        }
 
         scope.launch {
             val result = kotlin.runCatching {

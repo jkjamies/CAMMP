@@ -15,7 +15,6 @@ class DataSourceDiscoveryRepositoryImpl : DataSourceDiscoveryRepository {
 
             val modulePackageRepo = ModulePackageRepositoryImpl()
             val basePkg = modulePackageRepo.findModulePackage(moduleDir)
-                ?: return emptyMap()
 
             val combinedPkg = "$basePkg.dataSource"
             val remotePkg = "$basePkg.remoteDataSource"

@@ -67,10 +67,9 @@ class DatasourceScaffoldRepositoryImpl(
                     else -> e.subDir
                 }
                 val moduleDir = dataDir.parent?.resolve(moduleName)
-                    ?: error("Could not locate sibling $moduleName module for ${dataDir}")
-                val modulePkg = modulePkgRepo.findModulePackage(moduleDir) ?: ""
-                val implPkg = modulePkg
-                val implDir = moduleDir.resolve("src/main/kotlin").resolve(implPkg.replace('.', '/'))
+                    ?: error("Could not locate sibling $moduleName module for $dataDir")
+                val modulePkg = modulePkgRepo.findModulePackage(moduleDir)
+                val implDir = moduleDir.resolve("src/main/kotlin").resolve(modulePkg.replace('.', '/'))
                 implDir.createDirectories()
 
                 val ifaceClassName = ClassName(ifacePkg, className)
@@ -79,7 +78,7 @@ class DatasourceScaffoldRepositoryImpl(
                 if (!options.useKoin) {
                     constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
                 }
-                val fileSpec = FileSpec.builder(implPkg, implClassName)
+                val fileSpec = FileSpec.builder(modulePkg, implClassName)
                     .addType(
                         TypeSpec.classBuilder(implClassName)
                             .addSuperinterface(ifaceClassName)
@@ -104,8 +103,8 @@ class DatasourceScaffoldRepositoryImpl(
                     else -> e.subDir
                 }
                 val moduleDir = dataDir.parent?.resolve(moduleName)
-                    ?: error("Could not locate sibling $moduleName module for ${dataDir}")
-                val implPkg = modulePkgRepo.findModulePackage(moduleDir) ?: ""
+                    ?: error("Could not locate sibling $moduleName module for $dataDir")
+                val implPkg = modulePkgRepo.findModulePackage(moduleDir)
 
                 val ifaceImport = "import $ifacePkg.$className"
                 val implImport = "import $implPkg.${className}Impl"

@@ -48,7 +48,11 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
         } else false
     }
 
-    override fun ensureVersionCatalogPluginAliases(projectBase: Path, orgSegment: String, enabledModules: List<String>): Boolean {
+    override fun ensureVersionCatalogPluginAliases(
+        projectBase: Path,
+        orgSegment: String,
+        enabledModules: List<String>
+    ): Boolean {
         val gradleDir = projectBase.resolve("gradle")
         val catalog = gradleDir.resolve("libs.versions.toml")
         val safeOrg = orgSegment.trim().ifEmpty { "cammp" }
@@ -113,7 +117,7 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
         val appBuild = projectBase.resolve("app/build.gradle.kts")
         if (!appBuild.exists()) return false
         var text = appBuild.readText()
-        
+
         val rootSegments = root.replace('\\', '/').split('/')
             .filter { it.isNotBlank() }
         val projectPath = buildString {
@@ -125,15 +129,15 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
             append(feature)
             append(":di")
         }
-        
+
         val dependencyLine = "implementation(project(\"$projectPath\"))"
-        
+
         if (text.contains(dependencyLine)) return false
-        
+
         // Try to insert into dependencies block
         val dependenciesRegex = Regex("(?s)dependencies\\s*\\{(.*?)\\}")
         val match = dependenciesRegex.find(text)
-        
+
         if (match != null) {
             val updated = text.replace(dependenciesRegex) { mr ->
                 val content = mr.groups[1]?.value ?: ""

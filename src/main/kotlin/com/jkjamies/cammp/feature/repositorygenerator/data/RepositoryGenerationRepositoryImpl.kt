@@ -2,7 +2,13 @@ package com.jkjamies.cammp.feature.repositorygenerator.data
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.RepositoryGenerationRepository
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeSpec
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
@@ -23,7 +29,10 @@ class RepositoryGenerationRepositoryImpl : RepositoryGenerationRepository {
         val targetDir = params.dataDir.resolve("src/main/kotlin").resolve(dataPackage.replace('.', '/'))
         targetDir.createDirectories()
         val out = targetDir.resolve("${params.className}Impl.kt")
-        out.writeText(fileSpec.toString().replace("`data`", "data").replace("import org.koin.core.`annotation`.Single", "import org.koin.core.annotation.Single"))
+        out.writeText(
+            fileSpec.toString().replace("`data`", "data")
+                .replace("import org.koin.core.`annotation`.Single", "import org.koin.core.annotation.Single")
+        )
         return out
     }
 

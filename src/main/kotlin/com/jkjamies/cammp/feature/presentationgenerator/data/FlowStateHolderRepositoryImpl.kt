@@ -36,7 +36,7 @@ class FlowStateHolderRepositoryImpl(
         val mutableStateFlowClass = ClassName("kotlinx.coroutines.flow", "MutableStateFlow")
         val stateFlowClass = ClassName("kotlinx.coroutines.flow", "StateFlow")
         val unitClass = Unit::class.asClassName()
-        
+
         val flowClass = TypeSpec.classBuilder(flowName)
             .addModifiers(KModifier.INTERNAL)
             .addProperty(

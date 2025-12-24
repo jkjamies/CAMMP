@@ -27,6 +27,7 @@ internal fun Project.configureAndroidLibraryDefaults() {
 
         defaultConfig {
             minSdk = minSdkProp
+            // TODO: remove targetSdk if using AGP v9.0
             targetSdk = targetSdkProp
             testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
             // Optional build config field if semanticVersion provided
@@ -48,11 +49,14 @@ internal fun Project.configureAndroidLibraryDefaults() {
     }
 
     // Lint options and wiring custom lint checks
-    configureLintOptions()
+    // TODO: create your own
+//    configureLintOptions()
 
     // Flavors & build types
-    configureMarketFlavors()
-    configureStandardBuildTypes()
+    // TODO: create your own market flavors if you need them
+//    configureMarketFlavors()
+    // TODO: create your own configuration for debug/release/etc if you need them
+//    configureStandardBuildTypes()
 
     // Tests
     configureUnitTesting()

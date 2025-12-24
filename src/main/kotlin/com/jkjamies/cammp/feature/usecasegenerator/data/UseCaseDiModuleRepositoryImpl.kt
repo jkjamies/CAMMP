@@ -79,7 +79,7 @@ class UseCaseDiModuleRepositoryImpl : UseCaseDiModuleRepository {
                     }
                 }
 
-            // Extract existing body
+            // Extract an existing body
             val body = existing.substringAfter("module {", "").substringBeforeLast("}", "")
             if (body.isNotBlank()) {
                 // trimIndent() helps preserve relative indentation while removing common leading whitespace

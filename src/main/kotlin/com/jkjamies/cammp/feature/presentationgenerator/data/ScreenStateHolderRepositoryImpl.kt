@@ -29,7 +29,7 @@ class ScreenStateHolderRepositoryImpl(
         if (target.exists()) {
             return FileGenerationResult(target, GenerationStatus.SKIPPED, fileName)
         }
-        
+
         val stateHolderClass = TypeSpec.classBuilder(className)
             .addModifiers(KModifier.INTERNAL)
             .addKdoc("TODO: state for $screenName")

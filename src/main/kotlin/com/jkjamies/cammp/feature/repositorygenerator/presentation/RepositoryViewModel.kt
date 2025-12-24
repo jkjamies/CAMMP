@@ -56,6 +56,7 @@ class RepositoryViewModel(
                     }
                 }
             }
+
             is RepositoryIntent.SetName -> _state.update { it.copy(name = intent.value) }
             is RepositoryIntent.SetDomainPackage -> {
                 val newPath = intent.value
@@ -75,6 +76,7 @@ class RepositoryViewModel(
                     _state.update { it.copy(dataSourcesByType = emptyMap(), selectedDataSources = emptySet()) }
                 }
             }
+
             is RepositoryIntent.SetGenerateImplementation -> _state.update { it.copy(generateImplementation = intent.selected) }
             is RepositoryIntent.SetIncludeDatasource -> _state.update {
                 val enabled = intent.selected
@@ -85,6 +87,7 @@ class RepositoryViewModel(
                     datasourceLocal = if (!enabled) false else it.datasourceLocal,
                 )
             }
+
             is RepositoryIntent.SetDatasourceCombined -> _state.update {
                 val combined = intent.selected
                 it.copy(
@@ -93,6 +96,7 @@ class RepositoryViewModel(
                     datasourceLocal = if (combined) false else it.datasourceLocal,
                 )
             }
+
             is RepositoryIntent.SetDatasourceRemote -> _state.update {
                 val remote = intent.selected
                 it.copy(
@@ -100,6 +104,7 @@ class RepositoryViewModel(
                     datasourceCombined = if (remote || it.datasourceLocal) false else it.datasourceCombined,
                 )
             }
+
             is RepositoryIntent.SetDatasourceLocal -> _state.update {
                 val local = intent.selected
                 it.copy(
@@ -107,6 +112,7 @@ class RepositoryViewModel(
                     datasourceCombined = if (local || it.datasourceRemote) false else it.datasourceCombined,
                 )
             }
+
             is RepositoryIntent.SetDataSourcesByType -> _state.update { it.copy(dataSourcesByType = intent.value) }
             is RepositoryIntent.ToggleDataSourceSelection -> _state.update { s ->
                 val mutable = s.selectedDataSources.toMutableSet()
@@ -114,9 +120,23 @@ class RepositoryViewModel(
                 s.copy(selectedDataSources = mutable)
             }
 
-            is RepositoryIntent.SetDiHilt -> _state.update { it.copy(diHilt = intent.selected, diKoin = !intent.selected).updateDiStates() }
-            is RepositoryIntent.SetDiKoin -> _state.update { it.copy(diKoin = intent.selected, diHilt = !intent.selected).updateDiStates() }
-            is RepositoryIntent.ToggleKoinAnnotations -> _state.update { it.copy(diKoinAnnotations = intent.selected).updateDiStates() }
+            is RepositoryIntent.SetDiHilt -> _state.update {
+                it.copy(
+                    diHilt = intent.selected,
+                    diKoin = !intent.selected
+                ).updateDiStates()
+            }
+
+            is RepositoryIntent.SetDiKoin -> _state.update {
+                it.copy(
+                    diKoin = intent.selected,
+                    diHilt = !intent.selected
+                ).updateDiStates()
+            }
+
+            is RepositoryIntent.ToggleKoinAnnotations -> _state.update {
+                it.copy(diKoinAnnotations = intent.selected).updateDiStates()
+            }
         }
     }
 

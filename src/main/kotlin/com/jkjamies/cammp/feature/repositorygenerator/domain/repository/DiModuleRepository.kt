@@ -2,6 +2,7 @@ package com.jkjamies.cammp.feature.repositorygenerator.domain.repository
 
 import java.nio.file.Path
 
+/** Merge outcome model with [outPath] and [status]. */
 data class MergeOutcome(val outPath: Path, val status: String)
 
 interface DiModuleRepository {
@@ -24,6 +25,7 @@ interface DiModuleRepository {
     ): MergeOutcome
 }
 
+/** Datasource binding model with [ifaceImport], [implImport], [signature], and [block] lines to append. */
 data class DataSourceBinding(
     val ifaceImport: String,
     val implImport: String,

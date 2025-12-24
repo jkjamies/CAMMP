@@ -30,7 +30,7 @@ class UiStateRepositoryImpl(
         val uiStateName = "${screenName}UiState"
         val fileName = "$uiStateName.kt"
         val target = targetDir.resolve(fileName)
-        
+
         if (target.exists()) {
             return FileGenerationResult(target, GenerationStatus.SKIPPED, fileName)
         }

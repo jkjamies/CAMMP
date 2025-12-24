@@ -54,6 +54,7 @@ class UseCaseViewModel(
                     }
                 }
             }
+
             is UseCaseIntent.SetName -> _state.update { it.copy(name = intent.value) }
             is UseCaseIntent.SetDomainPackage -> {
                 val newPath = intent.value
@@ -71,6 +72,7 @@ class UseCaseViewModel(
                     _state.update { it.copy(availableRepositories = emptyList(), selectedRepositories = emptySet()) }
                 }
             }
+
             is UseCaseIntent.ToggleRepository -> {
                 _state.update { s ->
                     val mutable = s.selectedRepositories.toMutableSet()
@@ -78,11 +80,20 @@ class UseCaseViewModel(
                     s.copy(selectedRepositories = mutable)
                 }
             }
+
             is UseCaseIntent.SetAsync -> _state.update { it.copy(async = true, sync = false) }
             is UseCaseIntent.SetSync -> _state.update { it.copy(sync = true, async = false) }
-            is UseCaseIntent.SetDiHilt -> _state.update { it.copy(diHilt = intent.selected, diKoin = !intent.selected).updateDiStates() }
-            is UseCaseIntent.SetDiKoin -> _state.update { it.copy(diKoin = intent.selected, diHilt = !intent.selected).updateDiStates() }
-            is UseCaseIntent.ToggleKoinAnnotations -> _state.update { it.copy(diKoinAnnotations = intent.selected).updateDiStates() }
+            is UseCaseIntent.SetDiHilt -> _state.update {
+                it.copy(diHilt = intent.selected, diKoin = !intent.selected).updateDiStates()
+            }
+
+            is UseCaseIntent.SetDiKoin -> _state.update {
+                it.copy(diKoin = intent.selected, diHilt = !intent.selected).updateDiStates()
+            }
+
+            is UseCaseIntent.ToggleKoinAnnotations -> _state.update {
+                it.copy(diKoinAnnotations = intent.selected).updateDiStates()
+            }
         }
     }
 

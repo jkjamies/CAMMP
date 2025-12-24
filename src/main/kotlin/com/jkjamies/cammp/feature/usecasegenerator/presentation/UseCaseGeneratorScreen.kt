@@ -1,6 +1,13 @@
 package com.jkjamies.cammp.feature.usecasegenerator.presentation
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.selection.selectable
@@ -24,7 +31,11 @@ import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.TextField
 
 @Composable
-fun UseCaseGeneratorScreen(state: UseCaseUiState, onIntent: (UseCaseIntent) -> Unit, onBrowseDomainDir: () -> Unit = {}) {
+fun UseCaseGeneratorScreen(
+    state: UseCaseUiState,
+    onIntent: (UseCaseIntent) -> Unit,
+    onBrowseDomainDir: () -> Unit = {}
+) {
     val dirState: TextFieldState = rememberTextFieldState()
     val nameState: TextFieldState = rememberTextFieldState()
 
@@ -41,7 +52,11 @@ fun UseCaseGeneratorScreen(state: UseCaseUiState, onIntent: (UseCaseIntent) -> U
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text("Domain module directory:")
             TextField(state = dirState, modifier = Modifier.weight(1f))
             DefaultButton(onClick = onBrowseDomainDir) { Text("Browse…") }
@@ -53,7 +68,11 @@ fun UseCaseGeneratorScreen(state: UseCaseUiState, onIntent: (UseCaseIntent) -> U
         }
         val preview = run {
             val raw = state.name.trim()
-            if (raw.isEmpty()) "" else "Will generate class: " + (if (raw.endsWith("UseCase", ignoreCase = true)) raw else raw + "UseCase")
+            if (raw.isEmpty()) "" else "Will generate class: " + (if (raw.endsWith(
+                    "UseCase",
+                    ignoreCase = true
+                )
+            ) raw else raw + "UseCase")
         }
         if (preview.isNotEmpty()) {
             Text(preview)
@@ -88,17 +107,23 @@ fun UseCaseGeneratorScreen(state: UseCaseUiState, onIntent: (UseCaseIntent) -> U
                 if (!state.diKoin) onIntent(UseCaseIntent.SetDiKoin(true))
             }
             if (state.diKoin) {
-                CheckboxWithLabel(label = "Koin Annotations", checked = state.diKoinAnnotations, enabled = true, onCheckedChange = { onIntent(UseCaseIntent.ToggleKoinAnnotations(it)) })
+                CheckboxWithLabel(
+                    label = "Koin Annotations",
+                    checked = state.diKoinAnnotations,
+                    enabled = true,
+                    onCheckedChange = { onIntent(UseCaseIntent.ToggleKoinAnnotations(it)) })
             }
         }
-        val isDomainModule = state.domainPackage.trimEnd('/', '\\').substringAfterLast('/').substringAfterLast('\\').equals("domain", ignoreCase = true)
+        val isDomainModule = state.domainPackage.trimEnd('/', '\\').substringAfterLast('/').substringAfterLast('\\')
+            .equals("domain", ignoreCase = true)
         val isValid = state.name.isNotBlank() && state.domainPackage.isNotBlank() && isDomainModule
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             DefaultButton(onClick = { onIntent(UseCaseIntent.Generate) }, enabled = isValid && !state.isGenerating) {
                 Text(if (state.isGenerating) "Generating…" else "Generate")
             }
         }
-        val inlineError = if (!isDomainModule && state.domainPackage.isNotBlank()) "Selected directory must be a domain module" else null
+        val inlineError =
+            if (!isDomainModule && state.domainPackage.isNotBlank()) "Selected directory must be a domain module" else null
         val errorText = state.errorMessage ?: inlineError
         if (errorText != null) {
             Text("Error: $errorText", color = Color(0xFFD32F2F))
@@ -111,7 +136,10 @@ fun UseCaseGeneratorScreen(state: UseCaseUiState, onIntent: (UseCaseIntent) -> U
 
 @Composable
 private fun RadioWithLabel(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
-    Row(modifier = Modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         RadioButton(selected = selected, enabled = enabled, onClick = onClick)
         Text(label)
     }
