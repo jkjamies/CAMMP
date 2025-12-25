@@ -1,18 +1,18 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.data
 
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.FileSystemRepository
+import com.jkjamies.cammp.feature.cleanarchitecture.fakes.FakeFileSystemRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
 import java.nio.file.Path
 
+/**
+ * Test class for [AnnotationModuleRepositoryImpl].
+ */
 class AnnotationModuleRepositoryImplTest : BehaviorSpec({
 
     Given("an annotation module repository") {
-        val mockFs = mockk<FileSystemRepository>(relaxed = true)
-        val repository = AnnotationModuleRepositoryImpl(mockFs)
+        val fakeFs = FakeFileSystemRepository()
+        val repository = AnnotationModuleRepositoryImpl(fakeFs)
 
         When("generating annotation module") {
             val outputDir = Path.of("output")
@@ -20,13 +20,10 @@ class AnnotationModuleRepositoryImplTest : BehaviorSpec({
             val scanPackage = "com.example.feature"
             val featureName = "myFeature"
 
-            val contentSlot = slot<String>()
-            every { mockFs.writeText(any(), capture(contentSlot), any()) } returns Unit
-
             repository.generate(outputDir, packageName, scanPackage, featureName)
 
             Then("it should generate correct content") {
-                val content = contentSlot.captured
+                val content = fakeFs.writtenFiles.values.first()
                 content shouldContain "package com.example.di"
                 content shouldContain "import org.koin.core.annotation.ComponentScan"
                 content shouldContain "import org.koin.core.annotation.Module"

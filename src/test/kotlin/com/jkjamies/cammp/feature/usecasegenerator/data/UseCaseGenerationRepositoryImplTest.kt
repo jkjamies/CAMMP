@@ -4,24 +4,34 @@ import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePackageRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import java.nio.file.Files
 import kotlin.io.path.readText
 
+/**
+ * Test class for [UseCaseGenerationRepositoryImpl].
+ */
 class UseCaseGenerationRepositoryImplTest : BehaviorSpec({
 
-    Given("a use case generation repository") {
-        val mockModulePkgRepo = mockk<ModulePackageRepository>()
-        val repository = UseCaseGenerationRepositoryImpl(mockModulePkgRepo)
-        val tempDir = Files.createTempDirectory("usecase_gen_test")
-        val domainDir = tempDir.resolve("domain")
+    val mockModulePkgRepo = mockk<ModulePackageRepository>()
+    val repository = UseCaseGenerationRepositoryImpl(mockModulePkgRepo)
+    val tempDir = Files.createTempDirectory("usecase_gen_test")
+    val domainDir = tempDir.resolve("domain")
 
-        afterSpec {
-            tempDir.toFile().deleteRecursively()
-        }
-
+    beforeContainer {
+        clearAllMocks()
         every { mockModulePkgRepo.findModulePackage(any()) } returns "com.example.domain"
+    }
+
+    afterSpec {
+        tempDir.toFile().deleteRecursively()
+        unmockkAll()
+    }
+
+    Given("a use case generation repository") {
 
         When("generating use case with Hilt") {
             val params = UseCaseParams(

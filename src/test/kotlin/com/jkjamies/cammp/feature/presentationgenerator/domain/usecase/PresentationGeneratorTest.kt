@@ -3,7 +3,6 @@ package com.jkjamies.cammp.feature.presentationgenerator.domain.usecase
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationRepository
-import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
@@ -11,16 +10,23 @@ import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import java.nio.file.Paths
 
+/**
+ * Test class for [PresentationGenerator].
+ */
 class PresentationGeneratorTest : BehaviorSpec({
-    isolationMode = IsolationMode.InstancePerLeaf
 
     val repository = mockk<PresentationRepository>()
     val generator = PresentationGenerator(repository)
 
-    afterSpec {
+    beforeContainer {
         clearAllMocks()
+    }
+
+    afterSpec {
+        unmockkAll()
     }
 
     Given("a presentation generator") {

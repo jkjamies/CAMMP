@@ -3,37 +3,44 @@ package com.jkjamies.cammp.feature.usecasegenerator.presentation
 import app.cash.turbine.test
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.LoadRepositories
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.UseCaseGenerator
-import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import java.nio.file.Paths
 
+/**
+ * Test class for [UseCaseViewModel].
+ */
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalStdlibApi::class)
 class UseCaseViewModelTest : BehaviorSpec({
-    isolationMode = IsolationMode.InstancePerLeaf
     
     val testDispatcher = StandardTestDispatcher()
     val testScope = TestScope(testDispatcher)
 
     val mockGenerator = mockk<UseCaseGenerator>()
     val mockLoadRepositories = mockk<LoadRepositories>()
-    
-    val viewModel = UseCaseViewModel(
-        generator = mockGenerator,
-        loadRepositories = mockLoadRepositories,
-        scope = testScope
-    )
+
+    lateinit var viewModel: UseCaseViewModel
+
+    beforeContainer {
+        clearAllMocks()
+        viewModel = UseCaseViewModel(
+            generator = mockGenerator,
+            loadRepositories = mockLoadRepositories,
+            scope = testScope
+        )
+    }
 
     afterSpec {
-        clearAllMocks()
+        unmockkAll()
     }
 
     Given("a use case view model") {
@@ -120,6 +127,34 @@ class UseCaseViewModelTest : BehaviorSpec({
                     val state = awaitItem()
                     state.diHilt shouldBe false
                     state.diKoin shouldBe true
+                }
+            }
+            
+            viewModel.handleIntent(UseCaseIntent.SetDiHilt(true))
+            Then("Koin should be disabled and Hilt enabled") {
+                viewModel.state.test {
+                    val state = awaitItem()
+                    state.diKoin shouldBe false
+                    state.diHilt shouldBe true
+                }
+            }
+        }
+        
+        When("Koin Annotations is toggled") {
+            viewModel.handleIntent(UseCaseIntent.SetDiKoin(true))
+            viewModel.handleIntent(UseCaseIntent.ToggleKoinAnnotations(true))
+            Then("Koin Annotations should be enabled") {
+                viewModel.state.test {
+                    val state = awaitItem()
+                    state.diKoinAnnotations shouldBe true
+                }
+            }
+            
+            viewModel.handleIntent(UseCaseIntent.ToggleKoinAnnotations(false))
+            Then("Koin Annotations should be disabled") {
+                viewModel.state.test {
+                    val state = awaitItem()
+                    state.diKoinAnnotations shouldBe false
                 }
             }
         }

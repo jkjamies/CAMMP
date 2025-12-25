@@ -6,6 +6,9 @@ import io.kotest.matchers.string.shouldContain
 import java.nio.file.Files
 import kotlin.io.path.readText
 
+/**
+ * Test class for [RepositoryGenerationRepositoryImpl].
+ */
 class RepositoryGenerationRepositoryImplTest : BehaviorSpec({
 
     Given("a repository generation repository") {

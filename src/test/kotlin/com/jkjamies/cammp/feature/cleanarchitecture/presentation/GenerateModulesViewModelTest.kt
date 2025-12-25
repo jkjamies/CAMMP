@@ -3,33 +3,39 @@ package com.jkjamies.cammp.feature.cleanarchitecture.presentation
 import app.cash.turbine.test
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureResult
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.usecase.CleanArchitectureGenerator
-import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 
+/**
+ * Test class for [GenerateModulesViewModel].
+ */
 class GenerateModulesViewModelTest : BehaviorSpec({
-    isolationMode = IsolationMode.InstancePerLeaf
 
     val testDispatcher = StandardTestDispatcher()
     val testScope = TestScope(testDispatcher)
 
     val mockGenerator = mockk<CleanArchitectureGenerator>()
-    val initialState = GenerateModulesUiState(projectBasePath = "project")
-    
-    val viewModel = GenerateModulesViewModel(
-        initial = initialState,
-        generator = mockGenerator,
-        scope = testScope
-    )
+
+    lateinit var viewModel: GenerateModulesViewModel
+
+    beforeContainer {
+        clearAllMocks()
+        viewModel = GenerateModulesViewModel(
+            initial = GenerateModulesUiState(projectBasePath = "project"),
+            generator = mockGenerator,
+            scope = testScope
+        )
+    }
 
     afterSpec {
-        clearAllMocks()
+        unmockkAll()
     }
 
     Given("a GenerateModulesViewModel") {
@@ -161,47 +167,37 @@ class GenerateModulesViewModelTest : BehaviorSpec({
         }
 
         When("Generate intent is handled with missing base path") {
-            val emptyBaseViewModel = GenerateModulesViewModel(GenerateModulesUiState(projectBasePath = ""), mockGenerator, testScope)
-            emptyBaseViewModel.handleIntent(GenerateModulesIntent.Generate)
+            viewModel.handleIntent(GenerateModulesIntent.SetRoot(""))
+            viewModel.handleIntent(GenerateModulesIntent.Generate)
             Then("state should show error") {
-                emptyBaseViewModel.state.test {
-                    awaitItem().errorMessage shouldBe "Project base path is required"
+                viewModel.state.test {
+                    awaitItem().errorMessage shouldBe "Root and Feature are required"
                 }
             }
         }
 
         When("Generate intent is handled with KMP selected") {
-            val kmpViewModel = GenerateModulesViewModel(GenerateModulesUiState(projectBasePath = "project", platformKmp = true), mockGenerator, testScope)
-            kmpViewModel.handleIntent(GenerateModulesIntent.Generate)
+            viewModel.handleIntent(GenerateModulesIntent.SetPlatformKmp(true))
+            viewModel.handleIntent(GenerateModulesIntent.Generate)
             Then("state should show error") {
-                kmpViewModel.state.test {
+                viewModel.state.test {
                     awaitItem().errorMessage shouldBe "KMP generation is not supported yet in CAMMP"
                 }
             }
         }
 
         When("Generate intent is handled with missing root or feature") {
-            val missingInfoViewModel = GenerateModulesViewModel(GenerateModulesUiState(projectBasePath = "project", root = "", feature = ""), mockGenerator, testScope)
-            missingInfoViewModel.handleIntent(GenerateModulesIntent.Generate)
+            viewModel.handleIntent(GenerateModulesIntent.SetRoot(""))
+            viewModel.handleIntent(GenerateModulesIntent.SetFeature(""))
+            viewModel.handleIntent(GenerateModulesIntent.Generate)
             Then("state should show error") {
-                missingInfoViewModel.state.test {
+                viewModel.state.test {
                     awaitItem().errorMessage shouldBe "Root and Feature are required"
                 }
             }
         }
 
         When("Generate intent is handled successfully") {
-            // Setup success scenario
-            val successViewModel = GenerateModulesViewModel(
-                GenerateModulesUiState(
-                    projectBasePath = "project",
-                    root = "app",
-                    feature = "feature",
-                    platformAndroid = true
-                ),
-                mockGenerator,
-                testScope
-            )
             val result = CleanArchitectureResult(
                 created = listOf("domain", "data"),
                 skipped = emptyList(),
@@ -211,11 +207,14 @@ class GenerateModulesViewModelTest : BehaviorSpec({
             )
             every { mockGenerator(any()) } returns Result.success(result)
 
-            successViewModel.handleIntent(GenerateModulesIntent.Generate)
+            viewModel.handleIntent(GenerateModulesIntent.SetRoot("app"))
+            viewModel.handleIntent(GenerateModulesIntent.SetFeature("feature"))
+            viewModel.handleIntent(GenerateModulesIntent.SetPlatformAndroid(true))
+            viewModel.handleIntent(GenerateModulesIntent.Generate)
             testDispatcher.scheduler.advanceUntilIdle()
 
             Then("state should update with success") {
-                successViewModel.state.test {
+                viewModel.state.test {
                     val state = awaitItem()
                     state.isGenerating shouldBe false
                     state.lastMessage shouldBe "Success"
@@ -232,23 +231,16 @@ class GenerateModulesViewModelTest : BehaviorSpec({
         }
 
         When("Generate intent is handled with failure") {
-            val failureViewModel = GenerateModulesViewModel(
-                GenerateModulesUiState(
-                    projectBasePath = "project",
-                    root = "app",
-                    feature = "feature",
-                    platformAndroid = true
-                ),
-                mockGenerator,
-                testScope
-            )
             every { mockGenerator(any()) } returns Result.failure(Exception("Generation failed"))
 
-            failureViewModel.handleIntent(GenerateModulesIntent.Generate)
+            viewModel.handleIntent(GenerateModulesIntent.SetRoot("app"))
+            viewModel.handleIntent(GenerateModulesIntent.SetFeature("feature"))
+            viewModel.handleIntent(GenerateModulesIntent.SetPlatformAndroid(true))
+            viewModel.handleIntent(GenerateModulesIntent.Generate)
             testDispatcher.scheduler.advanceUntilIdle()
 
             Then("state should show error") {
-                failureViewModel.state.test {
+                viewModel.state.test {
                     val state = awaitItem()
                     state.isGenerating shouldBe false
                     state.errorMessage shouldBe "Generation failed"

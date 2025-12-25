@@ -3,36 +3,43 @@ package com.jkjamies.cammp.feature.repositorygenerator.presentation
 import app.cash.turbine.test
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryGenerator
-import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 
+/**
+ * Test class for [RepositoryViewModel].
+ */
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalStdlibApi::class)
 class RepositoryViewModelTest : BehaviorSpec({
-    isolationMode = IsolationMode.InstancePerLeaf
     
     val testDispatcher = StandardTestDispatcher()
     val testScope = TestScope(testDispatcher)
 
     val mockGenerator = mockk<RepositoryGenerator>()
     val mockLoadDataSources = mockk<LoadDataSourcesByType>()
-    
-    val viewModel = RepositoryViewModel(
-        generator = mockGenerator,
-        loadDataSourcesByType = mockLoadDataSources,
-        scope = testScope
-    )
+
+    lateinit var viewModel: RepositoryViewModel
+
+    beforeContainer {
+        clearAllMocks()
+        viewModel = RepositoryViewModel(
+            generator = mockGenerator,
+            loadDataSourcesByType = mockLoadDataSources,
+            scope = testScope
+        )
+    }
 
     afterSpec {
-        clearAllMocks()
+        unmockkAll()
     }
 
     Given("a repository view model") {

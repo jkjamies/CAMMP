@@ -14,17 +14,19 @@ import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.Screen
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenStateHolderRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.UiStateRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ViewModelRepository
-import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import java.nio.file.Files
 
+/**
+ * Test class for [PresentationRepositoryImpl].
+ */
 class PresentationRepositoryImplTest : BehaviorSpec({
-    isolationMode = IsolationMode.InstancePerLeaf
 
     val fs = mockk<FileSystemRepository>(relaxed = true)
     val modulePkgRepo = mockk<ModulePackageRepository>(relaxed = true)
@@ -53,9 +55,13 @@ class PresentationRepositoryImplTest : BehaviorSpec({
     val tempDir = Files.createTempDirectory("pres_repo_test")
     val moduleDir = tempDir.resolve("testModule")
 
+    beforeContainer {
+        clearAllMocks()
+    }
+
     afterSpec {
         tempDir.toFile().deleteRecursively()
-        clearAllMocks()
+        unmockkAll()
     }
 
     Given("a presentation repository") {
