@@ -42,7 +42,8 @@ class UseCaseGenerator(
                                     ?: base
                                 val marker = ".domain"
                                 val idx = existingPkg.lastIndexOf(marker)
-                                val baseDomain = if (idx >= 0) existingPkg.substring(0, idx + marker.length) else existingPkg
+                                val baseDomain =
+                                    if (idx >= 0) existingPkg.substring(0, idx + marker.length) else existingPkg
                                 "$baseDomain.repository.$repo"
                             },
                             useKoin = updatedParams.useKoin,

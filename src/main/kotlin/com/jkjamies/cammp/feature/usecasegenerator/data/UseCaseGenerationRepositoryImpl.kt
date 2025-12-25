@@ -14,7 +14,8 @@ class UseCaseGenerationRepositoryImpl(
 
     override fun generateUseCase(params: UseCaseParams, packageName: String): Path {
         val fileSpec = createFileSpec(packageName, params)
-        val content = fileSpec.toString().replace("import org.koin.core.`annotation`.Single", "import org.koin.core.annotation.Single")
+        val content = fileSpec.toString()
+            .replace("import org.koin.core.`annotation`.Single", "import org.koin.core.annotation.Single")
         val targetDir = params.domainDir.resolve("src/main/kotlin").resolve(packageName.replace('.', '/'))
         targetDir.createDirectories()
         val out = targetDir.resolve("${params.className}.kt")

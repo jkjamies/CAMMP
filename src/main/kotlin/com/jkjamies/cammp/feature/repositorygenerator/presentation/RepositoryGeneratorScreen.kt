@@ -1,6 +1,14 @@
 package com.jkjamies.cammp.feature.repositorygenerator.presentation
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,7 +32,11 @@ import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.TextField
 
 @Composable
-fun RepositoryGeneratorScreen(state: RepositoryUiState, onIntent: (RepositoryIntent) -> Unit, onBrowseDataDir: () -> Unit = {}) {
+fun RepositoryGeneratorScreen(
+    state: RepositoryUiState,
+    onIntent: (RepositoryIntent) -> Unit,
+    onBrowseDataDir: () -> Unit = {}
+) {
     val dirState: TextFieldState = rememberTextFieldState()
     val nameState: TextFieldState = rememberTextFieldState()
 
@@ -41,7 +53,11 @@ fun RepositoryGeneratorScreen(state: RepositoryUiState, onIntent: (RepositoryInt
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text("Data module directory:")
             TextField(state = dirState, modifier = Modifier.weight(1f))
             DefaultButton(onClick = onBrowseDataDir) { Text("Browse…") }
@@ -53,7 +69,9 @@ fun RepositoryGeneratorScreen(state: RepositoryUiState, onIntent: (RepositoryInt
         }
         Text("Data source(s):")
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = state.includeDatasource, onCheckedChange = { onIntent(RepositoryIntent.SetIncludeDatasource(it)) })
+            Checkbox(
+                checked = state.includeDatasource,
+                onCheckedChange = { onIntent(RepositoryIntent.SetIncludeDatasource(it)) })
             Text("Include datasource")
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -95,7 +113,14 @@ fun RepositoryGeneratorScreen(state: RepositoryUiState, onIntent: (RepositoryInt
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(
                                 checked = state.selectedDataSources.contains(fqn),
-                                onCheckedChange = { sel -> onIntent(RepositoryIntent.ToggleDataSourceSelection(fqn, sel)) }
+                                onCheckedChange = { sel ->
+                                    onIntent(
+                                        RepositoryIntent.ToggleDataSourceSelection(
+                                            fqn,
+                                            sel
+                                        )
+                                    )
+                                }
                             )
                             Text(fqn)
                         }
@@ -112,17 +137,23 @@ fun RepositoryGeneratorScreen(state: RepositoryUiState, onIntent: (RepositoryInt
                 if (!state.diKoin) onIntent(RepositoryIntent.SetDiKoin(true))
             }
             if (state.diKoin) {
-                CheckboxWithLabel(label = "Koin Annotations", checked = state.diKoinAnnotations, enabled = true, onCheckedChange = { onIntent(RepositoryIntent.ToggleKoinAnnotations(it)) })
+                CheckboxWithLabel(
+                    label = "Koin Annotations",
+                    checked = state.diKoinAnnotations,
+                    enabled = true,
+                    onCheckedChange = { onIntent(RepositoryIntent.ToggleKoinAnnotations(it)) })
             }
         }
-        val isDataModule = state.domainPackage.trimEnd('/', '\\').substringAfterLast('/').substringAfterLast('\\').equals("data", ignoreCase = true)
+        val isDataModule = state.domainPackage.trimEnd('/', '\\').substringAfterLast('/').substringAfterLast('\\')
+            .equals("data", ignoreCase = true)
         val isValid = state.name.isNotBlank() && state.domainPackage.isNotBlank() && isDataModule
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             DefaultButton(onClick = { onIntent(RepositoryIntent.Generate) }, enabled = isValid && !state.isGenerating) {
                 Text(if (state.isGenerating) "Generating…" else "Generate")
             }
         }
-        val inlineError = if (!isDataModule && state.domainPackage.isNotBlank()) "Selected directory must be a data module" else null
+        val inlineError =
+            if (!isDataModule && state.domainPackage.isNotBlank()) "Selected directory must be a data module" else null
         val errorText = state.errorMessage ?: inlineError
         if (errorText != null) {
             Text("Error: $errorText", color = Color(0xFFD32F2F))
@@ -139,7 +170,10 @@ fun RepositoryGeneratorScreen(state: RepositoryUiState, onIntent: (RepositoryInt
 
 @Composable
 private fun RadioWithLabel(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
-    Row(modifier = Modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier = Modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         RadioButton(selected = selected, enabled = enabled, onClick = onClick)
         Text(label)
     }

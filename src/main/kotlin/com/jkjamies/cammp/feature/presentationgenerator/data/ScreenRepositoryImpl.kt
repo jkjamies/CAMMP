@@ -26,9 +26,9 @@ class ScreenRepositoryImpl : ScreenRepository {
     ): FileGenerationResult {
         val viewModelName = "${screenName}ViewModel"
         val viewModelClass = ClassName(packageName, viewModelName)
-        
+
         val composableAnnotation = ClassName("androidx.compose.runtime", "Composable")
-        
+
         val viewModelInjection = if (diHilt) {
             com.squareup.kotlinpoet.MemberName("androidx.hilt.navigation.compose", "hiltViewModel")
         } else {
@@ -53,7 +53,7 @@ class ScreenRepositoryImpl : ScreenRepository {
 
         val outFile = targetDir.resolve("$screenName.kt")
         val exists = outFile.exists()
-        
+
         if (!exists) {
             outFile.writeText(fileSpec.toString())
         }

@@ -5,7 +5,11 @@ import com.jkjamies.cammp.feature.repositorygenerator.data.DatasourceScaffoldRep
 import com.jkjamies.cammp.feature.repositorygenerator.data.ModulePackageRepositoryImpl
 import com.jkjamies.cammp.feature.repositorygenerator.data.RepositoryGenerationRepositoryImpl
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
-import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.*
+import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceOptions
+import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
+import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModuleRepository
+import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
+import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.RepositoryGenerationRepository
 
 class RepositoryGenerator(
     private val modulePkgRepo: ModulePackageRepository = ModulePackageRepositoryImpl(),
@@ -34,7 +38,8 @@ class RepositoryGenerator(
 
         // DI module generation (Hilt or Koin). For Koin Annotations, skip manual merge.
         run {
-            val diDir = params.dataDir.parent?.resolve("di") ?: error("Could not locate sibling di module for ${params.dataDir}")
+            val diDir = params.dataDir.parent?.resolve("di")
+                ?: error("Could not locate sibling di module for ${params.dataDir}")
             val diExisting = modulePkgRepo.findModulePackage(diDir)
             val diBase = truncateAt(diExisting, ".di")
             if (!(params.useKoin && params.koinAnnotations)) {

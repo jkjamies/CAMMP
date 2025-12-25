@@ -1,6 +1,14 @@
 package com.jkjamies.cammp.feature.presentationgenerator.presentation
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,7 +31,11 @@ import org.jetbrains.jewel.ui.component.Text
 import org.jetbrains.jewel.ui.component.TextField
 
 @Composable
-fun PresentationGeneratorScreen(state: PresentationUiState, onIntent: (PresentationIntent) -> Unit, onBrowseDirectory: () -> Unit = {}) {
+fun PresentationGeneratorScreen(
+    state: PresentationUiState,
+    onIntent: (PresentationIntent) -> Unit,
+    onBrowseDirectory: () -> Unit = {}
+) {
     val dirState: TextFieldState = rememberTextFieldState()
     val nameState: TextFieldState = rememberTextFieldState()
     val pkgState: TextFieldState = rememberTextFieldState()
@@ -43,7 +55,11 @@ fun PresentationGeneratorScreen(state: PresentationUiState, onIntent: (Presentat
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text("Directory (desired presentation module):")
             TextField(state = dirState, modifier = Modifier.weight(1f))
             DefaultButton(onClick = onBrowseDirectory) { Text("Browse…") }
@@ -135,15 +151,20 @@ fun PresentationGeneratorScreen(state: PresentationUiState, onIntent: (Presentat
         }
 
         Spacer(Modifier.height(8.dp))
-        val isPresentationModule = state.directory.trimEnd('/', '\\').substringAfterLast('/').substringAfterLast('\\').contains("presentation", ignoreCase = true)
+        val isPresentationModule = state.directory.trimEnd('/', '\\').substringAfterLast('/').substringAfterLast('\\')
+            .contains("presentation", ignoreCase = true)
         val isValid = state.directory.isNotBlank() && state.screenName.isNotBlank() && isPresentationModule
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            DefaultButton(onClick = { onIntent(PresentationIntent.Generate) }, enabled = isValid && !state.isGenerating) {
+            DefaultButton(
+                onClick = { onIntent(PresentationIntent.Generate) },
+                enabled = isValid && !state.isGenerating
+            ) {
                 Text(if (state.isGenerating) "Generating…" else "Generate")
             }
         }
 
-        val inlineError = if (!isPresentationModule && state.directory.isNotBlank()) "Selected directory must be a presentation module" else null
+        val inlineError =
+            if (!isPresentationModule && state.directory.isNotBlank()) "Selected directory must be a presentation module" else null
         val errorText = state.errorMessage ?: inlineError
         if (errorText != null) {
             Text("Error: $errorText", color = Color(0xFFD32F2F))

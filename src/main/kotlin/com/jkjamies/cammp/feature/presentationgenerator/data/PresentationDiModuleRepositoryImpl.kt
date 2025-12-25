@@ -26,10 +26,10 @@ class PresentationDiModuleRepositoryImpl : PresentationDiModuleRepository {
         val diTargetDir = diDir.resolve("src/main/kotlin").resolve(diPackage.replace('.', '/'))
         if (!diTargetDir.exists()) diTargetDir.createDirectories()
         val out = diTargetDir.resolve("ViewModelModule.kt")
-        
+
         val params = List(dependencyCount) { "get()" }.joinToString(", ")
         val bindingLine = "viewModel { $viewModelSimpleName($params) }"
-        
+
         if (!out.exists()) {
             val codeBlock = CodeBlock.builder()
                 .beginControlFlow("module")
@@ -37,7 +37,10 @@ class PresentationDiModuleRepositoryImpl : PresentationDiModuleRepository {
                 .endControlFlow()
                 .build()
 
-            val property = PropertySpec.builder("viewModelModule", com.squareup.kotlinpoet.ClassName("org.koin.core.module", "Module"))
+            val property = PropertySpec.builder(
+                "viewModelModule",
+                com.squareup.kotlinpoet.ClassName("org.koin.core.module", "Module")
+            )
                 .initializer(codeBlock)
                 .build()
 
@@ -52,13 +55,13 @@ class PresentationDiModuleRepositoryImpl : PresentationDiModuleRepository {
             return PresentationMergeOutcome(out, "created")
         } else {
             val existingText = out.readText()
-            
+
             if (existingText.contains("viewModel { $viewModelSimpleName(")) {
                 return PresentationMergeOutcome(out, "exists")
             }
 
             val lines = existingText.lines().toMutableList()
-            
+
             val importLine = "import $viewModelFqn"
             if (!existingText.contains(importLine)) {
                 val lastImportIdx = lines.indexOfLast { it.startsWith("import ") }

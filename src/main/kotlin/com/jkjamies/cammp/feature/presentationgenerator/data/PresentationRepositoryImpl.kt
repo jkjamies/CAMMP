@@ -147,7 +147,14 @@ class PresentationRepositoryImpl(
                     screenName = sanitizedName,
                     screenFolder = folder
                 )
-                processResult(result, created, skipped, outputs, resultsLines, "navigation/destinations/${result.fileName}")
+                processResult(
+                    result,
+                    created,
+                    skipped,
+                    outputs,
+                    resultsLines,
+                    "navigation/destinations/${result.fileName}"
+                )
             }
         }
 

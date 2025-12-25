@@ -75,11 +75,11 @@ class NavigationRepositoryImpl(
 
         val destinationName = "${screenName}Destination"
         val destinationPackage = "$packageName.navigation.destinations"
-        
+
         val serializableAnnotation = ClassName("kotlinx.serialization", "Serializable")
         val navGraphBuilder = ClassName("androidx.navigation", "NavGraphBuilder")
         val composableMember = MemberName("androidx.navigation.compose", "composable")
-        
+
         // Import the screen composable
         val screenComposable = ClassName("$packageName.$screenFolder", screenName)
 

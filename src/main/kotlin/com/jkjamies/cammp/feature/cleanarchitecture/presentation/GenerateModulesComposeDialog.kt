@@ -1,6 +1,12 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.presentation
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.selection.selectable
@@ -53,7 +59,11 @@ fun GenerateModulesScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         LabeledRow(label = "Root folder under project (e.g., features):") {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 TextField(state = rootState, modifier = Modifier.weight(1f))
                 DefaultButton(onClick = onBrowseRoot) { Text("Browse…") }
             }
@@ -63,7 +73,10 @@ fun GenerateModulesScreen(
         }
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             LabeledRow(label = "Organization:") {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text("com.")
                     TextField(state = orgCenterState)
                     Text(state.orgRightPreview)
@@ -72,7 +85,11 @@ fun GenerateModulesScreen(
         }
 
         Text("Platform:")
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             RadioWithLabel(
                 label = "Android",
                 selected = state.platformAndroid,
@@ -99,17 +116,31 @@ fun GenerateModulesScreen(
 
         Text("Data:")
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = state.includeDatasource, onCheckedChange = { onIntent(GenerateModulesIntent.SetIncludeDatasource(it)) })
+            Checkbox(
+                checked = state.includeDatasource,
+                onCheckedChange = { onIntent(GenerateModulesIntent.SetIncludeDatasource(it)) })
             Text("Include datasource")
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            CheckboxWithLabel(label = "Remote", checked = state.datasourceRemote, enabled = state.includeDatasource && !state.datasourceCombined) {
+            CheckboxWithLabel(
+                label = "Remote",
+                checked = state.datasourceRemote,
+                enabled = state.includeDatasource && !state.datasourceCombined
+            ) {
                 onIntent(GenerateModulesIntent.SetDatasourceRemote(it))
             }
-            CheckboxWithLabel(label = "Local", checked = state.datasourceLocal, enabled = state.includeDatasource && !state.datasourceCombined) {
+            CheckboxWithLabel(
+                label = "Local",
+                checked = state.datasourceLocal,
+                enabled = state.includeDatasource && !state.datasourceCombined
+            ) {
                 onIntent(GenerateModulesIntent.SetDatasourceLocal(it))
             }
-            CheckboxWithLabel(label = "Combined", checked = state.datasourceCombined, enabled = state.includeDatasource) {
+            CheckboxWithLabel(
+                label = "Combined",
+                checked = state.datasourceCombined,
+                enabled = state.includeDatasource
+            ) {
                 onIntent(GenerateModulesIntent.SetDatasourceCombined(it))
             }
         }
@@ -131,13 +162,19 @@ fun GenerateModulesScreen(
 
         Text("Presentation:")
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(checked = state.includePresentation, onCheckedChange = { onIntent(GenerateModulesIntent.SetIncludePresentation(it)) })
+            Checkbox(
+                checked = state.includePresentation,
+                onCheckedChange = { onIntent(GenerateModulesIntent.SetIncludePresentation(it)) })
             Text("Include presentation module")
         }
 
-        val isValid = state.projectBasePath?.isNotBlank() == true && state.root.isNotBlank() && state.feature.isNotBlank()
+        val isValid =
+            state.projectBasePath?.isNotBlank() == true && state.root.isNotBlank() && state.feature.isNotBlank()
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            DefaultButton(onClick = { onIntent(GenerateModulesIntent.Generate) }, enabled = isValid && !state.isGenerating) {
+            DefaultButton(
+                onClick = { onIntent(GenerateModulesIntent.Generate) },
+                enabled = isValid && !state.isGenerating
+            ) {
                 Text(if (state.isGenerating) "Generating…" else "Generate")
             }
         }

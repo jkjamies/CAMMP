@@ -2,7 +2,16 @@ package com.jkjamies.cammp.feature.welcome.presentation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
@@ -151,6 +160,20 @@ internal fun WelcomeScreen() {
 
             CollapsibleSubSection("Dependency Injection") {
                 Text("Supports Hilt and Koin. For Koin, you can choose between standard DSL and Koin Annotations.")
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    boldItem(
+                        "Note: ",
+                        "The generator adds the feature's DI module as a dependency to the app module.",
+                        StringBuilder().apply {
+                            append(" This transitively adds all feature dependencies (domain, data, presentation) to the app module's classpath. ")
+                            append("This is standard for Hilt (to generate components) and Koin (to load modules), ")
+                            append("but be aware that the app module will have visibility of the entire feature. ")
+                            append("You can remove this if using Koin or modify it yourself if you need to fit for different architecture.")
+                        }.toString()
+                    ),
+                    fontSize = 12.sp
+                )
             }
         }
 

@@ -1,17 +1,22 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.domain.usecase
 
+import com.jkjamies.cammp.feature.cleanarchitecture.data.AliasesRepositoryImpl
+import com.jkjamies.cammp.feature.cleanarchitecture.data.AnnotationModuleRepositoryImpl
+import com.jkjamies.cammp.feature.cleanarchitecture.data.ConventionPluginRepositoryImpl
 import com.jkjamies.cammp.feature.cleanarchitecture.data.FileSystemRepositoryImpl
 import com.jkjamies.cammp.feature.cleanarchitecture.data.GradleSettingsRepositoryImpl
 import com.jkjamies.cammp.feature.cleanarchitecture.data.TemplateRepositoryImpl
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureResult
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.AliasesRepository
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.AnnotationModuleRepository
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.ConventionPluginRepository
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.DiMode
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.FileSystemRepository
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.GradleSettingsRepository
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.PluginType
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.TemplateRepository
 import java.nio.file.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
 
 /**
  * Generates a Clean Architecture module structure for a feature.
@@ -19,11 +24,17 @@ import kotlin.io.path.isDirectory
  * @param fs The [FileSystemRepository] to use for file operations.
  * @param templateRepo The [TemplateRepository] to use for loading templates.
  * @param settingsRepo The [GradleSettingsRepository] to use for updating Gradle settings.
+ * @param annotationModuleRepo The [AnnotationModuleRepository] to use for generating annotation modules.
+ * @param conventionPluginRepo The [ConventionPluginRepository] to use for generating convention plugins.
+ * @param aliasesRepo The [AliasesRepository] to use for generating the Aliases.kt file.
  */
 class CleanArchitectureGenerator(
     private val fs: FileSystemRepository = FileSystemRepositoryImpl(),
     private val templateRepo: TemplateRepository = TemplateRepositoryImpl(),
     private val settingsRepo: GradleSettingsRepository = GradleSettingsRepositoryImpl(),
+    private val annotationModuleRepo: AnnotationModuleRepository = AnnotationModuleRepositoryImpl(fs),
+    private val conventionPluginRepo: ConventionPluginRepository = ConventionPluginRepositoryImpl(fs),
+    private val aliasesRepo: AliasesRepository = AliasesRepositoryImpl(fs),
 ) {
 
     /**
@@ -31,7 +42,7 @@ class CleanArchitectureGenerator(
      * @return A [Result] containing the [CleanArchitectureResult], or an exception.
      */
     operator fun invoke(p: CleanArchitectureParams): Result<CleanArchitectureResult> = runCatching {
-        require(p.projectBasePath.isDirectory()) { "Project base path does not exist or is not a directory: ${p.projectBasePath}" }
+        require(fs.isDirectory(p.projectBasePath)) { "Project base path does not exist or is not a directory: ${p.projectBasePath}" }
 
         val featureName = p.feature.split('-')
             .mapIndexed { index, s -> if (index > 0) s.replaceFirstChar { it.titlecase() } else s }
@@ -39,8 +50,8 @@ class CleanArchitectureGenerator(
             .replaceFirstChar { it.lowercase() }
         val featureDirName = p.feature // Keep original for directory structure
 
-        val rootDir = p.projectBasePath.resolve(p.root).also { if (!it.exists()) it.createDirectories() }
-        val featureDir = rootDir.resolve(featureDirName).also { if (!it.exists()) it.createDirectories() }
+        val rootDir = p.projectBasePath.resolve(p.root).also { if (!fs.exists(it)) fs.createDirectories(it) }
+        val featureDir = rootDir.resolve(featureDirName).also { if (!fs.exists(it)) fs.createDirectories(it) }
 
         val modules = buildList {
             add("domain")
@@ -60,10 +71,10 @@ class CleanArchitectureGenerator(
 
         for (m in modules) {
             val moduleDir = featureDir.resolve(m)
-            if (moduleDir.exists()) {
+            if (fs.exists(moduleDir)) {
                 skipped += m
             } else {
-                moduleDir.createDirectories()
+                fs.createDirectories(moduleDir)
                 scaffoldModuleBuildFile(moduleDir, p, m, featureName, modules)
                 scaffoldModuleSourceSkeleton(moduleDir, p, m, featureName)
                 created += m
@@ -93,7 +104,7 @@ class CleanArchitectureGenerator(
 
     private fun sanitizeOrgCenter(input: String): String {
         val trimmed = input.trim()
-        val unwrapped = if (trimmed.startsWith("\${" ) && trimmed.endsWith("}")) {
+        val unwrapped = if (trimmed.startsWith("\${") && trimmed.endsWith("}")) {
             trimmed.removePrefix("\${").removeSuffix("}")
         } else trimmed
         val withoutLeading = unwrapped.removePrefix("com.").removePrefix("org.")
@@ -111,7 +122,13 @@ class CleanArchitectureGenerator(
         return out
     }
 
-    private fun scaffoldModuleBuildFile(moduleDir: Path, p: CleanArchitectureParams, moduleName: String, featureName: String, enabledModules: List<String>) {
+    private fun scaffoldModuleBuildFile(
+        moduleDir: Path,
+        p: CleanArchitectureParams,
+        moduleName: String,
+        featureName: String,
+        enabledModules: List<String>
+    ) {
         val templatePath = when (moduleName) {
             "domain" -> "templates/cleanArchitecture/module/domain.gradle.kts"
             "data" -> "templates/cleanArchitecture/module/data.gradle.kts"
@@ -141,17 +158,21 @@ class CleanArchitectureGenerator(
                 "data" -> {
                     appendLine("    implementation(project(\"$projectPrefix:domain\"))")
                 }
+
                 "domain" -> {
                     // domain pulls nothing
                 }
+
                 "di" -> {
                     enabledModules.filter { it != "di" }.forEach { dep ->
                         appendLine("    implementation(project(\"$projectPrefix:$dep\"))")
                     }
                 }
+
                 "presentation" -> {
                     appendLine("    implementation(project(\"$projectPrefix:domain\"))")
                 }
+
                 "dataSource", "remoteDataSource", "localDataSource" -> {
                     appendLine("    implementation(project(\"$projectPrefix:data\"))")
                 }
@@ -165,66 +186,79 @@ class CleanArchitectureGenerator(
         fs.writeText(moduleDir.resolve("build.gradle.kts"), content)
     }
 
-    private fun scaffoldModuleSourceSkeleton(moduleDir: Path, p: CleanArchitectureParams, moduleName: String, featureName: String) {
+    private fun scaffoldModuleSourceSkeleton(
+        moduleDir: Path,
+        p: CleanArchitectureParams,
+        moduleName: String,
+        featureName: String
+    ) {
         val safeOrg = sanitizeOrgCenter(p.orgCenter)
         val pkg = "com.$safeOrg.${p.root}.$featureName.$moduleName"
-        val srcMainKotlin = moduleDir.resolve("src/main/kotlin").also { if (!it.exists()) it.createDirectories() }
-        moduleDir.resolve("src/test/kotlin").also { if (!it.exists()) it.createDirectories() }
-        val pkgDir = srcMainKotlin.resolve(pkg.replace('.', '/')).also { if (!it.exists()) it.createDirectories() }
+        val srcMainKotlin = moduleDir.resolve("src/main/kotlin").also { if (!fs.exists(it)) fs.createDirectories(it) }
+        moduleDir.resolve("src/test/kotlin").also { if (!fs.exists(it)) fs.createDirectories(it) }
+        val pkgDir = srcMainKotlin.resolve(pkg.replace('.', '/')).also { if (!fs.exists(it)) fs.createDirectories(it) }
         val placeholder = """
             package $pkg
 
             class Placeholder
         """.trimIndent()
         val placeholderFile = pkgDir.resolve("Placeholder.kt")
-        if (!placeholderFile.exists()) fs.writeText(placeholderFile, placeholder)
+        if (!fs.exists(placeholderFile)) fs.writeText(placeholderFile, placeholder)
 
         // Create standard subpackages
         when (moduleName) {
             "domain" -> {
                 listOf("repository", "model", "usecase").forEach { sub ->
-                    val d = pkgDir.resolve(sub); if (!d.exists()) d.createDirectories()
+                    val d = pkgDir.resolve(sub); if (!fs.exists(d)) fs.createDirectories(d)
                 }
             }
+
             "data" -> {
-                val repoDir = pkgDir.resolve("repository"); if (!repoDir.exists()) repoDir.createDirectories()
+                val repoDir = pkgDir.resolve("repository"); if (!fs.exists(repoDir)) fs.createDirectories(repoDir)
                 if (p.includeDatasource) {
                     if (p.datasourceCombined) {
-                        val d = pkgDir.resolve("dataSource"); if (!d.exists()) d.createDirectories()
+                        val d = pkgDir.resolve("dataSource"); if (!fs.exists(d)) fs.createDirectories(d)
                     } else {
-                        if (p.datasourceRemote) { val d = pkgDir.resolve("remoteDataSource"); if (!d.exists()) d.createDirectories() }
-                        if (p.datasourceLocal) { val d = pkgDir.resolve("localDataSource"); if (!d.exists()) d.createDirectories() }
+                        if (p.datasourceRemote) {
+                            val d = pkgDir.resolve("remoteDataSource"); if (!fs.exists(d)) fs.createDirectories(d)
+                        }
+                        if (p.datasourceLocal) {
+                            val d = pkgDir.resolve("localDataSource"); if (!fs.exists(d)) fs.createDirectories(d)
+                        }
                     }
                 }
             }
+
             "di" -> {
                 // When Koin Annotations are selected, create a ComponentScan module here.
                 if (p.diKoin && p.diKoinAnnotations) {
-                    val template = templateRepo.getTemplateText("templates/cleanArchitecture/koinAnnotations/AnnotationsModule.kt")
-                    val diPackage = pkg // di module's package
                     val scanBase = "com.${sanitizeOrgCenter(p.orgCenter)}.${p.root}.$featureName"
-                    val featureTitleCase = featureName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                    val content = template
-                        .replace("\${DI_PACKAGE}", diPackage)
-                        .replace("\${PACKAGE_NAME}", scanBase)
-                        .replace("\${FEATURE_NAME}", featureTitleCase)
-                    val out = pkgDir.resolve("${featureTitleCase}AnnotationsModule.kt")
-                    if (!out.exists()) fs.writeText(out, content) else fs.writeText(out, content) // overwrite to keep in sync
+                    annotationModuleRepo.generate(
+                        outputDirectory = pkgDir,
+                        packageName = pkg,
+                        scanPackage = scanBase,
+                        featureName = featureName
+                    )
                 }
             }
         }
     }
 
-    private fun scaffoldBuildLogic(projectBase: Path, orgCenter: String, enabledModules: List<String>, p: CleanArchitectureParams): Boolean {
+    private fun scaffoldBuildLogic(
+        projectBase: Path,
+        orgCenter: String,
+        enabledModules: List<String>,
+        p: CleanArchitectureParams
+    ): Boolean {
         val buildLogicDir = projectBase.resolve("build-logic")
         var changed = false
-        if (!buildLogicDir.exists()) {
-            buildLogicDir.createDirectories()
+        if (!fs.exists(buildLogicDir)) {
+            fs.createDirectories(buildLogicDir)
             changed = true
         }
         // settings.gradle.kts
         val settingsPath = buildLogicDir.resolve("settings.gradle.kts")
-        if (!settingsPath.exists()) {
+        if (!fs.exists(settingsPath)) {
             val settings = templateRepo.getTemplateText("templates/cleanArchitecture/buildLogic/settings.gradle.kts")
             fs.writeText(settingsPath, settings)
             changed = true
@@ -234,63 +268,73 @@ class CleanArchitectureGenerator(
         val buildRaw = templateRepo.getTemplateText("templates/cleanArchitecture/buildLogic/build.gradle.kts")
         val buildText = replacePackageTokens(buildRaw, safeOrg)
         val buildPath = buildLogicDir.resolve("build.gradle.kts")
-        if (!buildPath.exists()) {
+        if (!fs.exists(buildPath)) {
             fs.writeText(buildPath, buildText)
             changed = true
         }
 
         // src/main/kotlin/com/<org>/convention and helpers
-        val srcMainKotlin = buildLogicDir.resolve("src/main/kotlin").also { if (!it.exists()) it.createDirectories() }
-        val basePkg = srcMainKotlin.resolve("com/${safeOrg.replace('.', '/')}/convention").also { if (!it.exists()) it.createDirectories() }
-        val helpersDir = basePkg.resolve("helpers").also { if (!it.exists()) it.createDirectories() }
-        val coreDir = basePkg.resolve("core").also { if (!it.exists()) it.createDirectories() }
+        val srcMainKotlin = buildLogicDir.resolve("src/main/kotlin").also { if (!fs.exists(it)) fs.createDirectories(it) }
+        val basePkg = srcMainKotlin.resolve("com/${safeOrg.replace('.', '/')}/convention")
+            .also { if (!fs.exists(it)) fs.createDirectories(it) }
+        val helpersDir = basePkg.resolve("helpers").also { if (!fs.exists(it)) fs.createDirectories(it) }
+        val coreDir = basePkg.resolve("core").also { if (!fs.exists(it)) fs.createDirectories(it) }
+
+        val conventionPackage = "com.$safeOrg.convention"
 
         // helpers
-        listOf("AndroidLibraryDefaults.kt", "StandardTestDependencies.kt", "TestOptions.kt").forEach { fname ->
-            val raw = templateRepo.getTemplateText("templates/cleanArchitecture/buildLogic/conventionPlugins/helpers/$fname")
-            val rewritten = raw.replace(Regex("(?m)^package\\s+.*$"), "package com.$safeOrg.convention.helpers")
-            val target = helpersDir.resolve(fname)
-            if (!target.exists()) {
-                fs.writeText(target, rewritten)
-                changed = true
-            }
+        if (!fs.exists(helpersDir.resolve("AndroidLibraryDefaults.kt"))) {
+            val raw = templateRepo.getTemplateText("templates/cleanArchitecture/buildLogic/conventionPlugins/helpers/AndroidLibraryDefaults.kt")
+            val content = replacePackageTokens(raw, safeOrg)
+            fs.writeText(helpersDir.resolve("AndroidLibraryDefaults.kt"), content)
+            changed = true
+        }
+        if (!fs.exists(helpersDir.resolve("StandardTestDependencies.kt"))) {
+            val raw = templateRepo.getTemplateText("templates/cleanArchitecture/buildLogic/conventionPlugins/helpers/StandardTestDependencies.kt")
+            val content = replacePackageTokens(raw, safeOrg)
+            fs.writeText(helpersDir.resolve("StandardTestDependencies.kt"), content)
+            changed = true
+        }
+        if (!fs.exists(helpersDir.resolve("TestOptions.kt"))) {
+            val raw = templateRepo.getTemplateText("templates/cleanArchitecture/buildLogic/conventionPlugins/helpers/TestOptions.kt")
+            val content = replacePackageTokens(raw, safeOrg)
+            fs.writeText(helpersDir.resolve("TestOptions.kt"), content)
+            changed = true
+        }
+
+        val diMode = when {
+            p.diKoin && p.diKoinAnnotations -> DiMode.KOIN_ANNOTATIONS
+            p.diKoin -> DiMode.KOIN
+            else -> DiMode.HILT
         }
 
         // core
-        listOf("Aliases.kt", "Dependencies.kt").forEach { fname ->
-            val raw = templateRepo.getTemplateText("templates/cleanArchitecture/buildLogic/conventionPlugins/core/$fname")
-            val rewritten = raw.replace(Regex("(?m)^package\\s+.*$"), "package com.$safeOrg.convention.core")
-            val target = coreDir.resolve(fname)
-            if (!target.exists()) {
-                fs.writeText(target, rewritten)
+        if (!fs.exists(coreDir.resolve("Aliases.kt"))) {
+            aliasesRepo.generateAliases(coreDir, "$conventionPackage.core", diMode)
+            changed = true
+        }
+        if (!fs.exists(coreDir.resolve("Dependencies.kt"))) {
+            val raw = templateRepo.getTemplateText("templates/cleanArchitecture/buildLogic/conventionPlugins/core/Dependencies.kt")
+            val content = replacePackageTokens(raw, safeOrg)
+            fs.writeText(coreDir.resolve("Dependencies.kt"), content)
+            changed = true
+        }
+
+        fun generatePlugin(type: PluginType, fileName: String) {
+            val target = basePkg.resolve(fileName)
+            if (!fs.exists(target)) {
+                conventionPluginRepo.generate(basePkg, conventionPackage, diMode, type)
                 changed = true
             }
         }
 
-        fun copyConvDiAware(name: String) {
-            // Prefer DI-flavored convention plugin templates.
-            val diFlavor = when {
-                p.diKoin && p.diKoinAnnotations -> "koinAnnotations"
-                p.diKoin -> "koin"
-                else -> "hilt"
-            }
-            val path = "templates/cleanArchitecture/buildLogic/conventionPlugins/$diFlavor/$name"
-            val raw = templateRepo.getTemplateText(path)
-            val replaced = replacePackageTokens(raw, safeOrg)
-            val target = basePkg.resolve(name)
-            if (!target.exists()) {
-                fs.writeText(target, replaced)
-                changed = true
-            }
-        }
-
-        if ("data" in enabledModules) copyConvDiAware("DataConventionPlugin.kt")
-        if ("di" in enabledModules) copyConvDiAware("DIConventionPlugin.kt")
-        if ("domain" in enabledModules) copyConvDiAware("DomainConventionPlugin.kt")
-        if ("presentation" in enabledModules) copyConvDiAware("PresentationConventionPlugin.kt")
-        if ("dataSource" in enabledModules) copyConvDiAware("DataSourceConventionPlugin.kt")
-        if ("remoteDataSource" in enabledModules) copyConvDiAware("RemoteDataSourceConventionPlugin.kt")
-        if ("localDataSource" in enabledModules) copyConvDiAware("LocalDataSourceConventionPlugin.kt")
+        if ("data" in enabledModules) generatePlugin(PluginType.DATA, "DataConventionPlugin.kt")
+        if ("di" in enabledModules) generatePlugin(PluginType.DI, "DIConventionPlugin.kt")
+        if ("domain" in enabledModules) generatePlugin(PluginType.DOMAIN, "DomainConventionPlugin.kt")
+        if ("presentation" in enabledModules) generatePlugin(PluginType.PRESENTATION, "PresentationConventionPlugin.kt")
+        if ("dataSource" in enabledModules) generatePlugin(PluginType.DATA_SOURCE, "DataSourceConventionPlugin.kt")
+        if ("remoteDataSource" in enabledModules) generatePlugin(PluginType.REMOTE_DATA_SOURCE, "RemoteDataSourceConventionPlugin.kt")
+        if ("localDataSource" in enabledModules) generatePlugin(PluginType.LOCAL_DATA_SOURCE, "LocalDataSourceConventionPlugin.kt")
 
         return changed
     }

@@ -10,7 +10,6 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asClassName
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
@@ -47,7 +46,7 @@ class ViewModelRepositoryImpl : ViewModelRepository {
 
         // Constructor
         val constructorBuilder = FunSpec.constructorBuilder()
-        
+
         if (diHilt) {
             classBuilder.addAnnotation(ClassName("dagger.hilt.android.lifecycle", "HiltViewModel"))
             constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
@@ -64,9 +63,9 @@ class ViewModelRepositoryImpl : ViewModelRepository {
             val simpleName = fqn.substringAfterLast('.')
             val pkg = fqn.substringBeforeLast('.', "")
             val paramName = simpleName.replaceFirstChar { it.lowercase() }
-            
+
             val typeName = ClassName(pkg, simpleName)
-            
+
             constructorBuilder.addParameter(paramName, typeName)
             classBuilder.addProperty(
                 PropertySpec.builder(paramName, typeName)
@@ -75,7 +74,7 @@ class ViewModelRepositoryImpl : ViewModelRepository {
                     .build()
             )
         }
-        
+
         classBuilder.primaryConstructor(constructorBuilder.build())
 
         // State
@@ -104,16 +103,16 @@ class ViewModelRepositoryImpl : ViewModelRepository {
         val fileSpec = FileSpec.builder(packageName, viewModelName)
             .addType(classBuilder.build())
             .build()
-            
+
         // Post-processing for Koin Annotations backticks
         var fileContent = fileSpec.toString()
         if (diKoin && diKoinAnnotations) {
-             fileContent = fileContent.replace("`annotation`", "annotation")
+            fileContent = fileContent.replace("`annotation`", "annotation")
         }
 
         val outFile = targetDir.resolve("$viewModelName.kt")
         val exists = outFile.exists()
-        
+
         if (!exists) {
             outFile.writeText(fileContent)
         }

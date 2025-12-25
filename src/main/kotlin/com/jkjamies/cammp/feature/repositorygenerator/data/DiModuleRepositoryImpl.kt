@@ -3,7 +3,14 @@ package com.jkjamies.cammp.feature.repositorygenerator.data
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModuleRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.MergeOutcome
-import com.squareup.kotlinpoet.*
+import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeSpec
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
@@ -29,9 +36,24 @@ class DiModuleRepositoryImpl : DiModuleRepository {
         val dataClassName = ClassName(dataFqn, "${className}Impl")
 
         val fileSpec = if (useKoin) {
-            createKoinModule(diPackage, "RepositoryModule", "repositoryModule", existing, "single<%T> { %T(get()) }", domainClassName, dataClassName)
+            createKoinModule(
+                diPackage,
+                "RepositoryModule",
+                "repositoryModule",
+                existing,
+                "single<%T> { %T(get()) }",
+                domainClassName,
+                dataClassName
+            )
         } else {
-            createHiltModule(diPackage, "RepositoryModule", existing, "bind${className}", dataClassName, domainClassName)
+            createHiltModule(
+                diPackage,
+                "RepositoryModule",
+                existing,
+                "bind${className}",
+                dataClassName,
+                domainClassName
+            )
         }
 
         val content = fileSpec.toString().replace("`data`", "data")
@@ -96,7 +118,9 @@ class DiModuleRepositoryImpl : DiModuleRepository {
             .addImport("org.koin.core.module", "Module")
             .addProperty(
                 PropertySpec.builder(propertyName, ClassName("org.koin.core.module", "Module"))
-                    .initializer(CodeBlock.builder().beginControlFlow("module").add(moduleBlock.build()).endControlFlow().build())
+                    .initializer(
+                        CodeBlock.builder().beginControlFlow("module").add(moduleBlock.build()).endControlFlow().build()
+                    )
                     .build()
             )
             .build()
@@ -113,9 +137,11 @@ class DiModuleRepositoryImpl : DiModuleRepository {
         val classBuilder = TypeSpec.classBuilder(fileName)
             .addModifiers(KModifier.ABSTRACT)
             .addAnnotation(ClassName("dagger", "Module"))
-            .addAnnotation(AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
-                .addMember("%T::class", ClassName("dagger.hilt.components", "SingletonComponent"))
-                .build())
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
+                    .addMember("%T::class", ClassName("dagger.hilt.components", "SingletonComponent"))
+                    .build()
+            )
 
         val existingFunctions = mutableSetOf<String>()
         if (existingContent != null) {
@@ -143,7 +169,10 @@ class DiModuleRepositoryImpl : DiModuleRepository {
                 FunSpec.builder(funName)
                     .addModifiers(KModifier.ABSTRACT)
                     .addAnnotation(ClassName("dagger", "Binds"))
-                    .addParameter(paramName, ClassName(paramType.substringBeforeLast("."), paramType.substringAfterLast(".")))
+                    .addParameter(
+                        paramName,
+                        ClassName(paramType.substringBeforeLast("."), paramType.substringAfterLast("."))
+                    )
                     .returns(ClassName(returnType.substringBeforeLast("."), returnType.substringAfterLast(".")))
                     .build()
             )
@@ -182,8 +211,14 @@ class DiModuleRepositoryImpl : DiModuleRepository {
         }
 
         bindings.forEach { binding ->
-            val iface = ClassName(binding.ifaceImport.removePrefix("import ").substringBeforeLast("."), binding.ifaceImport.substringAfterLast("."))
-            val impl = ClassName(binding.implImport.removePrefix("import ").substringBeforeLast("."), binding.implImport.substringAfterLast("."))
+            val iface = ClassName(
+                binding.ifaceImport.removePrefix("import ").substringBeforeLast("."),
+                binding.ifaceImport.substringAfterLast(".")
+            )
+            val impl = ClassName(
+                binding.implImport.removePrefix("import ").substringBeforeLast("."),
+                binding.implImport.substringAfterLast(".")
+            )
             moduleBlock.addStatement("single<%T> { %T(get()) }", iface, impl)
         }
 
@@ -192,7 +227,9 @@ class DiModuleRepositoryImpl : DiModuleRepository {
             .addImport("org.koin.core.module", "Module")
             .addProperty(
                 PropertySpec.builder(propertyName, ClassName("org.koin.core.module", "Module"))
-                    .initializer(CodeBlock.builder().beginControlFlow("module").add(moduleBlock.build()).endControlFlow().build())
+                    .initializer(
+                        CodeBlock.builder().beginControlFlow("module").add(moduleBlock.build()).endControlFlow().build()
+                    )
                     .build()
             )
             .build()
@@ -207,9 +244,11 @@ class DiModuleRepositoryImpl : DiModuleRepository {
         val classBuilder = TypeSpec.classBuilder(fileName)
             .addModifiers(KModifier.ABSTRACT)
             .addAnnotation(ClassName("dagger", "Module"))
-            .addAnnotation(AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
-                .addMember("%T::class", ClassName("dagger.hilt.components", "SingletonComponent"))
-                .build())
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
+                    .addMember("%T::class", ClassName("dagger.hilt.components", "SingletonComponent"))
+                    .build()
+            )
 
         val existingFunctions = mutableSetOf<String>()
         if (existingContent != null) {
@@ -233,15 +272,24 @@ class DiModuleRepositoryImpl : DiModuleRepository {
                 FunSpec.builder(funName)
                     .addModifiers(KModifier.ABSTRACT)
                     .addAnnotation(ClassName("dagger", "Binds"))
-                    .addParameter(paramName, ClassName(paramType.substringBeforeLast("."), paramType.substringAfterLast(".")))
+                    .addParameter(
+                        paramName,
+                        ClassName(paramType.substringBeforeLast("."), paramType.substringAfterLast("."))
+                    )
                     .returns(ClassName(returnType.substringBeforeLast("."), returnType.substringAfterLast(".")))
                     .build()
             )
         }
 
         bindings.forEach { binding ->
-            val iface = ClassName(binding.ifaceImport.removePrefix("import ").substringBeforeLast("."), binding.ifaceImport.substringAfterLast("."))
-            val impl = ClassName(binding.implImport.removePrefix("import ").substringBeforeLast("."), binding.implImport.substringAfterLast("."))
+            val iface = ClassName(
+                binding.ifaceImport.removePrefix("import ").substringBeforeLast("."),
+                binding.ifaceImport.substringAfterLast(".")
+            )
+            val impl = ClassName(
+                binding.implImport.removePrefix("import ").substringBeforeLast("."),
+                binding.implImport.substringAfterLast(".")
+            )
             if (!existingFunctions.any { it.contains("bind${iface.simpleName}") }) {
                 classBuilder.addFunction(
                     FunSpec.builder("bind${iface.simpleName}")

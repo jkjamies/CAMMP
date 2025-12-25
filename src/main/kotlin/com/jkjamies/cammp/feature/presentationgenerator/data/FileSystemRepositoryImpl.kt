@@ -21,5 +21,6 @@ class FileSystemRepositoryImpl : FileSystemRepository {
         if (!overwriteIfExists && Files.exists(path)) return
         path.writeText(content)
     }
+
     override fun readText(path: Path): String? = if (path.exists()) path.readText() else null
 }
