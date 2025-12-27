@@ -4,7 +4,10 @@ CAMMP
 
 [![Version](https://img.shields.io/jetbrains/plugin/v/29447)](https://plugins.jetbrains.com/plugin/29447)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/29447)](https://plugins.jetbrains.com/plugin/29447)
+
 [![Build](https://github.com/jkjamies/CAMMP/workflows/Build/badge.svg)][gh:buildCAMMP]
+[![codecov](https://codecov.io/gh/jkjamies/CAMMP/branch/main/graph/badge.svg?token=BT1TQL1486)](https://codecov.io/gh/jkjamies/CAMMP)
+
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/paypalme/jkjamies)
 
 JetBrains Platform Plugin Template
