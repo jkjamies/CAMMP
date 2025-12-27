@@ -3,7 +3,6 @@ package com.jkjamies.cammp.feature.presentationgenerator.data
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.mockk.clearAllMocks
 import java.nio.file.Files
 import kotlin.io.path.createDirectories
 import kotlin.io.path.readText
@@ -17,7 +16,6 @@ class PresentationDiModuleRepositoryImplTest : BehaviorSpec({
 
         afterSpec {
             tempDir.toFile().deleteRecursively()
-            clearAllMocks()
         }
 
         When("merging a new ViewModel module") {

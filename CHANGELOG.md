@@ -29,6 +29,7 @@
 - Repository Generator Testing
 - UseCase Generator Testing
 - Presentation Generator Testing
+- Kover reporting to CodeCov
 
 ### Changed
 

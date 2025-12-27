@@ -4,34 +4,42 @@ import app.cash.turbine.test
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.usecase.PresentationGenerator
-import io.kotest.core.spec.IsolationMode
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import java.nio.file.Paths
 
+/**
+ * Test class for [PresentationViewModel].
+ */
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalStdlibApi::class)
 class PresentationViewModelTest : BehaviorSpec({
-    isolationMode = IsolationMode.InstancePerLeaf
 
     val testDispatcher = StandardTestDispatcher()
     val testScope = TestScope(testDispatcher)
     
     val generator = mockk<PresentationGenerator>()
-    val viewModel = PresentationViewModel(
-        generator = generator,
-        scope = testScope
-    )
+
+    lateinit var viewModel: PresentationViewModel
+
+    beforeContainer {
+        clearAllMocks()
+        viewModel = PresentationViewModel(
+            generator = generator,
+            scope = testScope
+        )
+    }
 
     afterSpec {
-        clearAllMocks()
+        unmockkAll()
     }
 
     Given("a presentation view model") {

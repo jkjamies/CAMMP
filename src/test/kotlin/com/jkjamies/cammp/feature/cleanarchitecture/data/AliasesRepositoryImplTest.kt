@@ -1,21 +1,20 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.data
 
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.AliasesRepository
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.DiMode
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.FileSystemRepository
+import com.jkjamies.cammp.feature.cleanarchitecture.fakes.FakeFileSystemRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
 import java.nio.file.Path
 
+/**
+ * Test class for [AliasesRepositoryImpl].
+ */
 class AliasesRepositoryImplTest : BehaviorSpec({
 
     Given("an aliases repository") {
-        val mockFs = mockk<FileSystemRepository>(relaxed = true)
-        val repository = AliasesRepositoryImpl(mockFs)
+        val fakeFs = FakeFileSystemRepository()
+        val repository = AliasesRepositoryImpl(fakeFs)
         val outputDir = Path.of("output")
         val packageName = "com.example.convention.core"
 
@@ -60,11 +59,8 @@ class AliasesRepositoryImplTest : BehaviorSpec({
         }
 
         When("generating Aliases file with Hilt") {
-            val contentSlot = slot<String>()
-            every { mockFs.writeText(any(), capture(contentSlot), any()) } returns Unit
-
             repository.generateAliases(outputDir, packageName, DiMode.HILT)
-            val content = contentSlot.captured
+            val content = fakeFs.writtenFiles.values.first()
 
             Then("it should contain common aliases") {
                 assertCommonAliases(content)
@@ -87,11 +83,8 @@ class AliasesRepositoryImplTest : BehaviorSpec({
         }
 
         When("generating Aliases file with Koin without Annotations") {
-            val contentSlot = slot<String>()
-            every { mockFs.writeText(any(), capture(contentSlot), any()) } returns Unit
-
             repository.generateAliases(outputDir, packageName, DiMode.KOIN)
-            val content = contentSlot.captured
+            val content = fakeFs.writtenFiles.values.first()
 
             Then("it should contain common aliases") {
                 assertCommonAliases(content)
@@ -120,11 +113,8 @@ class AliasesRepositoryImplTest : BehaviorSpec({
         }
 
         When("generating Aliases file with Koin Annotations") {
-            val contentSlot = slot<String>()
-            every { mockFs.writeText(any(), capture(contentSlot), any()) } returns Unit
-
             repository.generateAliases(outputDir, packageName, DiMode.KOIN_ANNOTATIONS)
-            val content = contentSlot.captured
+            val content = fakeFs.writtenFiles.values.first()
 
             Then("it should contain common aliases") {
                 assertCommonAliases(content)

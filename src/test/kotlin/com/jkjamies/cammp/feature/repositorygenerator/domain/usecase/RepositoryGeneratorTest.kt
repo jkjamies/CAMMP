@@ -9,11 +9,21 @@ import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.Reposito
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.unmockkAll
 import java.nio.file.Path
 
 class RepositoryGeneratorTest : BehaviorSpec({
+
+    beforeContainer {
+        clearAllMocks()
+    }
+
+    afterSpec {
+        unmockkAll()
+    }
 
     Given("a repository generator") {
         val mockModulePkgRepo = mockk<ModulePackageRepository>()

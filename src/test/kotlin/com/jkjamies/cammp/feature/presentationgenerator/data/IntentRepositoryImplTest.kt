@@ -4,7 +4,6 @@ import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationS
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.mockk.clearAllMocks
 import java.nio.file.Files
 import kotlin.io.path.readText
 
@@ -14,7 +13,6 @@ class IntentRepositoryImplTest : BehaviorSpec({
 
     afterSpec {
         tempDir.toFile().deleteRecursively()
-        clearAllMocks()
     }
 
     Given("an Intent repository") {
