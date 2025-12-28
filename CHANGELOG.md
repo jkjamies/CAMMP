@@ -7,7 +7,11 @@
 ### Added
 
 - Message about :app module importing DI module - why and option to remove manually
-- Tests for ~70% of functionality (no UI-Tests, yet)
+- Unit-Tests for ~75% of functionality
+- Version Catalog (.toml) check and additions for convention plugin generation
+- Compose BOM usage for presentation convention plugin
+- Added UI-Tests
+  - Welcome Screen
 
 ### Changed
 
