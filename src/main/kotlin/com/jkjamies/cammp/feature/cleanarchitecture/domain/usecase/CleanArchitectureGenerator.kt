@@ -310,7 +310,8 @@ class CleanArchitectureGenerator(
 
         // core
         if (!fs.exists(coreDir.resolve("Aliases.kt"))) {
-            aliasesRepo.generateAliases(coreDir, "$conventionPackage.core", diMode)
+            val tomlPath = projectBase.resolve("gradle/libs.versions.toml")
+            aliasesRepo.generateAliases(coreDir, "$conventionPackage.core", diMode, tomlPath)
             changed = true
         }
         if (!fs.exists(coreDir.resolve("Dependencies.kt"))) {

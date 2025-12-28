@@ -20,6 +20,35 @@ class ConventionPluginRepositoryImplTest : BehaviorSpec({
         val outputDir = Path.of("output")
         val packageName = "com.example.convention"
 
+        fun assertCommonPresentationDeps(content: String) {
+            content.shouldNotBeNull()
+            content shouldContain "class PresentationConventionPlugin"
+            content shouldContain "buildFeatures { compose = true }"
+            
+            // Compose BOM & UI
+            content shouldContain "LibsCompose.COMPOSE_BOM"
+            content shouldContain "LibsCompose.UI"
+            content shouldContain "LibsCompose.UI_GRAPHICS"
+            content shouldContain "LibsCompose.TOOLING"
+            content shouldContain "LibsCompose.PREVIEW"
+            content shouldContain "LibsCompose.UI_TEST_MANIFEST"
+            content shouldContain "LibsCompose.MATERIAL3_ANDROID"
+            content shouldContain "LibsCompose.NAVIGATION"
+            
+            // Other Libs
+            content shouldContain "LibsCoroutines.ANDROID"
+            content shouldContain "LibsCoroutines.CORE"
+            content shouldContain "LibsCommon.CORE_KTX"
+            
+            // Android Test
+            content shouldContain "LibsAndroidTest.ANDROIDX_TEST_RUNNER"
+            content shouldContain "LibsAndroidTest.COMPOSE_UI_TEST"
+            content shouldContain "LibsAndroidTest.MOCKK_ANDROID"
+            content shouldContain "LibsAndroidTest.COROUTINES"
+            content shouldContain "LibsAndroidTest.ESPRESSO"
+            content shouldContain "LibsAndroidTest.NAV_TEST"
+        }
+
         When("generating DataConventionPlugin for Hilt") {
             repository.generate(outputDir, packageName, DiMode.HILT, PluginType.DATA)
             val outputFile = outputDir.resolve("DataConventionPlugin.kt")
@@ -31,10 +60,6 @@ class ConventionPluginRepositoryImplTest : BehaviorSpec({
                 content shouldContain "PluginAliases.HILT"
                 content shouldContain "LibsCommon.HILT"
                 content shouldContain "LibsCommon.HILT_COMPILER"
-            }
-            
-            Then("it should use static imports") {
-                content.shouldNotBeNull()
                 content shouldContain "import com.example.convention.core.Aliases.PluginAliases"
                 content shouldContain "import com.example.convention.core.Aliases.Dependencies.LibsCommon"
             }
@@ -45,14 +70,10 @@ class ConventionPluginRepositoryImplTest : BehaviorSpec({
             val outputFile = outputDir.resolve("DataConventionPlugin.kt")
             val content = fakeFs.writtenFiles[outputFile]
 
-            Then("it should contain Koin dependencies") {
+            Then("it should contain Koin dependencies and NOT Hilt") {
                 content.shouldNotBeNull()
                 content shouldContain "LibsCommon.KOIN"
                 content shouldContain "PluginAliases.ANDROID_LIBRARY"
-            }
-            
-            Then("it should NOT contain Hilt dependencies") {
-                content.shouldNotBeNull()
                 content shouldNotContain  "LibsCommon.HILT"
             }
         }
@@ -100,11 +121,11 @@ class ConventionPluginRepositoryImplTest : BehaviorSpec({
             val outputFile = outputDir.resolve("PresentationConventionPlugin.kt")
             val content = fakeFs.writtenFiles[outputFile]
 
-            Then("it should contain Presentation specific configuration") {
-                content.shouldNotBeNull()
-                content shouldContain "class PresentationConventionPlugin"
-                content shouldContain "buildFeatures { compose = true }"
-                content shouldContain "LibsCompose.UI"
+            Then("it should contain common presentation dependencies") {
+                assertCommonPresentationDeps(content!!)
+            }
+
+            Then("it should contain Hilt Navigation") {
                 content shouldContain "LibsCompose.HILT_NAVIGATION"
             }
         }
@@ -114,8 +135,11 @@ class ConventionPluginRepositoryImplTest : BehaviorSpec({
             val outputFile = outputDir.resolve("PresentationConventionPlugin.kt")
             val content = fakeFs.writtenFiles[outputFile]
 
-            Then("it should contain Koin Navigation") {
-                content.shouldNotBeNull()
+            Then("it should contain common presentation dependencies") {
+                assertCommonPresentationDeps(content!!)
+            }
+
+            Then("it should contain Koin Navigation and NOT Hilt") {
                 content shouldContain "LibsCompose.KOIN_NAVIGATION"
                 content shouldNotContain "LibsCompose.HILT_NAVIGATION"
             }

@@ -45,14 +45,20 @@ internal fun VersionCatalog.pluginId(alias: String): String =
 internal class Dependencies(private val project: Project, private val libs: VersionCatalog) {
     fun implementation(alias: String) = add(Operations.IMPLEMENTATION, alias)
     fun ksp(alias: String) = add(Operations.KSP, alias)
+    fun implementationPlatform(alias: String) = add(Operations.IMPLEMENTATION, alias, isPlatform = true)
+    fun debugImplementation(alias: String) = add(Operations.DEBUG_IMPLEMENTATION, alias)
     fun testImplementation(alias: String) = add(Operations.TEST_IMPLEMENTATION, alias)
-    fun androidTestImplementation(alias: String) =
-        add(Operations.ANDROID_TEST_IMPLEMENTATION, alias)
+    fun androidTestImplementation(alias: String) = add(Operations.ANDROID_TEST_IMPLEMENTATION, alias)
+    fun androidTestImplementationPlatform(alias: String) = add(Operations.ANDROID_TEST_IMPLEMENTATION, alias, isPlatform = true)
 
-    private fun add(configuration: String, alias: String) {
+    private fun add(configuration: String, alias: String, isPlatform: Boolean = false) {
         val provider: Provider<MinimalExternalModuleDependency> = libs.findLibrary(alias).get()
         project.dependencies {
-            addProvider(configuration, provider)
+            if (isPlatform) {
+                add(configuration, platform(provider))
+            } else {
+                add(configuration, provider)
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-package org.jetbrains.plugins.template
+package com.jkjamies.cammp.feature
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -7,7 +7,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import kotlinx.coroutines.test.runTest
 import org.jetbrains.jewel.intui.standalone.theme.IntUiTheme
 import org.junit.Rule
-
 
 /**
  * An abstract base class for Compose-based test cases.

@@ -67,15 +67,16 @@ class CleanArchitectureGeneratorTest : BehaviorSpec({
                 )
             }
 
-            Then("it should generate aliases") {
+            Then("it should generate aliases for KOIN_ANNOTATIONS") {
                 fakeAliasesRepo.lastCall shouldBe AliasesCall(
                     packageName = "com.example.convention.core",
-                    diMode = DiMode.KOIN_ANNOTATIONS
+                    diMode = DiMode.KOIN_ANNOTATIONS,
+                    tomlPath = projectBase.resolve("gradle/libs.versions.toml")
                 )
             }
         }
-        
-        When("invoked with separate datasources") {
+
+        When("invoked with valid params and koin (no annotations)") {
             val projectBase = Path.of("project")
             fakeFs.directories.add(projectBase)
             fakeFs.existingPaths.add(projectBase)
@@ -83,39 +84,12 @@ class CleanArchitectureGeneratorTest : BehaviorSpec({
             val params = CleanArchitectureParams(
                 projectBasePath = projectBase,
                 root = "app",
-                feature = "my-feature-sep",
+                feature = "my-feature-koin",
                 orgCenter = "com.example",
                 includePresentation = true,
                 includeDatasource = true,
-                datasourceCombined = false,
-                datasourceRemote = true,
-                datasourceLocal = true,
-                diHilt = false,
-                diKoin = true,
-                diKoinAnnotations = false
-            )
-
-            val result = generator(params)
-
-            Then("it should succeed") {
-                result.isSuccess shouldBe true
-            }
-        }
-        
-        When("invoked with only remote datasource") {
-            val projectBase = Path.of("project")
-            fakeFs.directories.add(projectBase)
-            fakeFs.existingPaths.add(projectBase)
-
-            val params = CleanArchitectureParams(
-                projectBasePath = projectBase,
-                root = "app",
-                feature = "my-feature-remote",
-                orgCenter = "com.example",
-                includePresentation = true,
-                includeDatasource = true,
-                datasourceCombined = false,
-                datasourceRemote = true,
+                datasourceCombined = true,
+                datasourceRemote = false,
                 datasourceLocal = false,
                 diHilt = false,
                 diKoin = true,
@@ -124,12 +98,17 @@ class CleanArchitectureGeneratorTest : BehaviorSpec({
 
             val result = generator(params)
 
-            Then("it should succeed") {
+            Then("it should generate aliases for KOIN") {
                 result.isSuccess shouldBe true
+                fakeAliasesRepo.lastCall shouldBe AliasesCall(
+                    packageName = "com.example.convention.core",
+                    diMode = DiMode.KOIN,
+                    tomlPath = projectBase.resolve("gradle/libs.versions.toml")
+                )
             }
         }
-        
-        When("invoked with only local datasource") {
+
+        When("invoked with valid params and hilt") {
             val projectBase = Path.of("project")
             fakeFs.directories.add(projectBase)
             fakeFs.existingPaths.add(projectBase)
@@ -137,22 +116,27 @@ class CleanArchitectureGeneratorTest : BehaviorSpec({
             val params = CleanArchitectureParams(
                 projectBasePath = projectBase,
                 root = "app",
-                feature = "my-feature-local",
+                feature = "my-feature-hilt",
                 orgCenter = "com.example",
                 includePresentation = true,
                 includeDatasource = true,
-                datasourceCombined = false,
+                datasourceCombined = true,
                 datasourceRemote = false,
-                datasourceLocal = true,
-                diHilt = false,
-                diKoin = true,
+                datasourceLocal = false,
+                diHilt = true,
+                diKoin = false,
                 diKoinAnnotations = false
             )
 
             val result = generator(params)
 
-            Then("it should succeed") {
+            Then("it should generate aliases for HILT") {
                 result.isSuccess shouldBe true
+                fakeAliasesRepo.lastCall shouldBe AliasesCall(
+                    packageName = "com.example.convention.core",
+                    diMode = DiMode.HILT,
+                    tomlPath = projectBase.resolve("gradle/libs.versions.toml")
+                )
             }
         }
     }
@@ -180,14 +164,20 @@ private class FakeAnnotationModuleRepository : AnnotationModuleRepository {
 
 private data class AliasesCall(
     val packageName: String,
-    val diMode: DiMode
+    val diMode: DiMode,
+    val tomlPath: Path
 )
 
 private class FakeAliasesRepository : AliasesRepository {
     var lastCall: AliasesCall? = null
 
-    override fun generateAliases(outputDirectory: Path, packageName: String, diMode: DiMode) {
-        lastCall = AliasesCall(packageName, diMode)
+    override fun generateAliases(
+        outputDirectory: Path,
+        packageName: String,
+        diMode: DiMode,
+        tomlPath: Path
+    ) {
+        lastCall = AliasesCall(packageName, diMode, tomlPath)
     }
 }
 

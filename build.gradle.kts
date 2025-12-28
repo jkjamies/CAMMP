@@ -55,6 +55,9 @@ dependencies {
     testImplementation(libs.kotest.property)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
+    
+    // Enable running JUnit 4 tests (like Compose UI tests) on JUnit Platform
+    testRuntimeOnly(libs.junit.vintage.engine)
 
     intellijPlatform {
         create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))

@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -45,7 +46,7 @@ internal fun WelcomeScreen() {
             fontSize = 14.sp
         )
 
-        CollapsibleSection("Recommended Workflow") {
+        CollapsibleSection("Recommended Workflow", "RecommendedWorkflow") {
             Text("To get the most out of CAMMP, recommended is the following workflow:")
             Spacer(Modifier.height(8.dp))
             BulletedList(
@@ -81,10 +82,10 @@ internal fun WelcomeScreen() {
             )
         }
 
-        CollapsibleSection("Clean Architecture Generator") {
+        CollapsibleSection("Clean Architecture Generator", "CleanArchitectureGenerator") {
             Text("Generates a full feature module structure including data, domain, and presentation layers. It also generates convention plugins and updates your settings.gradle.kts and build-logic.")
 
-            CollapsibleSubSection("What is Generated") {
+            CollapsibleSubSection("What is Generated", "CleanArch:WhatIsGenerated") {
                 BulletedList(
                     "Feature module structure (data, domain, presentation)",
                     "Convention plugins (in build-logic)",
@@ -98,11 +99,14 @@ internal fun WelcomeScreen() {
                 )
             }
 
-            CollapsibleSubSection("Convention Plugins & Version Catalog") {
+            CollapsibleSubSection("Convention Plugins & Version Catalog", "CleanArch:ConventionPlugins") {
                 Text("This generator adds convention plugins to your project and updates the version catalog (libs.versions.toml) with the generated convention plugins. It assumes the existence of a version catalog.")
-                Text("The following items are assumed to be present in your version catalog (they are NOT automatically added):")
+                
+                CollapsibleSubSection("Version Catalog Updates", "CleanArch:VersionCatalogUpdates") {
+                    Text("Dependencies in the libs.versions.toml file will be used if they exist. If they do not exist, they will be added automatically.")
+                }
 
-                CollapsibleSubSection("Plugins") {
+                CollapsibleSubSection("Plugins", "CleanArch:Plugins") {
                     BulletedList(
                         "android-library",
                         "kotlin-android",
@@ -114,7 +118,7 @@ internal fun WelcomeScreen() {
                     )
                 }
 
-                CollapsibleSubSection("Dependencies") {
+                CollapsibleSubSection("Dependencies", "CleanArch:Dependencies") {
                     BulletedList(
                         "kotlinx-serialization",
                         "json",
@@ -136,7 +140,7 @@ internal fun WelcomeScreen() {
                     )
                 }
 
-                CollapsibleSubSection("Test Dependencies") {
+                CollapsibleSubSection("Test Dependencies", "CleanArch:TestDependencies") {
                     BulletedList(
                         "kotest-runner",
                         "kotest-assertion",
@@ -147,7 +151,7 @@ internal fun WelcomeScreen() {
                     )
                 }
 
-                CollapsibleSubSection("UI Test Dependencies") {
+                CollapsibleSubSection("UI Test Dependencies", "CleanArch:UITestDependencies") {
                     BulletedList(
                         "androidx-test-runner",
                         "compose-ui-test",
@@ -156,9 +160,22 @@ internal fun WelcomeScreen() {
                         "androidx-navigation-testing"
                     )
                 }
+                
+                CollapsibleSubSection("Root build.gradle.kts Configuration", "CleanArch:RootConfig") {
+                    Text("Please ensure the following plugins are added to your root build.gradle.kts if not already present:")
+                    Spacer(Modifier.height(4.dp))
+                    Text("plugins {", fontWeight = FontWeight.Bold)
+                    Text("    alias(libs.plugins.android.application) apply false", fontWeight = FontWeight.Bold)
+                    Text("    alias(libs.plugins.kotlin.compose) apply false", fontWeight = FontWeight.Bold)
+                    Text("    alias(libs.plugins.hilt) apply false // if using Hilt", fontWeight = FontWeight.Bold)
+                    Text("    alias(libs.plugins.kotlin.serialization) apply false", fontWeight = FontWeight.Bold)
+                    Text("    alias(libs.plugins.ksp) apply false", fontWeight = FontWeight.Bold)
+                    Text("    alias(libs.plugins.kotlin.android) apply false", fontWeight = FontWeight.Bold)
+                    Text("}", fontWeight = FontWeight.Bold)
+                }
             }
 
-            CollapsibleSubSection("Dependency Injection") {
+            CollapsibleSubSection("Dependency Injection", "CleanArch:DI") {
                 Text("Supports Hilt and Koin. For Koin, you can choose between standard DSL and Koin Annotations.")
                 Spacer(Modifier.height(4.dp))
                 Text(
@@ -177,10 +194,10 @@ internal fun WelcomeScreen() {
             }
         }
 
-        CollapsibleSection("Repository Generator") {
+        CollapsibleSection("Repository Generator", "RepositoryGenerator") {
             Text("Generates a Repository interface in the domain layer and an implementation in the data layer. Can also generate Datasources.")
 
-            CollapsibleSubSection("What is Generated") {
+            CollapsibleSubSection("What is Generated", "Repo:WhatIsGenerated") {
                 BulletedList(
                     "Repository Interface (in domain)",
                     "Repository Implementation (in data)",
@@ -190,7 +207,7 @@ internal fun WelcomeScreen() {
                 )
             }
 
-            CollapsibleSubSection("Assumptions") {
+            CollapsibleSubSection("Assumptions", "Repo:Assumptions") {
                 BulletedList(
                     "You select a 'data' module directory.",
                     "Datasources are detected from the same module if available."
@@ -198,17 +215,17 @@ internal fun WelcomeScreen() {
             }
         }
 
-        CollapsibleSection("Use Case Generator") {
+        CollapsibleSection("Use Case Generator", "UseCaseGenerator") {
             Text("Generates a UseCase class in the domain layer.")
 
-            CollapsibleSubSection("What is Generated") {
+            CollapsibleSubSection("What is Generated", "UseCase:WhatIsGenerated") {
                 BulletedList(
                     "UseCase class (in domain)",
                     "DI Module update (Hilt or Koin based on selection)"
                 )
             }
 
-            CollapsibleSubSection("Assumptions") {
+            CollapsibleSubSection("Assumptions", "UseCase:Assumptions") {
                 BulletedList(
                     "You select a 'domain' module directory.",
                     "Repositories are detected from the 'repository' package within the domain module."
@@ -216,10 +233,10 @@ internal fun WelcomeScreen() {
             }
         }
 
-        CollapsibleSection("Presentation Generator") {
+        CollapsibleSection("Presentation Generator", "PresentationGenerator") {
             Text("Generates a Screen, ViewModel, and related components (State, Intent/Event). Supports MVI and MVVM patterns.")
 
-            CollapsibleSubSection("What is Generated") {
+            CollapsibleSubSection("What is Generated", "Presentation:WhatIsGenerated") {
                 BulletedList(
                     "Screen Composable",
                     "ViewModel",
@@ -233,14 +250,14 @@ internal fun WelcomeScreen() {
                 )
             }
 
-            CollapsibleSubSection("Assumptions") {
+            CollapsibleSubSection("Assumptions", "Presentation:Assumptions") {
                 BulletedList(
                     "You select a 'presentation' module directory.",
                     "UseCases are detected from across the project to be injected into the ViewModel."
                 )
             }
 
-            CollapsibleSubSection("UI Patterns") {
+            CollapsibleSubSection("UI Patterns", "Presentation:UIPatterns") {
                 Text("Choose between MVI (Model-View-Intent) or MVVM (Model-View-ViewModel) architectures.")
             }
         }
@@ -248,7 +265,7 @@ internal fun WelcomeScreen() {
 }
 
 @Composable
-internal fun CollapsibleSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+internal fun CollapsibleSection(title: String, testTag: String, content: @Composable ColumnScope.() -> Unit) {
     var expanded by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -256,7 +273,8 @@ internal fun CollapsibleSection(title: String, content: @Composable ColumnScope.
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { expanded = !expanded }
-                .padding(vertical = 8.dp),
+                .padding(vertical = 8.dp)
+                .testTag(testTag),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -278,7 +296,7 @@ internal fun CollapsibleSection(title: String, content: @Composable ColumnScope.
 }
 
 @Composable
-internal fun CollapsibleSubSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+internal fun CollapsibleSubSection(title: String, testTag: String, content: @Composable ColumnScope.() -> Unit) {
     var expanded by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -286,7 +304,8 @@ internal fun CollapsibleSubSection(title: String, content: @Composable ColumnSco
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { expanded = !expanded }
-                .padding(vertical = 4.dp),
+                .padding(vertical = 4.dp)
+                .testTag(testTag),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

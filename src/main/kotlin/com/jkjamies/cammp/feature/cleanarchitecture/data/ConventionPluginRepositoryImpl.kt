@@ -218,19 +218,21 @@ class ConventionPluginRepositoryImpl(
         val libsCommon = ClassName(corePackage, "Aliases", "Dependencies", "LibsCommon")
         val libsCompose = ClassName(corePackage, "Aliases", "Dependencies", "LibsCompose")
         val libsCoroutines = ClassName(corePackage, "Aliases", "Dependencies", "LibsCoroutines")
+        builder.addStatement("deps.implementationPlatform(%T.COMPOSE_BOM)", libsCompose)
         builder.addStatement("deps.implementation(%T.ANDROID)", libsCoroutines)
         builder.addStatement("deps.implementation(%T.CORE)", libsCoroutines)
         builder.addStatement("deps.implementation(%T.MATERIAL3_ANDROID)", libsCompose)
         builder.addStatement("deps.implementation(%T.CORE_KTX)", libsCommon)
         builder.addStatement("deps.implementation(%T.UI)", libsCompose)
+        builder.addStatement("deps.implementation(%T.UI_GRAPHICS)", libsCompose)
         builder.addStatement("deps.implementation(%T.NAVIGATION)", libsCompose)
         if (diMode == DiMode.HILT) {
             builder.addStatement("deps.implementation(%T.HILT_NAVIGATION)", libsCompose)
         } else {
             builder.addStatement("deps.implementation(%T.KOIN_NAVIGATION)", libsCompose)
         }
-        builder.addStatement("deps.implementation(%T.TOOLING)", libsCompose)
-        builder.addStatement("deps.implementation(%T.PREVIEW)", libsCompose)
+        builder.addStatement("deps.debugImplementation(%T.TOOLING)", libsCompose)
+        builder.addStatement("deps.debugImplementation(%T.PREVIEW)", libsCompose)
     }
 
     private fun addTestDependencies(builder: CodeBlock.Builder, packageName: String) {
@@ -242,6 +244,7 @@ class ConventionPluginRepositoryImpl(
     private fun addAndroidTestDependencies(builder: CodeBlock.Builder, packageName: String) {
         val corePackage = "$packageName.core"
         val libsAndroidTest = ClassName(corePackage, "Aliases", "Dependencies", "LibsAndroidTest")
+        val libsCompose = ClassName(corePackage, "Aliases", "Dependencies", "LibsCompose")
         builder.add("\n// Instrumented test dependencies via DSL\n")
         builder.addStatement("deps.androidTestImplementation(%T.ANDROIDX_TEST_RUNNER)", libsAndroidTest)
         builder.addStatement("deps.androidTestImplementation(%T.COMPOSE_UI_TEST)", libsAndroidTest)
@@ -249,6 +252,7 @@ class ConventionPluginRepositoryImpl(
         builder.addStatement("deps.androidTestImplementation(%T.COROUTINES)", libsAndroidTest)
         builder.addStatement("deps.androidTestImplementation(%T.ESPRESSO)", libsAndroidTest)
         builder.addStatement("deps.androidTestImplementation(%T.NAV_TEST)", libsAndroidTest)
+        builder.addStatement("deps.debugImplementation(%T.UI_TEST_MANIFEST)", libsCompose)
     }
     
     private fun CodeBlock.Builder.addEndControlFlow(): CodeBlock.Builder {
