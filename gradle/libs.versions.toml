@@ -32,7 +32,7 @@ kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core",
 kotest-property = { group = "io.kotest", name = "kotest-property", version.ref = "kotest" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
-junit-vintage-engine = { group = "org.junit.vintage", name = "junit-vintage-engine", version = "junit-vintage" }
+6.0.1-engine = { group = "org.junit.vintage", name = "6.0.1-engine", version = "6.0.1" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
