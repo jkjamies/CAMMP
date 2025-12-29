@@ -8,13 +8,15 @@ interface VersionCatalogDataSource {
         alias: String,
         group: String,
         artifact: String,
-        version: String? = null
+        version: String? = null,
+        versionRef: String? = null
     ): String
 
     fun getPluginAlias(
         tomlPath: Path,
         alias: String,
         id: String,
-        version: String? = null
+        version: String? = null,
+        versionRef: String? = null
     ): String
 }

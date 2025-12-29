@@ -40,10 +40,10 @@ class AliasesRepositoryImpl(
         return dependencies.associate { dep ->
             val alias = when (dep) {
                 is DependencyDefinition.Library -> versionCatalogDataSource.getLibraryAlias(
-                    tomlPath, dep.defaultAlias, dep.group, dep.artifact, dep.version
+                    tomlPath, dep.defaultAlias, dep.group, dep.artifact, dep.version, dep.versionRef
                 )
                 is DependencyDefinition.Plugin -> versionCatalogDataSource.getPluginAlias(
-                    tomlPath, dep.defaultAlias, dep.id, dep.version
+                    tomlPath, dep.defaultAlias, dep.id, dep.version, dep.versionRef
                 )
             }
             dep.aliasKey to alias
@@ -92,11 +92,11 @@ class AliasesRepositoryImpl(
         dependencies.add(DependencyDefinition.Library("NAV_TEST", "androidx-navigation-testing", "androidx.navigation", "navigation-testing", "2.9.6"))
 
         // Plugins
-        dependencies.add(DependencyDefinition.Plugin("ANDROID_LIBRARY", "android-library", "com.android.library", "8.13.2"))
-        dependencies.add(DependencyDefinition.Plugin("KOTLIN_ANDROID", "kotlin-android", "org.jetbrains.kotlin.android", "2.3.0"))
-        dependencies.add(DependencyDefinition.Plugin("PARCELIZE", "parcelize", "org.jetbrains.kotlin.plugin.parcelize", "2.3.0"))
-        dependencies.add(DependencyDefinition.Plugin("KOTLIN_SERIALIZATION", "kotlin-serialization", "org.jetbrains.kotlin.plugin.serialization", "2.3.0"))
-        dependencies.add(DependencyDefinition.Plugin("COMPOSE_COMPILER", "compose-compiler", "org.jetbrains.kotlin.plugin.compose", "2.3.0"))
+        dependencies.add(DependencyDefinition.Plugin("ANDROID_LIBRARY", "android-library", "com.android.library", "8.13.2", "agp"))
+        dependencies.add(DependencyDefinition.Plugin("KOTLIN_ANDROID", "kotlin-android", "org.jetbrains.kotlin.android", "2.3.0", "kotlin"))
+        dependencies.add(DependencyDefinition.Plugin("PARCELIZE", "parcelize", "org.jetbrains.kotlin.plugin.parcelize", "2.3.0", "kotlin"))
+        dependencies.add(DependencyDefinition.Plugin("KOTLIN_SERIALIZATION", "kotlin-serialization", "org.jetbrains.kotlin.plugin.serialization", "2.3.0", "kotlin"))
+        dependencies.add(DependencyDefinition.Plugin("COMPOSE_COMPILER", "compose-compiler", "org.jetbrains.kotlin.plugin.compose", "2.3.0", "kotlin"))
 
         // DI Specific
         when (diMode) {
@@ -282,14 +282,16 @@ class AliasesRepositoryImpl(
             override val defaultAlias: String,
             val group: String,
             val artifact: String,
-            val version: String?
+            val version: String?,
+            val versionRef: String? = null
         ) : DependencyDefinition()
 
         data class Plugin(
             override val aliasKey: String,
             override val defaultAlias: String,
             val id: String,
-            val version: String
+            val version: String,
+            val versionRef: String? = null
         ) : DependencyDefinition()
     }
 }

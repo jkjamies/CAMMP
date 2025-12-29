@@ -13,7 +13,8 @@ class VersionCatalogDataSourceImpl(
         alias: String,
         group: String,
         artifact: String,
-        version: String?
+        version: String?,
+        versionRef: String?
     ): String {
         val sections = parseToml(tomlPath)
         
@@ -21,16 +22,17 @@ class VersionCatalogDataSourceImpl(
         val existingAlias = findLibraryAlias(sections["libraries"] ?: emptyList(), group, artifact)
         if (existingAlias != null) return existingAlias
 
+        val ref = versionRef ?: alias
         // Add version if needed
         if (version != null) {
-            addVersion(sections, alias, version)
+            addVersion(sections, ref, version)
         }
 
         // Add library
         val libraryEntry = buildString {
             append("$alias = { group = \"$group\", name = \"$artifact\"")
             if (version != null) {
-                append(", version.ref = \"$alias\"")
+                append(", version.ref = \"$ref\"")
             }
             append(" }")
         }
@@ -44,7 +46,8 @@ class VersionCatalogDataSourceImpl(
         tomlPath: Path,
         alias: String,
         id: String,
-        version: String?
+        version: String?,
+        versionRef: String?
     ): String {
         val sections = parseToml(tomlPath)
 
@@ -52,16 +55,17 @@ class VersionCatalogDataSourceImpl(
         val existingAlias = findPluginAlias(sections["plugins"] ?: emptyList(), id)
         if (existingAlias != null) return existingAlias
 
+        val ref = versionRef ?: alias
         // Add version if needed
         if (version != null) {
-            addVersion(sections, alias, version)
+            addVersion(sections, ref, version)
         }
 
         // Add plugin
         val pluginEntry = buildString {
             append("$alias = { id = \"$id\"")
             if (version != null) {
-                append(", version.ref = \"$alias\"")
+                append(", version.ref = \"$ref\"")
             }
             append(" }")
         }

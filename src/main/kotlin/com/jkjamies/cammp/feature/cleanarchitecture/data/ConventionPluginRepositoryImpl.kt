@@ -150,9 +150,6 @@ class ConventionPluginRepositoryImpl(
         val helpersPackage = "$packageName.helpers"
         val configureDefaults = ClassName(helpersPackage, "configureAndroidLibraryDefaults")
         add("\n")
-        add("// Apply Jacoco script\n")
-        addStatement("apply { from(rootProject.file(\"scripts/jacoco.gradle\")) }")
-        add("\n")
         add("// Configure Android library defaults\n")
         addStatement("%T()", configureDefaults)
         return this

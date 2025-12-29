@@ -140,7 +140,7 @@ class PresentationRepositoryImpl(
             }
 
             run {
-                val destDir = navDir.resolve("destination").also { if (!it.exists()) it.createDirectories() }
+                val destDir = navDir.resolve("destinations").also { if (!it.exists()) it.createDirectories() }
                 val result = navigationRepo.generateDestination(
                     targetDir = destDir,
                     packageName = pkg,
