@@ -22,6 +22,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import java.nio.file.Files
+import kotlin.io.path.createDirectories
 
 /**
  * Test class for [PresentationRepositoryImpl].
@@ -202,6 +203,43 @@ class PresentationRepositoryImplTest : BehaviorSpec({
             presentationRepository.generate(params)
 
             Then("it should generate navigation host and destination") {
+                coVerify { navigationRepo.generateNavigationHost(any(), "com.example.test.presentation.navigation", "TestNavigationHost") }
+                coVerify { navigationRepo.generateDestination(any(), "com.example.test.presentation", "TestScreen", "testScreen") }
+            }
+        }
+
+        When("generating with Navigation and existing directories") {
+            // Pre-create directories
+            val pkgDir = moduleDir.resolve("src/main/kotlin/com/example/test/presentation")
+            val navDir = pkgDir.resolve("navigation")
+            val destDir = navDir.resolve("destinations")
+            destDir.createDirectories()
+
+            val params = PresentationParams(
+                moduleDir = moduleDir,
+                screenName = "TestScreen",
+                patternMVI = false,
+                patternMVVM = true,
+                diHilt = false,
+                diKoin = false,
+                diKoinAnnotations = false,
+                includeNavigation = true
+            )
+            every { modulePkgRepo.findModulePackage(any()) } returns "com.example.test.presentation"
+            coEvery { navigationRepo.generateNavigationHost(any(), any(), any()) } returns FileGenerationResult(
+                mockk(),
+                GenerationStatus.CREATED,
+                "TestNavigationHost.kt"
+            )
+            coEvery { navigationRepo.generateDestination(any(), any(), any(), any()) } returns FileGenerationResult(
+                mockk(),
+                GenerationStatus.CREATED,
+                "TestScreenDestination.kt"
+            )
+
+            presentationRepository.generate(params)
+
+            Then("it should use existing directories and generate files") {
                 coVerify { navigationRepo.generateNavigationHost(any(), "com.example.test.presentation.navigation", "TestNavigationHost") }
                 coVerify { navigationRepo.generateDestination(any(), "com.example.test.presentation", "TestScreen", "testScreen") }
             }

@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.datasource
 
+import com.jkjamies.cammp.feature.cleanarchitecture.data.datasource.VersionCatalogDataSource
 import com.jkjamies.cammp.feature.cleanarchitecture.fakes.FakeFileSystemRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -10,7 +11,7 @@ class VersionCatalogDataSourceImplTest : BehaviorSpec({
 
     Given("a version catalog data source") {
         val fakeFs = FakeFileSystemRepository()
-        val dataSource = VersionCatalogDataSourceImpl(fakeFs)
+        val dataSource: VersionCatalogDataSource = VersionCatalogDataSourceImpl(fakeFs)
         val tomlPath = Path.of("libs.versions.toml")
 
         When("getting a library alias that exists") {
@@ -74,13 +75,32 @@ class VersionCatalogDataSourceImplTest : BehaviorSpec({
             Then("it should NOT add the version to [versions] if it exists") {
                 val updatedContent = fakeFs.readText(tomlPath)!!
                 updatedContent shouldContain "my-version = \"1.0.0\""
-                // It might add it if logic dictates, but typically if ref is provided, we expect it to be used.
-                // If the version ref doesn't exist, it should probably be added.
             }
 
             Then("it should add the library to [libraries] with the provided version.ref") {
                 val updatedContent = fakeFs.readText(tomlPath)!!
                 updatedContent shouldContain "new-alias = { group = \"com.example\", name = \"new-lib\", version.ref = \"my-version\" }"
+            }
+        }
+
+        When("getting a library alias using default arguments") {
+            val tomlContent = """
+                [versions]
+                
+                [libraries]
+            """.trimIndent()
+            fakeFs.writeText(tomlPath, tomlContent)
+
+            // Calling without version and versionRef (uses interface defaults)
+            val alias = dataSource.getLibraryAlias(tomlPath, "default-args-lib", "com.example", "default-lib")
+
+            Then("it should return the default alias") {
+                alias shouldBe "default-args-lib"
+            }
+
+            Then("it should add the library to [libraries] without version") {
+                val updatedContent = fakeFs.readText(tomlPath)!!
+                updatedContent shouldContain "default-args-lib = { group = \"com.example\", name = \"default-lib\" }"
             }
         }
 
@@ -140,6 +160,25 @@ class VersionCatalogDataSourceImplTest : BehaviorSpec({
             Then("it should add the plugin to [plugins] with the provided version.ref") {
                 val updatedContent = fakeFs.readText(tomlPath)!!
                 updatedContent shouldContain "new-plugin = { id = \"com.example.new.plugin\", version.ref = \"plugin-version\" }"
+            }
+        }
+
+        When("getting a plugin alias using default arguments") {
+            val tomlContent = """
+                [plugins]
+            """.trimIndent()
+            fakeFs.writeText(tomlPath, tomlContent)
+
+            // Calling without version and versionRef (uses interface defaults)
+            val alias = dataSource.getPluginAlias(tomlPath, "default-args-plugin", "com.example.default.plugin")
+
+            Then("it should return the default alias") {
+                alias shouldBe "default-args-plugin"
+            }
+
+            Then("it should add the plugin to [plugins] without version") {
+                val updatedContent = fakeFs.readText(tomlPath)!!
+                updatedContent shouldContain "default-args-plugin = { id = \"com.example.default.plugin\" }"
             }
         }
         
