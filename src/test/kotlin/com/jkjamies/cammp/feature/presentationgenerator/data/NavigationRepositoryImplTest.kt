@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import java.nio.file.Files
 import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 class NavigationRepositoryImplTest : BehaviorSpec({
 
@@ -29,6 +30,18 @@ class NavigationRepositoryImplTest : BehaviorSpec({
             }
         }
 
+        When("generating NavigationHost that already exists") {
+            val existingFile = tempDir.resolve("ExistingNavHost.kt")
+            existingFile.writeText("// Existing content")
+            
+            val result = repo.generateNavigationHost(tempDir, "com.example", "ExistingNavHost")
+
+            Then("it should skip generation") {
+                result.status shouldBe GenerationStatus.SKIPPED
+                result.path.readText() shouldBe "// Existing content"
+            }
+        }
+
         When("generating Destination") {
             val result = repo.generateDestination(tempDir, "com.example", "TestScreen", "testscreen")
 
@@ -36,8 +49,30 @@ class NavigationRepositoryImplTest : BehaviorSpec({
                 result.status shouldBe GenerationStatus.CREATED
                 val content = result.path.readText()
                 content shouldContain "object TestScreenDestination"
-                content shouldContain "fun NavGraphBuilder.TestScreen"
+                content shouldContain "fun NavGraphBuilder.testScreen"
                 content shouldContain "composable<TestScreenDestination>"
+            }
+        }
+
+        When("generating Destination with uppercase ScreenName") {
+            val result = repo.generateDestination(tempDir, "com.example", "UppercaseScreen", "uppercasescreen")
+
+            Then("it should lowercase the screen name for the extension function") {
+                result.status shouldBe GenerationStatus.CREATED
+                val content = result.path.readText()
+                content shouldContain "fun NavGraphBuilder.uppercaseScreen"
+            }
+        }
+
+        When("generating Destination that already exists") {
+            val existingFile = tempDir.resolve("ExistingScreenDestination.kt")
+            existingFile.writeText("// Existing destination content")
+
+            val result = repo.generateDestination(tempDir, "com.example", "ExistingScreen", "existingscreen")
+
+            Then("it should skip generation") {
+                result.status shouldBe GenerationStatus.SKIPPED
+                result.path.readText() shouldBe "// Existing destination content"
             }
         }
     }

@@ -4,6 +4,7 @@ import com.jkjamies.cammp.feature.cleanarchitecture.data.datasource.VersionCatal
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.DiMode
 import com.jkjamies.cammp.feature.cleanarchitecture.fakes.FakeFileSystemRepository
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Path
@@ -78,22 +79,54 @@ class AliasesRepositoryImplTest : BehaviorSpec({
                 content shouldNotContain "const val KOIN: String = \"koin\""
             }
         }
+
+        When("verifying versionRef usage") {
+            val fakeDataSource = FakeVersionCatalogDataSource(useDefault = true)
+            val repository = AliasesRepositoryImpl(fakeFs, fakeDataSource)
+            repository.generateAliases(outputDir, packageName, DiMode.HILT, tomlPath)
+
+            Then("it should pass correct versionRef for plugins") {
+                // Check if any plugin call received a versionRef
+                // Based on AliasesRepositoryImpl, ANDROID_LIBRARY uses "agp" as versionRef
+                val androidLibraryCall = fakeDataSource.pluginCalls.find { it.alias == "android-library" }
+                androidLibraryCall?.versionRef shouldBe "agp"
+
+                // KOTLIN_ANDROID uses "kotlin" as versionRef
+                val kotlinAndroidCall = fakeDataSource.pluginCalls.find { it.alias == "kotlin-android" }
+                kotlinAndroidCall?.versionRef shouldBe "kotlin"
+            }
+        }
     }
 })
 
 private class FakeVersionCatalogDataSource(private val useDefault: Boolean) : VersionCatalogDataSource {
+    
+    data class LibraryCall(val alias: String, val versionRef: String?)
+    data class PluginCall(val alias: String, val versionRef: String?)
+    
+    val libraryCalls = mutableListOf<LibraryCall>()
+    val pluginCalls = mutableListOf<PluginCall>()
+
     override fun getLibraryAlias(
         tomlPath: Path,
         alias: String,
         group: String,
         artifact: String,
-        version: String?
-    ): String = if (useDefault) alias else "custom-$alias"
+        version: String?,
+        versionRef: String?
+    ): String {
+        libraryCalls.add(LibraryCall(alias, versionRef))
+        return if (useDefault) alias else "custom-$alias"
+    }
 
     override fun getPluginAlias(
         tomlPath: Path,
         alias: String,
         id: String,
-        version: String?
-    ): String = if (useDefault) alias else "custom-$alias"
+        version: String?,
+        versionRef: String?
+    ): String {
+        pluginCalls.add(PluginCall(alias, versionRef))
+        return if (useDefault) alias else "custom-$alias"
+    }
 }

@@ -109,7 +109,7 @@ class CleanArchitectureGenerator(
         } else trimmed
         val withoutLeading = unwrapped.removePrefix("com.").removePrefix("org.")
         val cleaned = withoutLeading.replace(Regex("[^A-Za-z0-9_.]"), "").trim('.')
-        return cleaned.ifBlank { "cammp" }
+        return cleaned.ifBlank { "cammp" }.replaceFirstChar { it.lowercase() }
     }
 
     private fun replacePackageTokens(text: String, orgCenter: String): String {

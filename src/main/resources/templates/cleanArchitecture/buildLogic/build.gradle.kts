@@ -20,9 +20,9 @@ gradlePlugin {
             id = "com.PACKAGE.convention.android.library.data"
             implementationClass = "com.PACKAGE.convention.DataConventionPlugin"
         }
-        register("androidLibraryDiConvention") {
+        register("androidLibraryDIConvention") {
             id = "com.PACKAGE.convention.android.library.di"
-            implementationClass = "com.PACKAGE.convention.DiConventionPlugin"
+            implementationClass = "com.PACKAGE.convention.DIConventionPlugin"
         }
         register("androidLibraryDomainConvention") {
             id = "com.PACKAGE.convention.android.library.domain"

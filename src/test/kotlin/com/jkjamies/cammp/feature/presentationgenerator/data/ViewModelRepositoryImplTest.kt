@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import java.nio.file.Files
 import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 class ViewModelRepositoryImplTest : BehaviorSpec({
 
@@ -42,6 +43,29 @@ class ViewModelRepositoryImplTest : BehaviorSpec({
                 content shouldContain "package com.example.test"
                 content shouldContain "class TestScreenViewModel"
                 content shouldContain ": ViewModel()"
+            }
+        }
+
+        When("generating a ViewModel that already exists") {
+            val packageName = "com.example.test"
+            val screenName = "ExistingScreen"
+            val existingFile = tempDir.resolve("${screenName}ViewModel.kt")
+            existingFile.writeText("// Existing content")
+            
+            val result = repository.generateViewModel(
+                targetDir = tempDir,
+                packageName = packageName,
+                screenName = screenName,
+                diHilt = false,
+                diKoin = false,
+                diKoinAnnotations = false,
+                patternMVI = false,
+                useCaseFqns = emptyList()
+            )
+
+            Then("it should skip generation") {
+                result.status shouldBe GenerationStatus.SKIPPED
+                result.path.readText() shouldBe "// Existing content"
             }
         }
 
@@ -147,10 +171,12 @@ class ViewModelRepositoryImplTest : BehaviorSpec({
                 useCaseFqns = useCases
             )
 
-            Then("it should inject the use case") {
+            Then("it should inject the use case with lowercased parameter name") {
                 val content = result.path.readText()
                 content shouldContain "private val getSomethingUseCase: GetSomethingUseCase"
                 content shouldContain "import com.example.domain.usecase.GetSomethingUseCase"
+                // Verify constructor parameter
+                content shouldContain "getSomethingUseCase: GetSomethingUseCase"
             }
         }
     }

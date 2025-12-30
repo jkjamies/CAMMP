@@ -43,6 +43,7 @@ class ViewModelRepositoryImpl : ViewModelRepository {
 
         val classBuilder = TypeSpec.classBuilder(viewModelName)
             .superclass(viewModelClass)
+            .addModifiers(KModifier.INTERNAL)
 
         // Constructor
         val constructorBuilder = FunSpec.constructorBuilder()
@@ -53,9 +54,6 @@ class ViewModelRepositoryImpl : ViewModelRepository {
         } else if (diKoin) {
             if (diKoinAnnotations) {
                 classBuilder.addAnnotation(ClassName("org.koin.android.annotation", "KoinViewModel"))
-                classBuilder.addModifiers(KModifier.INTERNAL)
-            } else {
-                classBuilder.addModifiers(KModifier.INTERNAL)
             }
         }
 
@@ -94,7 +92,7 @@ class ViewModelRepositoryImpl : ViewModelRepository {
             val handleIntentFunc = FunSpec.builder("handleIntent")
                 .addParameter("intent", intentType)
                 .beginControlFlow("when (intent)")
-                .addStatement("is %T.OnDismiss -> {}", intentType) // Placeholder
+                .addStatement("is %T.NoOp -> {}", intentType)
                 .endControlFlow()
                 .build()
             classBuilder.addFunction(handleIntentFunc)

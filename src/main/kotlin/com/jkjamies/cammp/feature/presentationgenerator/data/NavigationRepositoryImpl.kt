@@ -73,6 +73,7 @@ class NavigationRepositoryImpl(
             return FileGenerationResult(target, GenerationStatus.SKIPPED, fileName)
         }
 
+        val screenNameLower = screenName.replaceFirstChar { it.lowercase() }
         val destinationName = "${screenName}Destination"
         val destinationPackage = "$packageName.navigation.destinations"
 
@@ -81,21 +82,21 @@ class NavigationRepositoryImpl(
         val composableMember = MemberName("androidx.navigation.compose", "composable")
 
         // Import the screen composable
-        val screenComposable = ClassName("$packageName.$screenFolder", screenName)
+        val screenComposable = MemberName("$packageName.$screenFolder", screenName)
 
         val destinationObject = TypeSpec.objectBuilder(destinationName)
             .addModifiers(KModifier.INTERNAL)
             .addAnnotation(serializableAnnotation)
             .build()
 
-        val navGraphExtension = FunSpec.builder(screenName)
+        val navGraphExtension = FunSpec.builder(screenNameLower)
             .addModifiers(KModifier.INTERNAL)
             .receiver(navGraphBuilder)
             .addCode(
                 CodeBlock.builder()
                     .add("%M<%N> { backStackEntry ->\n", composableMember, destinationName)
                     .indent()
-                    .add("%T()\n", screenComposable)
+                    .add("%M()\n", screenComposable)
                     .unindent()
                     .add("}\n")
                     .build()
@@ -109,13 +110,13 @@ class NavigationRepositoryImpl(
             .addImport("androidx.navigation", "NavController", "NavOptionsBuilder", "navOptions", "toRoute")
             .build()
 
-        val content = fileSpec.toString() + getExampleComments(screenName)
+        val content = fileSpec.toString() + getExampleComments(screenName, screenNameLower)
 
         fs.writeText(target, content, overwriteIfExists = false)
         return FileGenerationResult(target, GenerationStatus.CREATED, fileName)
     }
 
-    private fun getExampleComments(screenName: String): String {
+    private fun getExampleComments(screenName: String, screenNameLower: String): String {
         return """
             |
             |// example if you need to pass parameters
@@ -123,7 +124,7 @@ class NavigationRepositoryImpl(
             |//internal data class ${screenName}Destination(val id: String)
             |
             |// example if navigation host doesn't need to pass a value
-            |//internal fun NavGraphBuilder.${screenName}() {
+            |//internal fun NavGraphBuilder.${screenNameLower}() {
             |//    composable<${screenName}Destination> { backStackEntry ->
             |//        val arguments = backStackEntry.toRoute<${screenName}Destination>()
             |//        ${screenName}(id = arguments.id)
@@ -131,7 +132,7 @@ class NavigationRepositoryImpl(
             |//}
             |
             |// example if navigation host needs to pass value and parameter required
-            |//internal fun NavGraphBuilder.${screenName}(
+            |//internal fun NavGraphBuilder.${screenNameLower}(
             |//    someState: State<String>,
             |//) {
             |//    composable<${screenName}Destination> { backStackEntry ->

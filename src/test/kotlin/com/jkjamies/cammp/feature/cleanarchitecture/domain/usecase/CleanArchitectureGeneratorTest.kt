@@ -139,6 +139,91 @@ class CleanArchitectureGeneratorTest : BehaviorSpec({
                 )
             }
         }
+
+        When("invoked with blank orgCenter") {
+            val projectBase = Path.of("project")
+            fakeFs.directories.add(projectBase)
+            fakeFs.existingPaths.add(projectBase)
+
+            val params = CleanArchitectureParams(
+                projectBasePath = projectBase,
+                root = "app",
+                feature = "my-feature-blank",
+                orgCenter = "   ", // Blank
+                includePresentation = true,
+                includeDatasource = true,
+                datasourceCombined = true,
+                datasourceRemote = false,
+                datasourceLocal = false,
+                diHilt = true,
+                diKoin = false,
+                diKoinAnnotations = false
+            )
+
+            val result = generator(params)
+
+            Then("it should use default 'cammp' orgCenter") {
+                result.isSuccess shouldBe true
+                fakeAliasesRepo.lastCall?.packageName shouldBe "com.cammp.convention.core"
+            }
+        }
+
+        When("invoked with orgCenter needing sanitization") {
+            val projectBase = Path.of("project")
+            fakeFs.directories.add(projectBase)
+            fakeFs.existingPaths.add(projectBase)
+
+            val params = CleanArchitectureParams(
+                projectBasePath = projectBase,
+                root = "app",
+                feature = "my-feature-sanitize",
+                orgCenter = "\${com.My-Org.Center}", // Needs sanitization
+                includePresentation = true,
+                includeDatasource = true,
+                datasourceCombined = true,
+                datasourceRemote = false,
+                datasourceLocal = false,
+                diHilt = true,
+                diKoin = false,
+                diKoinAnnotations = false
+            )
+
+            val result = generator(params)
+
+            Then("it should sanitize orgCenter") {
+                result.isSuccess shouldBe true
+                // ${com.My-Org.Center} -> com.My-Org.Center -> My-Org.Center -> MyOrg.Center -> myOrg.Center
+                fakeAliasesRepo.lastCall?.packageName shouldBe "com.myOrg.Center.convention.core"
+            }
+        }
+
+        When("invoked with uppercase orgCenter") {
+            val projectBase = Path.of("project")
+            fakeFs.directories.add(projectBase)
+            fakeFs.existingPaths.add(projectBase)
+
+            val params = CleanArchitectureParams(
+                projectBasePath = projectBase,
+                root = "app",
+                feature = "my-feature-uppercase",
+                orgCenter = "UppercaseOrg",
+                includePresentation = true,
+                includeDatasource = true,
+                datasourceCombined = true,
+                datasourceRemote = false,
+                datasourceLocal = false,
+                diHilt = true,
+                diKoin = false,
+                diKoinAnnotations = false
+            )
+
+            val result = generator(params)
+
+            Then("it should lowercase the first char of orgCenter") {
+                result.isSuccess shouldBe true
+                fakeAliasesRepo.lastCall?.packageName shouldBe "com.uppercaseOrg.convention.core"
+            }
+        }
     }
 })
 
