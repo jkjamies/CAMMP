@@ -96,6 +96,8 @@ class DiModuleRepositoryImplTest : BehaviorSpec({
                 val content = Files.readString(result.outPath)
                 content shouldContain "fun bindOldDataSource"
                 content shouldContain "fun bindNewDataSource"
+                content shouldContain "import com.example.data.datasource.OldDataSource"
+                content shouldContain "import com.example.data.datasource.OldDataSourceImpl"
             }
         }
 
@@ -172,6 +174,8 @@ class DiModuleRepositoryImplTest : BehaviorSpec({
                 val content = Files.readString(result.outPath)
                 content shouldContain "fun bindOldRepository"
                 content shouldContain "fun bindNewRepository"
+                content shouldContain "import com.example.domain.repository.OldRepository"
+                content shouldContain "import com.example.data.repository.OldRepositoryImpl"
             }
         }
         
@@ -205,6 +209,8 @@ class DiModuleRepositoryImplTest : BehaviorSpec({
                 val content = Files.readString(result.outPath)
                 content shouldContain "single<OldRepository> { OldRepositoryImpl(get()) }"
                 content shouldContain "single<NewRepository> { NewRepositoryImpl(get()) }"
+                content shouldContain "import com.example.domain.repository.OldRepository"
+                content shouldContain "import com.example.data.repository.OldRepositoryImpl"
             }
         }
     }

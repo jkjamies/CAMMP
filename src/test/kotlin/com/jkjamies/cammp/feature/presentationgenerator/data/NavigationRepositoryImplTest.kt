@@ -36,7 +36,7 @@ class NavigationRepositoryImplTest : BehaviorSpec({
                 result.status shouldBe GenerationStatus.CREATED
                 val content = result.path.readText()
                 content shouldContain "object TestScreenDestination"
-                content shouldContain "fun NavGraphBuilder.TestScreen"
+                content shouldContain "fun NavGraphBuilder.testScreen"
                 content shouldContain "composable<TestScreenDestination>"
             }
         }
