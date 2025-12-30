@@ -54,6 +54,16 @@ class NavigationRepositoryImplTest : BehaviorSpec({
             }
         }
 
+        When("generating Destination with uppercase ScreenName") {
+            val result = repo.generateDestination(tempDir, "com.example", "UppercaseScreen", "uppercasescreen")
+
+            Then("it should lowercase the screen name for the extension function") {
+                result.status shouldBe GenerationStatus.CREATED
+                val content = result.path.readText()
+                content shouldContain "fun NavGraphBuilder.uppercaseScreen"
+            }
+        }
+
         When("generating Destination that already exists") {
             val existingFile = tempDir.resolve("ExistingScreenDestination.kt")
             existingFile.writeText("// Existing destination content")
