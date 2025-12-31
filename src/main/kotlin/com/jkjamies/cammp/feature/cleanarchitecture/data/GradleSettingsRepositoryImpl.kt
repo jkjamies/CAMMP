@@ -1,9 +1,10 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.data
 
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.DiMode
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.GradleSettingsRepository
 import java.nio.file.Path
-import kotlin.io.path.exists
 import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
@@ -113,10 +114,11 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
         return false
     }
 
-    override fun ensureAppDependency(projectBase: Path, root: String, feature: String): Boolean {
+    override fun ensureAppDependency(projectBase: Path, root: String, feature: String, diMode: DiMode): Boolean {
         val appBuild = projectBase.resolve("app/build.gradle.kts")
         if (!appBuild.exists()) return false
         var text = appBuild.readText()
+        var changed = false
 
         val rootSegments = root.replace('\\', '/').split('/')
             .filter { it.isNotBlank() }
@@ -132,24 +134,102 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
 
         val dependencyLine = "implementation(project(\"$projectPath\"))"
 
-        if (text.contains(dependencyLine)) return false
+        if (!text.contains(dependencyLine)) {
+            // Try to insert into dependencies block
+            val dependenciesRegex = Regex("(?s)dependencies\\s*\\{(.*?)\\}")
+            val match = dependenciesRegex.find(text)
 
-        // Try to insert into dependencies block
-        val dependenciesRegex = Regex("(?s)dependencies\\s*\\{(.*?)\\}")
-        val match = dependenciesRegex.find(text)
-
-        if (match != null) {
-            val updated = text.replace(dependenciesRegex) { mr ->
-                val content = mr.groups[1]?.value ?: ""
-                "dependencies {$content\n    $dependencyLine\n}"
+            if (match != null) {
+                text = text.replace(dependenciesRegex) { mr ->
+                    val content = mr.groups[1]?.value ?: ""
+                    "dependencies {$content\n    $dependencyLine\n}"
+                }
+                changed = true
+            } else {
+                // If no dependencies block, append one
+                text += "\n\ndependencies {\n    $dependencyLine\n}"
+                changed = true
             }
-            appBuild.writeText(updated)
-            return true
-        } else {
-            // If no dependencies block, append one
-            text += "\n\ndependencies {\n    $dependencyLine\n}"
-            appBuild.writeText(text)
-            return true
         }
+
+        // Handle Kotlin 2.3.0+ metadata workaround for Hilt
+        if (diMode == DiMode.HILT) {
+            // 1. Ensure library in version catalog
+            val catalogChanged = ensureKotlinMetadataInCatalog(projectBase)
+            
+            // 2. Ensure dependency in app/build.gradle.kts
+            val metadataDependency = "ksp(libs.kotlin.metadata.jvm)"
+            if (!text.contains(metadataDependency)) {
+                val dependenciesRegex = Regex("(?s)dependencies\\s*\\{(.*?)\\}")
+                val match = dependenciesRegex.find(text)
+                if (match != null) {
+                    text = text.replace(dependenciesRegex) { mr ->
+                        val content = mr.groups[1]?.value ?: ""
+                        "dependencies {$content\n    $metadataDependency\n}"
+                    }
+                    changed = true
+                }
+            }
+            if (catalogChanged) changed = true // Signal change if catalog was updated, though return value is mostly for logging
+        }
+
+        if (changed) {
+            appBuild.writeText(text)
+        }
+        return changed
+    }
+
+    private fun ensureKotlinMetadataInCatalog(projectBase: Path): Boolean {
+        val catalog = projectBase.resolve("gradle/libs.versions.toml")
+        if (!catalog.exists()) return false
+        var text = catalog.readText()
+        var changed = false
+
+        // Ensure version
+        if (!text.contains("kotlin-metadata-jvm = \"2.3.0\"")) {
+             if (!Regex("(?m)^\\[versions]\\s*").containsMatchIn(text)) {
+                 if (!text.endsWith("\n")) text += "\n"
+                 text += "\n[versions]\n"
+             }
+             val versionsRegex = Regex("(?s)\\[versions]\\s*(.*?)(?:\\n\\[[^\\]]+]|$)")
+             val match = versionsRegex.find(text)
+             if (match != null) {
+                 val block = match.groups[1]?.value ?: ""
+                 if (!block.contains("kotlin-metadata-jvm")) {
+                     text = text.replace(versionsRegex) { mr ->
+                         val content = mr.groups[1]?.value ?: ""
+                         val newContent = if (content.isNotBlank() && !content.endsWith("\n")) content + "\n" else content
+                         "[versions]\n" + newContent + "kotlin-metadata-jvm = \"2.3.0\"\n"
+                     }
+                     changed = true
+                 }
+             }
+        }
+
+        // Ensure library
+        if (!text.contains("kotlin-metadata-jvm = { group = \"org.jetbrains.kotlin\", name = \"kotlin-metadata-jvm\", version.ref = \"kotlin-metadata-jvm\" }")) {
+             if (!Regex("(?m)^\\[libraries]\\s*").containsMatchIn(text)) {
+                 if (!text.endsWith("\n")) text += "\n"
+                 text += "\n[libraries]\n"
+             }
+             val libsRegex = Regex("(?s)\\[libraries]\\s*(.*?)(?:\\n\\[[^\\]]+]|$)")
+             val match = libsRegex.find(text)
+             if (match != null) {
+                 val block = match.groups[1]?.value ?: ""
+                 if (!block.contains("kotlin-metadata-jvm = {")) {
+                     text = text.replace(libsRegex) { mr ->
+                         val content = mr.groups[1]?.value ?: ""
+                         val newContent = if (content.isNotBlank() && !content.endsWith("\n")) content + "\n" else content
+                         "[libraries]\n" + newContent + "kotlin-metadata-jvm = { group = \"org.jetbrains.kotlin\", name = \"kotlin-metadata-jvm\", version.ref = \"kotlin-metadata-jvm\" }\n"
+                     }
+                     changed = true
+                 }
+             }
+        }
+        
+        if (changed) {
+            catalog.writeText(text)
+        }
+        return changed
     }
 }

@@ -39,6 +39,8 @@ internal class WelcomeScreenTest : ComposeBasedTestCase() {
         robot.clickOnTag("CleanArch:ConventionPlugins")
         composableRule.waitForIdle()
         robot.verifyTextContains("This generator adds convention plugins to your project and updates the version catalog (libs.versions.toml) with the generated convention plugins. It assumes the existence of a version catalog.")
+        robot.verifyTextContains("AGP Version: ")
+        robot.verifyTextContains("Kotlin/JDK Version: ")
         
         robot.clickOnTag("CleanArch:VersionCatalogUpdates")
         composableRule.waitForIdle()
@@ -67,6 +69,7 @@ internal class WelcomeScreenTest : ComposeBasedTestCase() {
         robot.clickOnTag("CleanArch:DI")
         composableRule.waitForIdle()
         robot.verifyTextContains("Supports Hilt and Koin. For Koin, you can choose between standard DSL and Koin Annotations.")
+        robot.verifyTextContains("Hilt Setup: ")
 
         // Repository Generator
         robot.clickOnTag("RepositoryGenerator")
@@ -106,6 +109,7 @@ internal class WelcomeScreenTest : ComposeBasedTestCase() {
         robot.clickOnTag("Presentation:Assumptions")
         composableRule.waitForIdle()
         robot.verifyTextIsDisplayed("You select a 'presentation' module directory.")
+        robot.verifyTextContains("Navigation: ")
         
         robot.clickOnTag("Presentation:UIPatterns")
         composableRule.waitForIdle()

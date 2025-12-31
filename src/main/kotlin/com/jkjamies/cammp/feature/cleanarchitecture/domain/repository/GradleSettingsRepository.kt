@@ -13,5 +13,5 @@ interface GradleSettingsRepository {
     fun ensureVersionCatalogPluginAliases(projectBase: Path, orgSegment: String, enabledModules: List<String>): Boolean
 
     /** Ensures the app module depends on the feature's DI module. Returns true if modified. */
-    fun ensureAppDependency(projectBase: Path, root: String, feature: String): Boolean
+    fun ensureAppDependency(projectBase: Path, root: String, feature: String, diMode: DiMode): Boolean
 }
