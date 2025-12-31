@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added welcome screen notes
+- Automatically adds `kotlin-metadata-jvm` to app module when using hilt and kotlin 2.3.0+
+
 ## [0.0.4-alpha] - 2025-12-31
 
 ### Added
