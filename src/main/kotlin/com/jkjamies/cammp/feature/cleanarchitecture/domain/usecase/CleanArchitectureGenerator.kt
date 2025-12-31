@@ -81,11 +81,17 @@ class CleanArchitectureGenerator(
             }
         }
 
+        val diMode = when {
+            p.diKoin && p.diKoinAnnotations -> DiMode.KOIN_ANNOTATIONS
+            p.diKoin -> DiMode.KOIN
+            else -> DiMode.HILT
+        }
+
         val settingsUpdated = settingsRepo.ensureIncludes(p.projectBasePath, p.root, featureDirName, modules)
         settingsRepo.ensureIncludeBuild(p.projectBasePath, "build-logic")
         settingsRepo.ensureVersionCatalogPluginAliases(p.projectBasePath, p.orgCenter, modules)
-        val appDependencyUpdated = settingsRepo.ensureAppDependency(p.projectBasePath, p.root, featureDirName)
-        val buildLogicCreated = scaffoldBuildLogic(p.projectBasePath, p.orgCenter, modules, p)
+        val appDependencyUpdated = settingsRepo.ensureAppDependency(p.projectBasePath, p.root, featureDirName, diMode)
+        val buildLogicCreated = scaffoldBuildLogic(p.projectBasePath, p.orgCenter, modules, diMode)
 
         val msg = if (created.isEmpty()) {
             "No modules created (all existed). Settings and build-logic ensured."
@@ -248,7 +254,7 @@ class CleanArchitectureGenerator(
         projectBase: Path,
         orgCenter: String,
         enabledModules: List<String>,
-        p: CleanArchitectureParams
+        diMode: DiMode
     ): Boolean {
         val buildLogicDir = projectBase.resolve("build-logic")
         var changed = false
@@ -300,12 +306,6 @@ class CleanArchitectureGenerator(
             val content = replacePackageTokens(raw, safeOrg)
             fs.writeText(helpersDir.resolve("TestOptions.kt"), content)
             changed = true
-        }
-
-        val diMode = when {
-            p.diKoin && p.diKoinAnnotations -> DiMode.KOIN_ANNOTATIONS
-            p.diKoin -> DiMode.KOIN
-            else -> DiMode.HILT
         }
 
         // core

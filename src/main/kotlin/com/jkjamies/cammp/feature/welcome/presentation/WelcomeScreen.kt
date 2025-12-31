@@ -101,7 +101,25 @@ internal fun WelcomeScreen() {
 
             CollapsibleSubSection("Convention Plugins & Version Catalog", "CleanArch:ConventionPlugins") {
                 Text("This generator adds convention plugins to your project and updates the version catalog (libs.versions.toml) with the generated convention plugins. It assumes the existence of a version catalog.")
-                
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    boldItem(
+                        "Note: ",
+                        "AGP Version: ",
+                        "Assumes AGP 8.13.2 or earlier. AGP 9+ may require manual modifications to the generated convention plugins."
+                    ),
+                    fontSize = 12.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    boldItem(
+                        "Note: ",
+                        "Kotlin/JDK Version: ",
+                        "Assumes Kotlin and JDK 17. Please ensure your project is configured with the Kotlin JVM toolchain set to 17 in your build files (e.g., kotlin { jvmToolchain(17) })."
+                    ),
+                    fontSize = 12.sp
+                )
+
                 CollapsibleSubSection("Version Catalog Updates", "CleanArch:VersionCatalogUpdates") {
                     Text("Dependencies in the libs.versions.toml file will be used if they exist. If they do not exist, they will be added automatically.")
                 }
@@ -191,6 +209,31 @@ internal fun WelcomeScreen() {
                     ),
                     fontSize = 12.sp
                 )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    boldItem(
+                        "Note: ",
+                        "If using Hilt and Kotlin 2.3.0+, ",
+                        "the generator will automatically add the 'kotlin-metadata-jvm' dependency to your app module to resolve compatibility issues."
+                    ),
+                    fontSize = 12.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    boldItem(
+                        "Hilt Setup: ",
+                        "Please ensure you have the standard Hilt setup in your project, including:",
+                        ""
+                    ),
+                    fontSize = 12.sp
+                )
+                BulletedList(
+                    "Hilt plugin in the base gradle file",
+                    "Hilt plugin and dependency in the app module",
+                    "KSP plugin and Hilt compiler dependency in the app module",
+                    "An Application class with @HiltAndroidApp",
+                    "Your MainActivity annotated with @AndroidEntryPoint"
+                )
             }
         }
 
@@ -254,6 +297,15 @@ internal fun WelcomeScreen() {
                 BulletedList(
                     "You select a 'presentation' module directory.",
                     "UseCases are detected from across the project to be injected into the ViewModel."
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    boldItem(
+                        "Note: ",
+                        "Navigation: ",
+                        "The generator does not automatically handle navigation between features. You will need to manually import the generated Screen or NavHost and integrate it into your app's navigation graph, or set up deeplinks/activities/fragments as needed."
+                    ),
+                    fontSize = 12.sp
                 )
             }
 

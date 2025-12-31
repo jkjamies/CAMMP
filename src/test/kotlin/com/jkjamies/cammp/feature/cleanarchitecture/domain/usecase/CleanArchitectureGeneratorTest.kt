@@ -274,7 +274,7 @@ private class FakeGradleSettingsRepository : GradleSettingsRepository {
     override fun ensureIncludes(projectBase: Path, root: String, feature: String, modules: List<String>): Boolean = true
     override fun ensureIncludeBuild(projectBase: Path, buildLogicName: String): Boolean = true
     override fun ensureVersionCatalogPluginAliases(projectBase: Path, orgSegment: String, enabledModules: List<String>): Boolean = true
-    override fun ensureAppDependency(projectBase: Path, root: String, feature: String): Boolean = true
+    override fun ensureAppDependency(projectBase: Path, root: String, feature: String, diMode: DiMode): Boolean = true
 }
 
 private class FakeConventionPluginRepository : ConventionPluginRepository {
