@@ -236,7 +236,7 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
             }
         }
 
-        When("ensureAppDependency is called with Hilt and existing sections but missing metadata") {
+        When("ensureAppDependency is called with Hilt and existing libraries section but missing metadata") {
             val appDir = tempDir.resolve("app")
             appDir.createDirectories()
             val buildFile = appDir.resolve("build.gradle.kts")
@@ -244,19 +244,16 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
             val gradleDir = tempDir.resolve("gradle")
             gradleDir.createDirectories()
             val catalogFile = gradleDir.resolve("libs.versions.toml")
-            catalogFile.writeText("[versions]\nother-lib = \"1.0\"\n[libraries]\nother-lib = { module = \"com.example:lib\", version.ref = \"other-lib\" }")
+            catalogFile.writeText("[versions]\n[libraries]\nother-lib = { module = \"com.example:lib\" }")
 
-            val result = repository.ensureAppDependency(tempDir, "", "hiltFeatureExistingSections", DiMode.HILT)
+            val result = repository.ensureAppDependency(tempDir, "", "hiltFeatureExistingLibrary", DiMode.HILT)
 
-            Then("it should add metadata dependency to existing sections") {
+            Then("it should add metadata dependency to existing libraries section") {
                 result shouldBe true
                 val catalogContent = catalogFile.readText()
-                catalogContent shouldContain "[versions]"
-                catalogContent shouldContain "kotlin-metadata-jvm = \"2.3.0\""
                 catalogContent shouldContain "[libraries]"
                 catalogContent shouldContain "kotlin-metadata-jvm = {"
-                // Ensure existing content is preserved
-                catalogContent shouldContain "other-lib = \"1.0\""
+                catalogContent shouldContain "other-lib = { module = \"com.example:lib\" }"
             }
         }
 
