@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.0.4-alpha] - 2025-12-31
+
 ### Added
 
 - Message about :app module importing DI module - why and option to remove manually
@@ -85,7 +87,8 @@
 
 Initial Alpha Release
 
-[Unreleased]: https://github.com/jkjamies/CAMMP/compare/v0.0.3-alpha...HEAD
+[Unreleased]: https://github.com/jkjamies/CAMMP/compare/v0.0.4-alpha...HEAD
+[0.0.4-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.3-alpha...v0.0.4-alpha
 [0.0.3-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.2-alpha...v0.0.3-alpha
 [0.0.2-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.1...v0.0.2-alpha
 [0.0.1]: https://github.com/jkjamies/CAMMP/commits/v0.0.1
