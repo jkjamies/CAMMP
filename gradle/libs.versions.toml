@@ -18,6 +18,7 @@ changelog = "2.5.0"
 intelliJPlatform = "2.10.5"
 kotlin = "2.3.0"
 kover = "0.9.4"
+metro = "0.9.2"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -40,3 +41,4 @@ intelliJPlatform = { id = "org.jetbrains.intellij.platform", version.ref = "inte
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+metro = { id = "dev.zacsweers.metro", version.ref = "metro" }

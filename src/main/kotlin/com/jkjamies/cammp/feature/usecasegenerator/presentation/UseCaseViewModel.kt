@@ -3,23 +3,25 @@ package com.jkjamies.cammp.feature.usecasegenerator.presentation
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.UseCaseGenerator
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.LoadRepositories
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import java.nio.file.Paths
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@AssistedInject
 class UseCaseViewModel(
-    initial: UseCaseUiState = UseCaseUiState(),
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
-    private val generator: UseCaseGenerator = UseCaseGenerator(),
-    private val loadRepositories: LoadRepositories = LoadRepositories()
+    @Assisted private val domainPackage: String,
+    @Assisted private val scope: CoroutineScope,
+    private val generator: UseCaseGenerator,
+    private val loadRepositories: LoadRepositories
 ) {
-    private val _state = MutableStateFlow(initial)
+    private val _state = MutableStateFlow(UseCaseUiState(domainPackage = domainPackage))
     val state: StateFlow<UseCaseUiState> = _state.asStateFlow()
 
     fun handleIntent(intent: UseCaseIntent) {
@@ -123,4 +125,9 @@ class UseCaseViewModel(
         } else {
             copy(diHilt = true, diKoin = false, diKoinAnnotations = false)
         }
+
+    @AssistedFactory
+    fun interface Factory {
+        fun create(domainPackage: String, scope: CoroutineScope): UseCaseViewModel
+    }
 }

@@ -17,7 +17,8 @@ class NavigationRepositoryImplTest : BehaviorSpec({
     }
 
     Given("a Navigation repository") {
-        val repo = NavigationRepositoryImpl()
+        val fs = FileSystemRepositoryImpl()
+        val repo = NavigationRepositoryImpl(fs)
 
         When("generating NavigationHost") {
             val result = repo.generateNavigationHost(tempDir, "com.example", "TestNavHost")

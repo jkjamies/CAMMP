@@ -1,10 +1,13 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationDiModuleRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationMergeOutcome
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.PropertySpec
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
@@ -14,6 +17,8 @@ import kotlin.io.path.writeText
 /**
  * Implementation of [PresentationDiModuleRepository] for creating and updating Koin ViewModel modules.
  */
+@ContributesBinding(AppScope::class)
+@Inject
 class PresentationDiModuleRepositoryImpl : PresentationDiModuleRepository {
 
     override fun mergeViewModelModule(

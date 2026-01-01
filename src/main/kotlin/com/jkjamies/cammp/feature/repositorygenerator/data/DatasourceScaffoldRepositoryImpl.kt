@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceOptions
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
@@ -9,13 +10,17 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
+@ContributesBinding(AppScope::class)
+@Inject
 class DatasourceScaffoldRepositoryImpl(
-    private val modulePkgRepo: ModulePackageRepository = ModulePackageRepositoryImpl(),
-    private val diRepo: DiModuleRepository = DiModuleRepositoryImpl(),
+    private val modulePkgRepo: ModulePackageRepository,
+    private val diRepo: DiModuleRepository,
 ) : DatasourceScaffoldRepository {
 
     override fun generate(

@@ -1,11 +1,12 @@
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
+import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePackageRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.mockkConstructor
+import io.mockk.mockk
 import io.mockk.unmockkAll
 import java.nio.file.Files
 
@@ -14,9 +15,7 @@ import java.nio.file.Files
  */
 class RepositoryDiscoveryRepositoryImplTest : BehaviorSpec({
 
-    beforeSpec {
-        mockkConstructor(ModulePackageRepositoryImpl::class)
-    }
+    val mockModulePkgRepo = mockk<ModulePackageRepository>()
 
     beforeContainer {
         clearAllMocks()
@@ -27,7 +26,7 @@ class RepositoryDiscoveryRepositoryImplTest : BehaviorSpec({
     }
 
     Given("a RepositoryDiscoveryRepositoryImpl") {
-        val repository = RepositoryDiscoveryRepositoryImpl()
+        val repository = RepositoryDiscoveryRepositoryImpl(mockModulePkgRepo)
 
         When("loadRepositories is called with an invalid path") {
             val result = repository.loadRepositories("/invalid/path")
@@ -47,7 +46,7 @@ class RepositoryDiscoveryRepositoryImplTest : BehaviorSpec({
             Files.createFile(packagePath.resolve("AuthRepository.kt"))
             Files.createFile(packagePath.resolve("UserRepository.kt"))
 
-            every { anyConstructed<ModulePackageRepositoryImpl>().findModulePackage(any()) } returns "com.example.domain.usecase"
+            every { mockModulePkgRepo.findModulePackage(any()) } returns "com.example.domain.usecase"
 
             val result = repository.loadRepositories(tempDir.toString())
 

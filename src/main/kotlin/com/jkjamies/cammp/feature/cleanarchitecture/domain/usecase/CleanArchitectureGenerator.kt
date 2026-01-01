@@ -1,11 +1,5 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.domain.usecase
 
-import com.jkjamies.cammp.feature.cleanarchitecture.data.AliasesRepositoryImpl
-import com.jkjamies.cammp.feature.cleanarchitecture.data.AnnotationModuleRepositoryImpl
-import com.jkjamies.cammp.feature.cleanarchitecture.data.ConventionPluginRepositoryImpl
-import com.jkjamies.cammp.feature.cleanarchitecture.data.FileSystemRepositoryImpl
-import com.jkjamies.cammp.feature.cleanarchitecture.data.GradleSettingsRepositoryImpl
-import com.jkjamies.cammp.feature.cleanarchitecture.data.TemplateRepositoryImpl
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureResult
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.AliasesRepository
@@ -16,6 +10,7 @@ import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.FileSystem
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.GradleSettingsRepository
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.PluginType
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.TemplateRepository
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
 /**
@@ -28,13 +23,14 @@ import java.nio.file.Path
  * @param conventionPluginRepo The [ConventionPluginRepository] to use for generating convention plugins.
  * @param aliasesRepo The [AliasesRepository] to use for generating the Aliases.kt file.
  */
+@Inject
 class CleanArchitectureGenerator(
-    private val fs: FileSystemRepository = FileSystemRepositoryImpl(),
-    private val templateRepo: TemplateRepository = TemplateRepositoryImpl(),
-    private val settingsRepo: GradleSettingsRepository = GradleSettingsRepositoryImpl(),
-    private val annotationModuleRepo: AnnotationModuleRepository = AnnotationModuleRepositoryImpl(fs),
-    private val conventionPluginRepo: ConventionPluginRepository = ConventionPluginRepositoryImpl(fs),
-    private val aliasesRepo: AliasesRepository = AliasesRepositoryImpl(fs),
+    private val fs: FileSystemRepository,
+    private val templateRepo: TemplateRepository,
+    private val settingsRepo: GradleSettingsRepository,
+    private val annotationModuleRepo: AnnotationModuleRepository,
+    private val conventionPluginRepo: ConventionPluginRepository,
+    private val aliasesRepo: AliasesRepository,
 ) {
 
     /**

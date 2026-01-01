@@ -6,8 +6,13 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
+@ContributesBinding(AppScope::class)
+@Inject
 class AnnotationModuleRepositoryImpl(
     private val fs: FileSystemRepository
 ) : AnnotationModuleRepository {

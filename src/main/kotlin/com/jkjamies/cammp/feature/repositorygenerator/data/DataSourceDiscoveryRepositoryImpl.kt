@@ -1,19 +1,26 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceDiscoveryRepository
+import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
-class DataSourceDiscoveryRepositoryImpl : DataSourceDiscoveryRepository {
+@ContributesBinding(AppScope::class)
+@Inject
+class DataSourceDiscoveryRepositoryImpl(
+    private val modulePackageRepo: ModulePackageRepository
+) : DataSourceDiscoveryRepository {
     override fun loadDataSourcesByType(dataModulePath: String): Map<String, List<String>> {
         return try {
             val moduleDir = Paths.get(dataModulePath)
             val kotlinRoot = moduleDir.resolve("src/main/kotlin")
             if (!kotlinRoot.exists()) return emptyMap()
 
-            val modulePackageRepo = ModulePackageRepositoryImpl()
             val basePkg = modulePackageRepo.findModulePackage(moduleDir)
 
             val combinedPkg = "$basePkg.dataSource"

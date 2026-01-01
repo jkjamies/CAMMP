@@ -16,7 +16,8 @@ class UiStateRepositoryImplTest : BehaviorSpec({
     }
 
     Given("a UiState repository") {
-        val repo = UiStateRepositoryImpl()
+        val fs = FileSystemRepositoryImpl()
+        val repo = UiStateRepositoryImpl(fs)
 
         When("generating UiState") {
             val result = repo.generateUiState(tempDir, "com.example", "Test")

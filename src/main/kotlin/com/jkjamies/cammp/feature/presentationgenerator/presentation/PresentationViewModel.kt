@@ -1,23 +1,24 @@
 package com.jkjamies.cammp.feature.presentationgenerator.presentation
 
-import com.jkjamies.cammp.feature.presentationgenerator.data.PresentationRepositoryImpl
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.usecase.PresentationGenerator
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@AssistedInject
 class PresentationViewModel(
-    initial: PresentationUiState = PresentationUiState(),
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
-    private val generator: PresentationGenerator = PresentationGenerator(PresentationRepositoryImpl())
+    @Assisted private val directory: String,
+    @Assisted private val scope: CoroutineScope,
+    private val generator: PresentationGenerator,
 ) {
-    private val _state = MutableStateFlow(initial)
+    private val _state = MutableStateFlow(PresentationUiState(directory = directory))
     val state: StateFlow<PresentationUiState> = _state.asStateFlow()
 
     fun handleIntent(intent: PresentationIntent) {
@@ -103,5 +104,10 @@ class PresentationViewModel(
                 }
             )
         }
+    }
+
+    @AssistedFactory
+    fun interface Factory {
+        fun create(directory: String, scope: CoroutineScope): PresentationViewModel
     }
 }

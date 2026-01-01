@@ -16,7 +16,8 @@ class IntentRepositoryImplTest : BehaviorSpec({
     }
 
     Given("an Intent repository") {
-        val repo = IntentRepositoryImpl()
+        val fs = FileSystemRepositoryImpl()
+        val repo = IntentRepositoryImpl(fs)
 
         When("generating Intent") {
             val result = repo.generateIntent(tempDir, "com.example", "Test")

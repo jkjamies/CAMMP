@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FileSystemRepository
@@ -11,14 +12,18 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.TypeSpec
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.exists
 
 /**
  * Implementation of [NavigationRepository] that generates Navigation components using KotlinPoet.
  */
+@ContributesBinding(AppScope::class)
+@Inject
 class NavigationRepositoryImpl(
-    private val fs: FileSystemRepository = FileSystemRepositoryImpl()
+    private val fs: FileSystemRepository
 ) : NavigationRepository {
 
     override fun generateNavigationHost(

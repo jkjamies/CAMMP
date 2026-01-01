@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ViewModelRepository
@@ -10,6 +11,8 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
@@ -17,6 +20,8 @@ import kotlin.io.path.writeText
 /**
  * Implementation of [ViewModelRepository] that generates ViewModel files using KotlinPoet.
  */
+@ContributesBinding(AppScope::class)
+@Inject
 class ViewModelRepositoryImpl : ViewModelRepository {
 
     override fun generateViewModel(

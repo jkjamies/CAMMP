@@ -1,9 +1,14 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.datasource
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.cleanarchitecture.data.datasource.VersionCatalogDataSource
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.FileSystemRepository
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
+@ContributesBinding(AppScope::class)
+@Inject
 class VersionCatalogDataSourceImpl(
     private val fs: FileSystemRepository
 ) : VersionCatalogDataSource {

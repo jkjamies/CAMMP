@@ -2,12 +2,17 @@ package com.jkjamies.cammp.feature.cleanarchitecture.data
 
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.DiMode
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.GradleSettingsRepository
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
+@ContributesBinding(AppScope::class)
+@Inject
 class GradleSettingsRepositoryImpl : GradleSettingsRepository {
     override fun ensureIncludes(projectBase: Path, root: String, feature: String, modules: List<String>): Boolean {
         val settings = projectBase.resolve("settings.gradle.kts")

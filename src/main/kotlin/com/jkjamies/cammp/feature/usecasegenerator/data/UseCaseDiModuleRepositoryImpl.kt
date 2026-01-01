@@ -1,17 +1,22 @@
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseDiModuleRepository
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseMergeOutcome
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.PropertySpec
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
+@ContributesBinding(AppScope::class)
+@Inject
 class UseCaseDiModuleRepositoryImpl : UseCaseDiModuleRepository {
 
     override fun mergeUseCaseModule(

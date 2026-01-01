@@ -1,19 +1,18 @@
 package com.jkjamies.cammp.feature.usecasegenerator.domain.usecase
 
-import com.jkjamies.cammp.feature.usecasegenerator.data.ModulePackageRepositoryImpl
-import com.jkjamies.cammp.feature.usecasegenerator.data.UseCaseDiModuleRepositoryImpl
-import com.jkjamies.cammp.feature.usecasegenerator.data.UseCaseGenerationRepositoryImpl
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePackageRepository
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseDiModuleRepository
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationRepository
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.exists
 
+@Inject
 class UseCaseGenerator(
-    private val modulePkgRepo: ModulePackageRepository = ModulePackageRepositoryImpl(),
-    private val diRepo: UseCaseDiModuleRepository = UseCaseDiModuleRepositoryImpl(),
-    private val generationRepo: UseCaseGenerationRepository = UseCaseGenerationRepositoryImpl()
+    private val modulePkgRepo: ModulePackageRepository,
+    private val diRepo: UseCaseDiModuleRepository,
+    private val generationRepo: UseCaseGenerationRepository
 ) {
     suspend operator fun invoke(params: UseCaseParams): Result<Path> {
         return runCatching {

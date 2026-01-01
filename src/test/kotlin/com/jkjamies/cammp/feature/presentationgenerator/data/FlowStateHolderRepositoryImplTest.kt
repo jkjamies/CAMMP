@@ -16,7 +16,8 @@ class FlowStateHolderRepositoryImplTest : BehaviorSpec({
     }
 
     Given("a FlowStateHolder repository") {
-        val repo = FlowStateHolderRepositoryImpl()
+        val fs = FileSystemRepositoryImpl()
+        val repo = FlowStateHolderRepositoryImpl(fs)
 
         When("generating FlowStateHolder") {
             val result = repo.generateFlowStateHolder(tempDir, "com.example", "TestFlowStateHolder")

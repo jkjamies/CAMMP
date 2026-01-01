@@ -32,9 +32,10 @@ class RepositoryViewModelTest : BehaviorSpec({
     beforeContainer {
         clearAllMocks()
         viewModel = RepositoryViewModel(
+            domainPackage = "",
+            scope = testScope,
             generator = mockGenerator,
-            loadDataSourcesByType = mockLoadDataSources,
-            scope = testScope
+            loadDataSourcesByType = mockLoadDataSources
         )
     }
 

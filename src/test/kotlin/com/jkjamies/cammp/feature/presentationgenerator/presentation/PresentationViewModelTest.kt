@@ -33,8 +33,9 @@ class PresentationViewModelTest : BehaviorSpec({
     beforeContainer {
         clearAllMocks()
         viewModel = PresentationViewModel(
-            generator = generator,
-            scope = testScope
+            directory = "",
+            scope = testScope,
+            generator = generator
         )
     }
 

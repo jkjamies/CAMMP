@@ -11,8 +11,13 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
+@ContributesBinding(AppScope::class)
+@Inject
 class ConventionPluginRepositoryImpl(
     private val fs: FileSystemRepository
 ) : ConventionPluginRepository {

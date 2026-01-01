@@ -1,10 +1,15 @@
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePackageRepository
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
+@ContributesBinding(AppScope::class)
+@Inject
 class ModulePackageRepositoryImpl : ModulePackageRepository {
     override fun findModulePackage(moduleDir: Path): String? {
         val vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(moduleDir.toString())
