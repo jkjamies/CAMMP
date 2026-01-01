@@ -84,8 +84,11 @@ class VersionCatalogDataSourceImpl(
         
         text.lines().forEach { line ->
             val trimmed = line.trim()
-            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                currentSection = trimmed.substring(1, trimmed.length - 1)
+            // Handle comments in section headers
+            val potentialHeader = trimmed.substringBefore("#").trim()
+            
+            if (potentialHeader.startsWith("[") && potentialHeader.endsWith("]")) {
+                currentSection = potentialHeader.substring(1, potentialHeader.length - 1)
             } else {
                 if (line.isNotBlank()) {
                     sections.getOrPut(currentSection) { mutableListOf() }.add(line)

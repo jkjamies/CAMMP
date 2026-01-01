@@ -106,6 +106,16 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
                     content.lines().count { it.contains("convention-android-library-presentation") } shouldBe 1
                 }
             }
+
+            And("org name has uppercase letters") {
+                Then("it should lowercase the first letter of org name in plugin ID") {
+                    val result = repository.ensureVersionCatalogPluginAliases(tempDir, "MyOrg", listOf("di"))
+                    result shouldBe true
+                    val content = catalogFile.readText()
+                    // Should be com.myOrg... (first letter lowercased)
+                    content shouldContain "convention-android-library-di = { id = \"com.myOrg.convention.android.library.di\" }"
+                }
+            }
         }
 
         When("ensureAppDependency is called") {
@@ -150,7 +160,7 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
             }
         }
 
-        When("ensureAppDependency is called with Hilt") {
+        When("ensureAppDependency is called with Hilt and Kotlin 2.3.0") {
             val appDir = tempDir.resolve("app")
             appDir.createDirectories()
             val buildFile = appDir.resolve("build.gradle.kts")
@@ -158,7 +168,7 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
             val gradleDir = tempDir.resolve("gradle")
             gradleDir.createDirectories()
             val catalogFile = gradleDir.resolve("libs.versions.toml")
-            catalogFile.writeText("[versions]\n[libraries]\n")
+            catalogFile.writeText("[versions]\nkotlin = \"2.3.0\"\n[libraries]\n")
 
             val result = repository.ensureAppDependency(tempDir, "", "hiltFeature", DiMode.HILT)
 
@@ -170,6 +180,28 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
                 val catalogContent = catalogFile.readText()
                 catalogContent shouldContain "kotlin-metadata-jvm = \"2.3.0\""
                 catalogContent shouldContain "kotlin-metadata-jvm = { group = \"org.jetbrains.kotlin\", name = \"kotlin-metadata-jvm\", version.ref = \"kotlin-metadata-jvm\" }"
+            }
+        }
+
+        When("ensureAppDependency is called with Hilt and Kotlin 2.0.21") {
+            val appDir = tempDir.resolve("app")
+            appDir.createDirectories()
+            val buildFile = appDir.resolve("build.gradle.kts")
+            buildFile.writeText("dependencies {}")
+            val gradleDir = tempDir.resolve("gradle")
+            gradleDir.createDirectories()
+            val catalogFile = gradleDir.resolve("libs.versions.toml")
+            catalogFile.writeText("[versions]\nkotlin = \"2.0.21\"\n[libraries]\n")
+
+            val result = repository.ensureAppDependency(tempDir, "", "hiltFeatureOldKotlin", DiMode.HILT)
+
+            Then("it should NOT add metadata dependency") {
+                result shouldBe true // Still true because feature dependency is added
+                val buildContent = buildFile.readText()
+                buildContent shouldNotContain "ksp(libs.kotlin.metadata.jvm)"
+
+                val catalogContent = catalogFile.readText()
+                catalogContent shouldNotContain "kotlin-metadata-jvm"
             }
         }
 
@@ -185,10 +217,10 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
 
             val result = repository.ensureAppDependency(tempDir, "", "hiltFeatureNoCatalog", DiMode.HILT)
 
-            Then("it should not crash and return true (because build file updated)") {
+            Then("it should not crash and return true (because build file updated) but NOT add metadata dependency (cant check version)") {
                 result shouldBe true
                 val buildContent = buildFile.readText()
-                buildContent shouldContain "ksp(libs.kotlin.metadata.jvm)"
+                buildContent shouldNotContain "ksp(libs.kotlin.metadata.jvm)"
             }
         }
 
@@ -200,7 +232,7 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
             val gradleDir = tempDir.resolve("gradle")
             gradleDir.createDirectories()
             val catalogFile = gradleDir.resolve("libs.versions.toml")
-            catalogFile.writeText("[versions]\nkotlin-metadata-jvm = \"2.3.0\"\n[libraries]\nkotlin-metadata-jvm = { group = \"org.jetbrains.kotlin\", name = \"kotlin-metadata-jvm\", version.ref = \"kotlin-metadata-jvm\" }\n")
+            catalogFile.writeText("[versions]\nkotlin = \"2.3.0\"\nkotlin-metadata-jvm = \"2.3.0\"\n[libraries]\nkotlin-metadata-jvm = { group = \"org.jetbrains.kotlin\", name = \"kotlin-metadata-jvm\", version.ref = \"kotlin-metadata-jvm\" }\n")
 
             val result = repository.ensureAppDependency(tempDir, "", "hiltFeatureExisting", DiMode.HILT)
 
@@ -222,7 +254,7 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
             val gradleDir = tempDir.resolve("gradle")
             gradleDir.createDirectories()
             val catalogFile = gradleDir.resolve("libs.versions.toml")
-            catalogFile.writeText("# Empty catalog")
+            catalogFile.writeText("[versions]\nkotlin = \"2.3.0\"\n# Empty catalog")
 
             val result = repository.ensureAppDependency(tempDir, "", "hiltFeatureEmptyCatalog", DiMode.HILT)
 
@@ -244,7 +276,7 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
             val gradleDir = tempDir.resolve("gradle")
             gradleDir.createDirectories()
             val catalogFile = gradleDir.resolve("libs.versions.toml")
-            catalogFile.writeText("[versions]\n[libraries]\nother-lib = { module = \"com.example:lib\" }")
+            catalogFile.writeText("[versions]\nkotlin = \"2.3.0\"\n[libraries]\nother-lib = { module = \"com.example:lib\" }")
 
             val result = repository.ensureAppDependency(tempDir, "", "hiltFeatureExistingLibrary", DiMode.HILT)
 

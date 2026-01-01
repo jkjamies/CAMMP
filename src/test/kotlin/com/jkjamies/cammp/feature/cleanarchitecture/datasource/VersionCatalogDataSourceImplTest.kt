@@ -216,6 +216,29 @@ class VersionCatalogDataSourceImplTest : BehaviorSpec({
                 versionsIndex shouldBeLessThan librariesIndex
             }
         }
+
+        When("parsing a file with comments on section headers") {
+            val tomlContent = """
+                [versions] # This is the versions section
+                v = "1"
+                
+                [libraries] # This is the libraries section
+                l = "2"
+            """.trimIndent()
+            fakeFs.writeText(tomlPath, tomlContent)
+
+            dataSource.getLibraryAlias(tomlPath, "new-lib", "group", "artifact", "1.0", null)
+
+            Then("it should correctly identify sections and not merge them") {
+                val content = fakeFs.readText(tomlPath)!!
+                // Check that [libraries] is still there and not merged into [versions]
+                content shouldContain "[libraries]"
+                // Check that 'l = "2"' is under [libraries] (implied by structure, but we can check order)
+                val librariesIndex = content.indexOf("[libraries]")
+                val lIndex = content.indexOf("l = \"2\"")
+                librariesIndex shouldBeLessThan lIndex
+            }
+        }
     }
 })
 

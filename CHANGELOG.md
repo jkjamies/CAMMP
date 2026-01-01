@@ -11,10 +11,11 @@
 
 ### Changed
 
-- FlowStateHolder has composable remember function with stable state class
-- ScreenStateHolder has composable remember function with stable state class
+- FlowStateHolder has a composable remember function with stable state class
+- ScreenStateHolder has a composable remember function with stable state class
 - Fixed convention plugin IDs added to version catalog (capitalization issue)
-- 
+- Updated version catalog handling to prevent mess (wip/in-testing)
+
 ## [0.0.4-alpha] - 2025-12-31
 
 ### Added
