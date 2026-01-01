@@ -24,7 +24,10 @@ class ScreenStateHolderRepositoryImplTest : BehaviorSpec({
             Then("it should create the file") {
                 result.status shouldBe GenerationStatus.CREATED
                 val content = result.path.readText()
-                content shouldContain "class TestStateHolder"
+                content shouldContain "internal class TestStateHolder"
+                content shouldContain "@Composable"
+                content shouldContain "internal fun rememberTestStateHolder"
+                content shouldContain "@Stable"
             }
         }
     }

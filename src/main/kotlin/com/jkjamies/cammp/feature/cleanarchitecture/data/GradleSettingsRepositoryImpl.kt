@@ -57,6 +57,9 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
         val gradleDir = projectBase.resolve("gradle")
         val catalog = gradleDir.resolve("libs.versions.toml")
         val safeOrg = orgSegment.trim().ifEmpty { "cammp" }
+        // Ensure org name starts with lowercase for convention plugin IDs
+        val conventionOrg = safeOrg.replaceFirstChar { it.lowercase() }
+        
         val requiredLayers = buildList {
             add("domain"); add("data")
             if (enabledModules.contains("di")) add("di")
@@ -77,7 +80,7 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
             sb.appendLine("[plugins]")
             requiredLayers.forEach { layer ->
                 val alias = "convention-android-library-$layer"
-                val id = "com.$safeOrg.convention.android.library.$layer"
+                val id = "com.$conventionOrg.convention.android.library.$layer"
                 sb.appendLine("$alias = { id = \"$id\" }")
             }
             if (!gradleDir.exists()) gradleDir.createDirectories()
@@ -96,7 +99,7 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
         val additions = StringBuilder()
         requiredLayers.forEach { layer ->
             val alias = "convention-android-library-$layer"
-            val id = "com.$safeOrg.convention.android.library.$layer"
+            val id = "com.$conventionOrg.convention.android.library.$layer"
             val aliasRegex = Regex("(?m)^\\s*${Regex.escape(alias)}\\s*=\\s*\\{.*\\}")
             if (!aliasRegex.containsMatchIn(pluginsBlock)) {
                 additions.appendLine("$alias = { id = \"$id\" }")

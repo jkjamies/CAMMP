@@ -9,6 +9,12 @@
 - Added welcome screen notes
 - Automatically adds `kotlin-metadata-jvm` to app module when using hilt and kotlin 2.3.0+
 
+### Changed
+
+- FlowStateHolder has composable remember function with stable state class
+- ScreenStateHolder has composable remember function with stable state class
+- Fixed convention plugin IDs added to version catalog (capitalization issue)
+- 
 ## [0.0.4-alpha] - 2025-12-31
 
 ### Added
