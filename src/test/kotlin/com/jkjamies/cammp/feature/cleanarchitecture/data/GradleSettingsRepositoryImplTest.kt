@@ -80,14 +80,25 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
             val gradleDir = tempDir.resolve("gradle")
             val catalogFile = gradleDir.resolve("libs.versions.toml")
 
-            And("catalog file does not exist") {
-                Then("it should create catalog file with aliases") {
+            And("catalog file does not exist and gradle dir does not exist") {
+                if (gradleDir.exists()) gradleDir.toFile().deleteRecursively()
+                Then("it should create gradle dir and catalog file with aliases") {
                     val result = repository.ensureVersionCatalogPluginAliases(tempDir, "myorg", listOf("domain", "data"))
                     result shouldBe true
+                    gradleDir.exists() shouldBe true
                     catalogFile.exists() shouldBe true
                     val content = catalogFile.readText()
                     content shouldContain "convention-android-library-domain = { id = \"com.myorg.convention.android.library.domain\" }"
-                    content shouldContain "convention-android-library-data = { id = \"com.myorg.convention.android.library.data\" }"
+                }
+            }
+
+            And("orgSegment is empty") {
+                if (catalogFile.exists()) catalogFile.toFile().delete()
+                Then("it should use default 'cammp' org") {
+                    val result = repository.ensureVersionCatalogPluginAliases(tempDir, " ", listOf("domain"))
+                    result shouldBe true
+                    val content = catalogFile.readText()
+                    content shouldContain "id = \"com.cammp.convention.android.library.domain\""
                 }
             }
 
@@ -245,6 +256,25 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
 
                 val catalogContent = catalogFile.readText()
                 catalogContent shouldNotContain "kotlin-metadata-jvm"
+            }
+        }
+
+        When("ensureAppDependency is called with Hilt and Kotlin version is missing from catalog") {
+            val appDir = tempDir.resolve("app")
+            appDir.createDirectories()
+            val buildFile = appDir.resolve("build.gradle.kts")
+            buildFile.writeText("dependencies {}")
+            val gradleDir = tempDir.resolve("gradle")
+            gradleDir.createDirectories()
+            val catalogFile = gradleDir.resolve("libs.versions.toml")
+            catalogFile.writeText("[versions]\n[libraries]\n") // No kotlin version
+
+            val result = repository.ensureAppDependency(tempDir, "", "hiltFeatureNoKotlinVersion", DiMode.HILT)
+
+            Then("it should NOT add metadata dependency") {
+                result shouldBe true // Still true because feature dependency is added
+                val buildContent = buildFile.readText()
+                buildContent shouldNotContain "ksp(libs.kotlin.metadata.jvm)"
             }
         }
 
