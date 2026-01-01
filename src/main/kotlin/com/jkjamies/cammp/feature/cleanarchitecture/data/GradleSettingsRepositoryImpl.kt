@@ -57,6 +57,9 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
         val gradleDir = projectBase.resolve("gradle")
         val catalog = gradleDir.resolve("libs.versions.toml")
         val safeOrg = orgSegment.trim().ifEmpty { "cammp" }
+        // Ensure org name starts with lowercase for convention plugin IDs
+        val conventionOrg = safeOrg.replaceFirstChar { it.lowercase() }
+        
         val requiredLayers = buildList {
             add("domain"); add("data")
             if (enabledModules.contains("di")) add("di")
@@ -77,7 +80,7 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
             sb.appendLine("[plugins]")
             requiredLayers.forEach { layer ->
                 val alias = "convention-android-library-$layer"
-                val id = "com.$safeOrg.convention.android.library.$layer"
+                val id = "com.$conventionOrg.convention.android.library.$layer"
                 sb.appendLine("$alias = { id = \"$id\" }")
             }
             if (!gradleDir.exists()) gradleDir.createDirectories()
@@ -86,17 +89,17 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
         }
 
         var text = catalog.readText()
-        if (!Regex("(?m)^\\[plugins]\\s*").containsMatchIn(text)) {
+        if (!Regex("(?m)^\\s*\\[plugins]\\s*").containsMatchIn(text)) {
             if (!text.endsWith("\n")) text += "\n"
             text += "\n[plugins]\n"
         }
-        val pluginsSectionRegex = Regex("(?s)\\[plugins]\\s*(.*?)(?:\\n\\[[^\\]]+]|$)")
+        val pluginsSectionRegex = Regex("(?s)\\[plugins]\\s*(.*?)(?=\\n\\s*\\[[^\\]]+]|$)")
         val match = pluginsSectionRegex.find(text)
         val pluginsBlock = match?.groups?.get(1)?.value ?: ""
         val additions = StringBuilder()
         requiredLayers.forEach { layer ->
             val alias = "convention-android-library-$layer"
-            val id = "com.$safeOrg.convention.android.library.$layer"
+            val id = "com.$conventionOrg.convention.android.library.$layer"
             val aliasRegex = Regex("(?m)^\\s*${Regex.escape(alias)}\\s*=\\s*\\{.*\\}")
             if (!aliasRegex.containsMatchIn(pluginsBlock)) {
                 additions.appendLine("$alias = { id = \"$id\" }")
@@ -154,29 +157,53 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
 
         // Handle Kotlin 2.3.0+ metadata workaround for Hilt
         if (diMode == DiMode.HILT) {
-            // 1. Ensure library in version catalog
-            val catalogChanged = ensureKotlinMetadataInCatalog(projectBase)
-            
-            // 2. Ensure dependency in app/build.gradle.kts
-            val metadataDependency = "ksp(libs.kotlin.metadata.jvm)"
-            if (!text.contains(metadataDependency)) {
-                val dependenciesRegex = Regex("(?s)dependencies\\s*\\{(.*?)\\}")
-                val match = dependenciesRegex.find(text)
-                if (match != null) {
-                    text = text.replace(dependenciesRegex) { mr ->
-                        val content = mr.groups[1]?.value ?: ""
-                        "dependencies {$content\n    $metadataDependency\n}"
+            // Check Kotlin version in catalog
+            val catalog = projectBase.resolve("gradle/libs.versions.toml")
+            if (catalog.exists()) {
+                val catalogText = catalog.readText()
+                val kotlinVersionRegex = Regex("(?m)^\\s*kotlin\\s*=\\s*\"([^\"]+)\"")
+                val match = kotlinVersionRegex.find(catalogText)
+                val kotlinVersion = match?.groups?.get(1)?.value
+
+                if (kotlinVersion != null && isKotlinVersionAtLeast(kotlinVersion, "2.3.0")) {
+                    // 1. Ensure library in version catalog
+                    val catalogChanged = ensureKotlinMetadataInCatalog(projectBase)
+                    
+                    // 2. Ensure dependency in app/build.gradle.kts
+                    val metadataDependency = "ksp(libs.kotlin.metadata.jvm)"
+                    if (!text.contains(metadataDependency)) {
+                        val dependenciesRegex = Regex("(?s)dependencies\\s*\\{(.*?)\\}")
+                        val matchDep = dependenciesRegex.find(text)
+                        if (matchDep != null) {
+                            text = text.replace(dependenciesRegex) { mr ->
+                                val content = mr.groups[1]?.value ?: ""
+                                "dependencies {$content\n    $metadataDependency\n}"
+                            }
+                            changed = true
+                        }
                     }
-                    changed = true
+                    if (catalogChanged) changed = true
                 }
             }
-            if (catalogChanged) changed = true // Signal change if catalog was updated, though return value is mostly for logging
         }
 
         if (changed) {
             appBuild.writeText(text)
         }
         return changed
+    }
+
+    private fun isKotlinVersionAtLeast(current: String, target: String): Boolean {
+        val currentParts = current.split('.').mapNotNull { it.toIntOrNull() }
+        val targetParts = target.split('.').mapNotNull { it.toIntOrNull() }
+        
+        for (i in 0 until maxOf(currentParts.size, targetParts.size)) {
+            val c = currentParts.getOrElse(i) { 0 }
+            val t = targetParts.getOrElse(i) { 0 }
+            if (c > t) return true
+            if (c < t) return false
+        }
+        return true
     }
 
     private fun ensureKotlinMetadataInCatalog(projectBase: Path): Boolean {
@@ -191,7 +218,7 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
                  if (!text.endsWith("\n")) text += "\n"
                  text += "\n[versions]\n"
              }
-             val versionsRegex = Regex("(?s)\\[versions]\\s*(.*?)(?:\\n\\[[^\\]]+]|$)")
+             val versionsRegex = Regex("(?s)\\[versions]\\s*(.*?)(?=\\n\\s*\\[[^\\]]+]|$)")
              val match = versionsRegex.find(text)
              if (match != null) {
                  val block = match.groups[1]?.value ?: ""
@@ -212,7 +239,7 @@ class GradleSettingsRepositoryImpl : GradleSettingsRepository {
                  if (!text.endsWith("\n")) text += "\n"
                  text += "\n[libraries]\n"
              }
-             val libsRegex = Regex("(?s)\\[libraries]\\s*(.*?)(?:\\n\\[[^\\]]+]|$)")
+             val libsRegex = Regex("(?s)\\[libraries]\\s*(.*?)(?=\\n\\s*\\[[^\\]]+]|$)")
              val match = libsRegex.find(text)
              if (match != null) {
                  val block = match.groups[1]?.value ?: ""

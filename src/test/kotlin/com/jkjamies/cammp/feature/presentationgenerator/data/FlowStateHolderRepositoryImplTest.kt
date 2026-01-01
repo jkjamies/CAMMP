@@ -24,8 +24,11 @@ class FlowStateHolderRepositoryImplTest : BehaviorSpec({
             Then("it should create the file") {
                 result.status shouldBe GenerationStatus.CREATED
                 val content = result.path.readText()
-                content shouldContain "class TestFlowStateHolder"
-                content shouldContain "MutableStateFlow(Unit)"
+                content shouldContain "internal class TestFlowStateHolder"
+                content shouldContain "@Composable"
+                content shouldContain "internal fun rememberTestFlowStateHolder"
+                content shouldContain "navController: NavHostController"
+                content shouldContain "@Stable"
             }
         }
     }

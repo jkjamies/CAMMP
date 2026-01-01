@@ -216,6 +216,53 @@ class VersionCatalogDataSourceImplTest : BehaviorSpec({
                 versionsIndex shouldBeLessThan librariesIndex
             }
         }
+
+        When("parsing a file with comments on section headers") {
+            val tomlContent = """
+                [versions] # This is the versions section
+                v = "1"
+                
+                [libraries] # This is the libraries section
+                l = "2"
+            """.trimIndent()
+            fakeFs.writeText(tomlPath, tomlContent)
+
+            dataSource.getLibraryAlias(tomlPath, "new-lib", "group", "artifact", "1.0", null)
+
+            Then("it should correctly identify sections and not merge them") {
+                val content = fakeFs.readText(tomlPath)!!
+                // Check that [libraries] is still there and not merged into [versions]
+                content shouldContain "[libraries]"
+                // Check that 'l = "2"' is under [libraries] (implied by structure, but we can check order)
+                val librariesIndex = content.indexOf("[libraries]")
+                val lIndex = content.indexOf("l = \"2\"")
+                librariesIndex shouldBeLessThan lIndex
+            }
+        }
+
+        When("parsing a file with malformed section headers") {
+            val tomlContent = """
+                [versions
+                v = "1"
+                libraries]
+                l = "2"
+            """.trimIndent()
+            fakeFs.writeText(tomlPath, tomlContent)
+
+            dataSource.getLibraryAlias(tomlPath, "new-lib", "group", "artifact", "1.0", null)
+
+            Then("it should treat malformed headers as content") {
+                val content = fakeFs.readText(tomlPath)!!
+                // Malformed headers are treated as part of the "header" section (before any valid section)
+                // and will be written back at the top.
+                // The parser will then create new, valid sections as needed.
+                content shouldContain "[versions"
+                content shouldContain "libraries]"
+                content shouldContain "[versions]"
+                content shouldContain "[libraries]"
+                content shouldContain "new-lib = { group = \"group\", name = \"artifact\", version.ref = \"new-lib\" }"
+            }
+        }
     }
 })
 
