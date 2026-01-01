@@ -239,6 +239,30 @@ class VersionCatalogDataSourceImplTest : BehaviorSpec({
                 librariesIndex shouldBeLessThan lIndex
             }
         }
+
+        When("parsing a file with malformed section headers") {
+            val tomlContent = """
+                [versions
+                v = "1"
+                libraries]
+                l = "2"
+            """.trimIndent()
+            fakeFs.writeText(tomlPath, tomlContent)
+
+            dataSource.getLibraryAlias(tomlPath, "new-lib", "group", "artifact", "1.0", null)
+
+            Then("it should treat malformed headers as content") {
+                val content = fakeFs.readText(tomlPath)!!
+                // Malformed headers are treated as part of the "header" section (before any valid section)
+                // and will be written back at the top.
+                // The parser will then create new, valid sections as needed.
+                content shouldContain "[versions"
+                content shouldContain "libraries]"
+                content shouldContain "[versions]"
+                content shouldContain "[libraries]"
+                content shouldContain "new-lib = { group = \"group\", name = \"artifact\", version.ref = \"new-lib\" }"
+            }
+        }
     }
 })
 

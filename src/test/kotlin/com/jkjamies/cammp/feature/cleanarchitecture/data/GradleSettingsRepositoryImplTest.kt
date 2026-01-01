@@ -116,6 +116,49 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
                     content shouldContain "convention-android-library-di = { id = \"com.myOrg.convention.android.library.di\" }"
                 }
             }
+
+            And("catalog file exists but missing plugins section") {
+                catalogFile.writeText("[versions]\n")
+                Then("it should add plugins section and aliases") {
+                    val result = repository.ensureVersionCatalogPluginAliases(tempDir, "myorg", listOf("domain"))
+                    result shouldBe true
+                    val content = catalogFile.readText()
+                    content shouldContain "[plugins]"
+                    content shouldContain "convention-android-library-domain"
+                }
+            }
+
+            And("catalog file exists but missing plugins section and no newline at end") {
+                catalogFile.writeText("[versions]")
+                Then("it should add newline and plugins section") {
+                    val result = repository.ensureVersionCatalogPluginAliases(tempDir, "myorg", listOf("domain"))
+                    result shouldBe true
+                    val content = catalogFile.readText()
+                    content shouldContain "[versions]\n\n[plugins]"
+                    content shouldContain "convention-android-library-domain"
+                }
+            }
+
+            And("data source modules are enabled (combined or split)") {
+                Then("it should add aliases for the enabled data source types") {
+                    // Test combined dataSource
+                    val result1 = repository.ensureVersionCatalogPluginAliases(tempDir, "myorg", listOf("dataSource"))
+                    result1 shouldBe true
+                    var content = catalogFile.readText()
+                    content shouldContain "convention-android-library-dataSource"
+                    content shouldNotContain "convention-android-library-remoteDataSource"
+                    content shouldNotContain "convention-android-library-localDataSource"
+
+                    // Test split data sources (simulating a different run or feature)
+                    // Note: In a real scenario, we wouldn't remove the previous alias if we are just appending, 
+                    // but here we are testing that the *new* aliases are added.
+                    val result2 = repository.ensureVersionCatalogPluginAliases(tempDir, "myorg", listOf("remoteDataSource", "localDataSource"))
+                    result2 shouldBe true
+                    content = catalogFile.readText()
+                    content shouldContain "convention-android-library-remoteDataSource"
+                    content shouldContain "convention-android-library-localDataSource"
+                }
+            }
         }
 
         When("ensureAppDependency is called") {
@@ -202,6 +245,44 @@ class GradleSettingsRepositoryImplTest : BehaviorSpec({
 
                 val catalogContent = catalogFile.readText()
                 catalogContent shouldNotContain "kotlin-metadata-jvm"
+            }
+        }
+
+        When("ensureAppDependency is called with Hilt and Kotlin 2.4.0 (newer)") {
+            val appDir = tempDir.resolve("app")
+            appDir.createDirectories()
+            val buildFile = appDir.resolve("build.gradle.kts")
+            buildFile.writeText("dependencies {}")
+            val gradleDir = tempDir.resolve("gradle")
+            gradleDir.createDirectories()
+            val catalogFile = gradleDir.resolve("libs.versions.toml")
+            catalogFile.writeText("[versions]\nkotlin = \"2.4.0\"\n[libraries]\n")
+
+            val result = repository.ensureAppDependency(tempDir, "", "hiltFeatureNewerKotlin", DiMode.HILT)
+
+            Then("it should add metadata dependency") {
+                result shouldBe true
+                val buildContent = buildFile.readText()
+                buildContent shouldContain "ksp(libs.kotlin.metadata.jvm)"
+            }
+        }
+
+        When("ensureAppDependency is called with Hilt and Kotlin 2.3.0.1 (patch newer)") {
+            val appDir = tempDir.resolve("app")
+            appDir.createDirectories()
+            val buildFile = appDir.resolve("build.gradle.kts")
+            buildFile.writeText("dependencies {}")
+            val gradleDir = tempDir.resolve("gradle")
+            gradleDir.createDirectories()
+            val catalogFile = gradleDir.resolve("libs.versions.toml")
+            catalogFile.writeText("[versions]\nkotlin = \"2.3.0.1\"\n[libraries]\n")
+
+            val result = repository.ensureAppDependency(tempDir, "", "hiltFeaturePatchNewer", DiMode.HILT)
+
+            Then("it should add metadata dependency") {
+                result shouldBe true
+                val buildContent = buildFile.readText()
+                buildContent shouldContain "ksp(libs.kotlin.metadata.jvm)"
             }
         }
 
