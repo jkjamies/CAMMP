@@ -3,23 +3,25 @@ package com.jkjamies.cammp.feature.repositorygenerator.presentation
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryGenerator
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import java.nio.file.Paths
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@AssistedInject
 class RepositoryViewModel(
-    initial: RepositoryUiState = RepositoryUiState(),
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
-    private val generator: RepositoryGenerator = RepositoryGenerator(),
-    private val loadDataSourcesByType: LoadDataSourcesByType = LoadDataSourcesByType()
+    @Assisted private val domainPackage: String,
+    @Assisted private val scope: CoroutineScope,
+    private val generator: RepositoryGenerator,
+    private val loadDataSourcesByType: LoadDataSourcesByType
 ) {
-    private val _state = MutableStateFlow(initial)
+    private val _state = MutableStateFlow(RepositoryUiState(domainPackage = domainPackage))
     val state: StateFlow<RepositoryUiState> = _state.asStateFlow()
 
     fun handleIntent(intent: RepositoryIntent) {
@@ -159,4 +161,9 @@ class RepositoryViewModel(
         } else {
             copy(diHilt = true, diKoin = false, diKoinAnnotations = false)
         }
+
+    @AssistedFactory
+    fun interface Factory {
+        fun create(domainPackage: String, scope: CoroutineScope): RepositoryViewModel
+    }
 }

@@ -1,21 +1,19 @@
 package com.jkjamies.cammp.feature.repositorygenerator.domain.usecase
 
-import com.jkjamies.cammp.feature.repositorygenerator.data.DiModuleRepositoryImpl
-import com.jkjamies.cammp.feature.repositorygenerator.data.DatasourceScaffoldRepositoryImpl
-import com.jkjamies.cammp.feature.repositorygenerator.data.ModulePackageRepositoryImpl
-import com.jkjamies.cammp.feature.repositorygenerator.data.RepositoryGenerationRepositoryImpl
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceOptions
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModuleRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.RepositoryGenerationRepository
+import dev.zacsweers.metro.Inject
 
+@Inject
 class RepositoryGenerator(
-    private val modulePkgRepo: ModulePackageRepository = ModulePackageRepositoryImpl(),
-    private val diRepo: DiModuleRepository = DiModuleRepositoryImpl(),
-    private val dsRepo: DatasourceScaffoldRepository = DatasourceScaffoldRepositoryImpl(),
-    private val generationRepo: RepositoryGenerationRepository = RepositoryGenerationRepositoryImpl()
+    private val modulePkgRepo: ModulePackageRepository,
+    private val diRepo: DiModuleRepository,
+    private val dsRepo: DatasourceScaffoldRepository,
+    private val generationRepo: RepositoryGenerationRepository
 ) {
     suspend operator fun invoke(params: RepositoryParams): Result<String> = runCatching {
         val results = mutableListOf<String>()

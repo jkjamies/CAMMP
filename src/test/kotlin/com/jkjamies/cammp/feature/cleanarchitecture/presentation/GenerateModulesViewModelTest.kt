@@ -28,9 +28,9 @@ class GenerateModulesViewModelTest : BehaviorSpec({
     beforeContainer {
         clearAllMocks()
         viewModel = GenerateModulesViewModel(
-            initial = GenerateModulesUiState(projectBasePath = "project"),
-            generator = mockGenerator,
-            scope = testScope
+            projectBasePath = "project",
+            scope = testScope,
+            generator = mockGenerator
         )
     }
 
@@ -167,11 +167,13 @@ class GenerateModulesViewModelTest : BehaviorSpec({
         }
 
         When("Generate intent is handled with missing base path") {
-            viewModel.handleIntent(GenerateModulesIntent.SetRoot(""))
-            viewModel.handleIntent(GenerateModulesIntent.Generate)
+            // Re-create VM with empty base path for this test case
+            val vm = GenerateModulesViewModel(projectBasePath = "", scope = testScope, generator = mockGenerator)
+            vm.handleIntent(GenerateModulesIntent.SetRoot(""))
+            vm.handleIntent(GenerateModulesIntent.Generate)
             Then("state should show error") {
-                viewModel.state.test {
-                    awaitItem().errorMessage shouldBe "Root and Feature are required"
+                vm.state.test {
+                    awaitItem().errorMessage shouldBe "Project base path is required"
                 }
             }
         }

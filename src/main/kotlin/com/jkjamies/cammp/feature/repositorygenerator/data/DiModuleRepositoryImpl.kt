@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModuleRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.MergeOutcome
@@ -11,12 +12,16 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
+@ContributesBinding(AppScope::class)
+@Inject
 class DiModuleRepositoryImpl : DiModuleRepository {
 
     override fun mergeRepositoryModule(

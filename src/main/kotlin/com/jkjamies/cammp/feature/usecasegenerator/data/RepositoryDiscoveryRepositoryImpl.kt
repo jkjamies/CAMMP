@@ -1,13 +1,19 @@
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.RepositoryDiscoveryRepository
-import com.jkjamies.cammp.feature.usecasegenerator.data.ModulePackageRepositoryImpl
+import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePackageRepository
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.stream.Collectors
 
-class RepositoryDiscoveryRepositoryImpl : RepositoryDiscoveryRepository {
-    private val modulePackageRepo = ModulePackageRepositoryImpl()
+@ContributesBinding(AppScope::class)
+@Inject
+class RepositoryDiscoveryRepositoryImpl(
+    private val modulePackageRepo: ModulePackageRepository
+) : RepositoryDiscoveryRepository {
 
     override fun loadRepositories(domainModulePath: String): List<String> {
         return try {

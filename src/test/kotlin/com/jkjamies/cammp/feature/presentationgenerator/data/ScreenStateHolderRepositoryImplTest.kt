@@ -16,7 +16,8 @@ class ScreenStateHolderRepositoryImplTest : BehaviorSpec({
     }
 
     Given("a ScreenStateHolder repository") {
-        val repo = ScreenStateHolderRepositoryImpl()
+        val fs = FileSystemRepositoryImpl()
+        val repo = ScreenStateHolderRepositoryImpl(fs)
 
         When("generating ScreenStateHolder") {
             val result = repo.generateScreenStateHolder(tempDir, "com.example", "Test")

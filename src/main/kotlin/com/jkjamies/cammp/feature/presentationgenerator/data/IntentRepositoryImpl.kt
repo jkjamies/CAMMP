@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FileSystemRepository
@@ -7,14 +8,18 @@ import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.Intent
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.exists
 
 /**
  * Implementation of [IntentRepository] that generates MVI Intent interfaces using KotlinPoet.
  */
+@ContributesBinding(AppScope::class)
+@Inject
 class IntentRepositoryImpl(
-    private val fs: FileSystemRepository = FileSystemRepositoryImpl()
+    private val fs: FileSystemRepository
 ) : IntentRepository {
 
     override fun generateIntent(

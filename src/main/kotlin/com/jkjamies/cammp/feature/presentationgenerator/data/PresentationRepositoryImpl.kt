@@ -1,20 +1,23 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FileSystemRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ModulePackageRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationDiModuleRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.UiStateRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenStateHolderRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FlowStateHolderRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.IntentRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.NavigationRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ViewModelRepository
+import dev.zacsweers.metro.AppScope
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FileSystemRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FlowStateHolderRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.IntentRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ModulePackageRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.NavigationRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationDiModuleRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenStateHolderRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.UiStateRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ViewModelRepository
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
@@ -36,17 +39,19 @@ import kotlin.io.path.exists
  * @param screenRepo The [ScreenRepository] for screen composable generation.
  * @param viewModelRepo The [ViewModelRepository] for ViewModel generation.
  */
+@ContributesBinding(AppScope::class)
+@Inject
 class PresentationRepositoryImpl(
-    private val fs: FileSystemRepository = FileSystemRepositoryImpl(),
-    private val modulePkgRepo: ModulePackageRepository = ModulePackageRepositoryImpl(),
-    private val diRepo: PresentationDiModuleRepository = PresentationDiModuleRepositoryImpl(),
-    private val uiStateRepo: UiStateRepository = UiStateRepositoryImpl(),
-    private val screenStateHolderRepo: ScreenStateHolderRepository = ScreenStateHolderRepositoryImpl(),
-    private val flowStateHolderRepo: FlowStateHolderRepository = FlowStateHolderRepositoryImpl(),
-    private val intentRepo: IntentRepository = IntentRepositoryImpl(),
-    private val navigationRepo: NavigationRepository = NavigationRepositoryImpl(),
-    private val screenRepo: ScreenRepository = ScreenRepositoryImpl(),
-    private val viewModelRepo: ViewModelRepository = ViewModelRepositoryImpl(),
+    private val fs: FileSystemRepository,
+    private val modulePkgRepo: ModulePackageRepository,
+    private val diRepo: PresentationDiModuleRepository,
+    private val uiStateRepo: UiStateRepository,
+    private val screenStateHolderRepo: ScreenStateHolderRepository,
+    private val flowStateHolderRepo: FlowStateHolderRepository,
+    private val intentRepo: IntentRepository,
+    private val navigationRepo: NavigationRepository,
+    private val screenRepo: ScreenRepository,
+    private val viewModelRepo: ViewModelRepository,
 ) : PresentationRepository {
 
     override fun generate(params: PresentationParams): PresentationResult {

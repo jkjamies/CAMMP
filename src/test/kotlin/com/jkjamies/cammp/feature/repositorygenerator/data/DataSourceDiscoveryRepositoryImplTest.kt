@@ -1,12 +1,13 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.shouldBe
 import io.mockk.clearAllMocks
 import io.mockk.every
-import io.mockk.mockkConstructor
+import io.mockk.mockk
 import io.mockk.unmockkAll
 import java.nio.file.Files
 
@@ -15,9 +16,7 @@ import java.nio.file.Files
  */
 class DataSourceDiscoveryRepositoryImplTest : BehaviorSpec({
 
-    beforeSpec {
-        mockkConstructor(ModulePackageRepositoryImpl::class)
-    }
+    val mockModulePkgRepo = mockk<ModulePackageRepository>()
 
     beforeContainer {
         clearAllMocks()
@@ -28,7 +27,7 @@ class DataSourceDiscoveryRepositoryImplTest : BehaviorSpec({
     }
 
     Given("a DataSourceDiscoveryRepositoryImpl") {
-        val repository = DataSourceDiscoveryRepositoryImpl()
+        val repository = DataSourceDiscoveryRepositoryImpl(mockModulePkgRepo)
 
         When("loadDataSourcesByType is called with an invalid path") {
             val result = repository.loadDataSourcesByType("/invalid/path")
@@ -53,7 +52,7 @@ class DataSourceDiscoveryRepositoryImplTest : BehaviorSpec({
             Files.createFile(packagePath.resolve("localDataSource/UserLocalDataSource.kt"))
             Files.createFile(packagePath.resolve("dataSource/OtherFile.kt"))
 
-            every { anyConstructed<ModulePackageRepositoryImpl>().findModulePackage(any()) } returns basePkg
+            every { mockModulePkgRepo.findModulePackage(any()) } returns basePkg
 
             val result = repository.loadDataSourcesByType(tempDir.toString())
 
@@ -72,7 +71,7 @@ class DataSourceDiscoveryRepositoryImplTest : BehaviorSpec({
         }
         
         When("loadDataSourcesByType encounters an exception during processing") {
-             every { anyConstructed<ModulePackageRepositoryImpl>().findModulePackage(any()) } throws RuntimeException("Something went wrong")
+             every { mockModulePkgRepo.findModulePackage(any()) } throws RuntimeException("Something went wrong")
              
              val tempDir = Files.createTempDirectory("test_datasource_exception")
              Files.createDirectories(tempDir.resolve("src/main/kotlin"))

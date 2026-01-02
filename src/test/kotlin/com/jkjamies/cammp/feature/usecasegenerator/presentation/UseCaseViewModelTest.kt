@@ -33,9 +33,10 @@ class UseCaseViewModelTest : BehaviorSpec({
     beforeContainer {
         clearAllMocks()
         viewModel = UseCaseViewModel(
+            domainPackage = "",
+            scope = testScope,
             generator = mockGenerator,
-            loadRepositories = mockLoadRepositories,
-            scope = testScope
+            loadRepositories = mockLoadRepositories
         )
     }
 

@@ -2,9 +2,10 @@ package com.jkjamies.cammp.feature.cleanarchitecture.presentation
 
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.usecase.CleanArchitectureGenerator
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,12 +13,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.nio.file.Paths
 
+@AssistedInject
 class GenerateModulesViewModel(
-    initial: GenerateModulesUiState,
-    private val generator: CleanArchitectureGenerator = CleanArchitectureGenerator(),
-    private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    @Assisted private val projectBasePath: String,
+    @Assisted private val scope: CoroutineScope,
+    private val generator: CleanArchitectureGenerator,
 ) {
-    private val _state = MutableStateFlow(initial)
+    private val _state = MutableStateFlow(
+        GenerateModulesUiState(
+            projectBasePath = projectBasePath,
+            root = projectBasePath,
+            orgCenter = projectBasePath.substringAfterLast('/').ifBlank { "cammp" }
+        )
+    )
     val state: StateFlow<GenerateModulesUiState> = _state.asStateFlow()
 
     fun handleIntent(intent: GenerateModulesIntent) {
@@ -163,5 +171,10 @@ class GenerateModulesViewModel(
                 }
             )
         }
+    }
+
+    @AssistedFactory
+    fun interface Factory {
+        fun create(projectBasePath: String, scope: CoroutineScope): GenerateModulesViewModel
     }
 }

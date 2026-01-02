@@ -3,12 +3,14 @@ package com.jkjamies.cammp.feature.presentationgenerator.domain.usecase
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
+import dev.zacsweers.metro.Inject
 
 /**
  * Generates presentation layer files for a screen.
  *
  * @param repository The [PresentationRepository] to use for generation.
  */
+@Inject
 class PresentationGenerator(
     private val repository: PresentationRepository,
 ) {

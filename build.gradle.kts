@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.composeCompiler) // Gradle Compose Compiler Plugin
     alias(libs.plugins.kover) // Kover Plugin
+    alias(libs.plugins.metro) // Metro Plugin
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -152,6 +153,11 @@ kover {
         total {
             xml {
                 onCheck = true
+            }
+            filters {
+                excludes {
+                    packages("com.jkjamies.cammp.di")
+                }
             }
         }
     }

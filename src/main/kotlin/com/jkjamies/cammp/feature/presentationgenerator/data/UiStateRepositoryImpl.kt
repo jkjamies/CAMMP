@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FileSystemRepository
@@ -12,14 +13,18 @@ import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.exists
 
 /**
  * Implementation of [UiStateRepository] that generates UI State data classes using KotlinPoet.
  */
+@ContributesBinding(AppScope::class)
+@Inject
 class UiStateRepositoryImpl(
-    private val fs: FileSystemRepository = FileSystemRepositoryImpl()
+    private val fs: FileSystemRepository
 ) : UiStateRepository {
 
     override fun generateUiState(

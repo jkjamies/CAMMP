@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.jkjamies.cammp.di.CammpGraph
 import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesIntent
 import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesScreen
 import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesUiState
@@ -25,6 +26,11 @@ import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseIntent
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseUiState
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseViewModel
 import com.jkjamies.cammp.feature.welcome.presentation.WelcomeScreen
+import dev.zacsweers.metro.createGraph
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import org.jetbrains.jewel.bridge.addComposeTab
 import org.jetbrains.plugins.template.util.chooseDirectoryPath
 import org.jetbrains.plugins.template.util.refreshUseCases
@@ -37,24 +43,17 @@ class ComposeSamplesToolWindowFactory : ToolWindowFactory, DumbAware {
     }
 
     private fun cleanArchitecture(project: Project, toolWindow: ToolWindow) {
-        val basePath = project.basePath
-        val initial = GenerateModulesUiState(
-            projectBasePath = basePath,
-            root = basePath ?: "",
-            orgCenter = basePath?.substringAfterLast('/') ?: "cammp",
-        )
-        val vm = GenerateModulesViewModel(initial)
-        Disposer.register(toolWindow.disposable) { /* no-op; simple VM without resources */ }
+        val basePath = project.basePath ?: ""
+        
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+        Disposer.register(toolWindow.disposable) { scope.cancel() }
 
-        // Hoist generator ViewModels to persist across recompositions
-        val presentationInitial = PresentationUiState(directory = project.basePath ?: "")
-        val presentationVm = PresentationViewModel(presentationInitial)
-
-        val repositoryInitial = RepositoryUiState(domainPackage = project.basePath ?: "")
-        val repositoryVm = RepositoryViewModel(repositoryInitial)
-
-        val useCaseInitial = UseCaseUiState(domainPackage = project.basePath ?: "")
-        val useCaseVm = UseCaseViewModel(useCaseInitial)
+        val graph = createGraph<CammpGraph>()
+        
+        val vm = graph.generateModulesViewModelFactory.create(basePath, scope)
+        val presentationVm = graph.presentationViewModelFactory.create(basePath, scope)
+        val repositoryVm = graph.repositoryViewModelFactory.create(basePath, scope)
+        val useCaseVm = graph.useCaseViewModelFactory.create(basePath, scope)
 
         toolWindow.addComposeTab("Welcome") {
             WelcomeScreen()

@@ -1,15 +1,20 @@
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePackageRepository
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationRepository
 import com.squareup.kotlinpoet.*
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
+@ContributesBinding(AppScope::class)
+@Inject
 class UseCaseGenerationRepositoryImpl(
-    private val modulePkgRepo: ModulePackageRepository = ModulePackageRepositoryImpl()
+    private val modulePkgRepo: ModulePackageRepository
 ) : UseCaseGenerationRepository {
 
     override fun generateUseCase(params: UseCaseParams, packageName: String): Path {

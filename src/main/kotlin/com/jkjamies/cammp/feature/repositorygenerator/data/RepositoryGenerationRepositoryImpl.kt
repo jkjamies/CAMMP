@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.RepositoryGenerationRepository
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -9,10 +10,14 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
+@ContributesBinding(AppScope::class)
+@Inject
 class RepositoryGenerationRepositoryImpl : RepositoryGenerationRepository {
 
     override fun generateDomainLayer(params: RepositoryParams, packageName: String, domainDir: Path): Path {

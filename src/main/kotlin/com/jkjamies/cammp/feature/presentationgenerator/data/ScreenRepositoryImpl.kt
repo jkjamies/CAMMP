@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenRepository
@@ -8,6 +9,8 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
@@ -15,6 +18,8 @@ import kotlin.io.path.writeText
 /**
  * Implementation of [ScreenRepository] that generates Composable Screen files using KotlinPoet.
  */
+@ContributesBinding(AppScope::class)
+@Inject
 class ScreenRepositoryImpl : ScreenRepository {
 
     override fun generateScreen(

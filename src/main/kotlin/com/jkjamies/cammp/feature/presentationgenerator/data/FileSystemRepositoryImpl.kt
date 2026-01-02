@@ -1,6 +1,9 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FileSystemRepository
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -12,6 +15,8 @@ import kotlin.io.path.writeText
 /**
  * Implementation of [FileSystemRepository] using `java.nio.file`.
  */
+@ContributesBinding(AppScope::class)
+@Inject
 class FileSystemRepositoryImpl : FileSystemRepository {
     override fun exists(path: Path): Boolean = path.exists()
     override fun isDirectory(path: Path): Boolean = path.isDirectory()

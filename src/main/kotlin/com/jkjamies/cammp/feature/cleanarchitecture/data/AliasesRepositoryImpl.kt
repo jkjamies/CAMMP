@@ -1,7 +1,7 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.data
 
+import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.cleanarchitecture.data.datasource.VersionCatalogDataSource
-import com.jkjamies.cammp.feature.cleanarchitecture.datasource.VersionCatalogDataSourceImpl
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.AliasesRepository
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.DiMode
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.FileSystemRepository
@@ -9,11 +9,15 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
+@ContributesBinding(AppScope::class)
+@Inject
 class AliasesRepositoryImpl(
     private val fs: FileSystemRepository,
-    private val versionCatalogDataSource: VersionCatalogDataSource = VersionCatalogDataSourceImpl(fs)
+    private val versionCatalogDataSource: VersionCatalogDataSource
 ) : AliasesRepository {
 
     override fun generateAliases(outputDirectory: Path, packageName: String, diMode: DiMode, tomlPath: Path) {

@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Metro Dependency Injection
+
 ## [0.0.5-alpha] - 2026-01-01
 
 ### Added
