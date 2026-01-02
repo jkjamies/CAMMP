@@ -61,9 +61,9 @@ class RepositorySpecFactoryTest : BehaviorSpec({
             )
             val content = spec.toString()
 
-            Then("it should inject combined DataSource") {
-                content shouldContain "private val userDataSource: UserDataSource"
-                content shouldContain "import com.example.`data`.dataSource.UserDataSource"
+            Then("it should inject combined DataSource with Repository suffix retained") {
+                content shouldContain "private val userRepositoryDataSource: UserRepositoryDataSource"
+                content shouldContain "import com.example.`data`.dataSource.UserRepositoryDataSource"
             }
         }
 
@@ -81,17 +81,17 @@ class RepositorySpecFactoryTest : BehaviorSpec({
             )
             val content = spec.toString()
 
-            Then("it should inject both DataSources") {
-                content shouldContain "private val userRemoteDataSource: UserRemoteDataSource"
-                content shouldContain "import com.example.`data`.remoteDataSource.UserRemoteDataSource"
-                content shouldContain "private val userLocalDataSource: UserLocalDataSource"
-                content shouldContain "import com.example.`data`.localDataSource.UserLocalDataSource"
+            Then("it should inject both DataSources with Repository suffix retained") {
+                content shouldContain "private val userRepositoryRemoteDataSource: UserRepositoryRemoteDataSource"
+                content shouldContain "import com.example.`data`.remoteDataSource.UserRepositoryRemoteDataSource"
+                content shouldContain "private val userRepositoryLocalDataSource: UserRepositoryLocalDataSource"
+                content shouldContain "import com.example.`data`.localDataSource.UserRepositoryLocalDataSource"
             }
         }
 
         When("creating data implementation with Selected DataSources") {
             val params = mockParams("UserRepository").copy(
-                selectedDataSources = listOf("com.other.OtherDataSource")
+                selectedDataSources = listOf("com.external.OtherDataSource")
             )
             val spec = factory.createDataImplementation(
                 "com.example.data.repository",
@@ -102,7 +102,7 @@ class RepositorySpecFactoryTest : BehaviorSpec({
 
             Then("it should inject selected DataSources") {
                 content shouldContain "private val otherDataSource: OtherDataSource"
-                content shouldContain "import com.other.OtherDataSource"
+                content shouldContain "import com.`external`.OtherDataSource"
             }
         }
     }

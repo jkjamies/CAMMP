@@ -35,7 +35,7 @@ class RepositorySpecFactoryImpl : RepositorySpecFactory {
             constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
         }
 
-        val baseName = stripRepositorySuffix(params.className)
+        val baseName = params.className
         val dataBasePkg = dataPackage.substringBeforeLast(".repository")
 
         val generatedFqns = buildList {
@@ -69,7 +69,4 @@ class RepositorySpecFactoryImpl : RepositorySpecFactory {
             .addType(classBuilder.build())
             .build()
     }
-
-    private fun stripRepositorySuffix(name: String): String =
-        if (name.endsWith("Repository") && name.length > "Repository".length) name.removeSuffix("Repository") else name
 }
