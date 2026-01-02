@@ -1,89 +1,101 @@
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
+import com.jkjamies.cammp.feature.usecasegenerator.data.datasource.DiModuleDataSource
+import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import java.nio.file.Files
+import kotlin.io.path.createDirectories
+import kotlin.io.path.writeText
 
-/**
- * Test class for [UseCaseDiModuleRepositoryImpl].
- */
 class UseCaseDiModuleRepositoryImplTest : BehaviorSpec({
 
-    Given("a UseCaseDiModuleRepositoryImpl") {
-        val repository = UseCaseDiModuleRepositoryImpl()
+    val dataSource = mockk<DiModuleDataSource>()
+    val repository = UseCaseDiModuleRepositoryImpl(dataSource)
+
+    Given("UseCaseDiModuleRepositoryImpl") {
         val tempDir = Files.createTempDirectory("usecase_di_test")
-        val diDir = tempDir.resolve("di")
-        val diPackage = "com.example.di"
+        val diPath = tempDir.resolve("src/main/kotlin/com/example/di")
+        diPath.createDirectories()
 
         afterSpec {
             tempDir.toFile().deleteRecursively()
         }
 
-        When("mergeUseCaseModule is called with useKoin=false") {
+        When("merging Koin module (New File)") {
+            every { dataSource.generateKoinModuleContent(any(), any(), any(), any(), any()) } returns "content"
+
             val result = repository.mergeUseCaseModule(
-                diDir = diDir,
-                diPackage = diPackage,
-                useCaseSimpleName = "GetUsers",
-                useCaseFqn = "com.example.domain.usecase.GetUsers",
+                diDir = tempDir,
+                diPackage = "com.example.di",
+                useCaseSimpleName = "UC",
+                useCaseFqn = "UC",
                 repositoryFqns = emptyList(),
-                useKoin = false
+                diStrategy = DiStrategy.Koin(false)
             )
 
-            Then("it should return skipped status") {
-                result.status shouldBe "skipped"
-            }
-        }
-
-        When("mergeUseCaseModule is called with useKoin=true (new file)") {
-            val result = repository.mergeUseCaseModule(
-                diDir = diDir,
-                diPackage = diPackage,
-                useCaseSimpleName = "GetUsers",
-                useCaseFqn = "com.example.domain.usecase.GetUsers",
-                repositoryFqns = listOf("com.example.domain.repository.UserRepository"),
-                useKoin = true
-            )
-
-            Then("it should create the Koin module") {
+            Then("it should call dataSource and create file") {
+                verify { dataSource.generateKoinModuleContent(null, "com.example.di", any(), any(), any()) }
                 result.status shouldBe "created"
-                Files.exists(result.outPath)
-                val content = Files.readString(result.outPath)
-                content shouldContain "module {"
-                content shouldContain "single { GetUsers(get()) }"
             }
         }
 
-        When("mergeUseCaseModule is called with existing file") {
-            val existingFile = diDir.resolve("src/main/kotlin/com/example/di/UseCaseModule.kt")
-            Files.createDirectories(existingFile.parent)
-            val existingContent = """
-                package com.example.di
-                
-                import org.koin.dsl.module
-                import org.koin.core.module.Module
-                import com.example.domain.usecase.OldUseCase
-                
-                val useCaseModule = module {
-                    single { OldUseCase() }
-                }
-            """.trimIndent()
-            Files.writeString(existingFile, existingContent)
+        When("merging Koin module (Existing File, Content Changed)") {
+            val existingFile = diPath.resolve("UseCaseModule.kt")
+            existingFile.writeText("old content")
+            
+            every { dataSource.generateKoinModuleContent(any(), any(), any(), any(), any()) } returns "new content"
 
             val result = repository.mergeUseCaseModule(
-                diDir = diDir,
-                diPackage = diPackage,
-                useCaseSimpleName = "NewUseCase",
-                useCaseFqn = "com.example.domain.usecase.NewUseCase",
+                diDir = tempDir,
+                diPackage = "com.example.di",
+                useCaseSimpleName = "UC",
+                useCaseFqn = "UC",
                 repositoryFqns = emptyList(),
-                useKoin = true
+                diStrategy = DiStrategy.Koin(false)
             )
 
-            Then("it should append to existing module") {
+            Then("it should update file") {
+                verify { dataSource.generateKoinModuleContent("old content", "com.example.di", any(), any(), any()) }
                 result.status shouldBe "updated"
-                val content = Files.readString(result.outPath)
-                content shouldContain "single { OldUseCase() }"
-                content shouldContain "single { NewUseCase() }"
+            }
+        }
+
+        When("merging Koin module (Existing File, Content Unchanged)") {
+            val existingFile = diPath.resolve("UseCaseModule.kt")
+            existingFile.writeText("same content")
+            
+            every { dataSource.generateKoinModuleContent(any(), any(), any(), any(), any()) } returns "same content"
+
+            val result = repository.mergeUseCaseModule(
+                diDir = tempDir,
+                diPackage = "com.example.di",
+                useCaseSimpleName = "UC",
+                useCaseFqn = "UC",
+                repositoryFqns = emptyList(),
+                diStrategy = DiStrategy.Koin(false)
+            )
+
+            Then("it should report exists") {
+                result.status shouldBe "exists"
+            }
+        }
+
+        When("merging Hilt module") {
+            val result = repository.mergeUseCaseModule(
+                diDir = tempDir,
+                diPackage = "com.example.di",
+                useCaseSimpleName = "UC",
+                useCaseFqn = "UC",
+                repositoryFqns = emptyList(),
+                diStrategy = DiStrategy.Hilt
+            )
+
+            Then("it should skip") {
+                result.status shouldBe "skipped"
             }
         }
     }

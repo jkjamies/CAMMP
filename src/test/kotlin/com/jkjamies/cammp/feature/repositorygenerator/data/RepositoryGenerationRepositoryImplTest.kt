@@ -1,127 +1,89 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import com.jkjamies.cammp.feature.repositorygenerator.data.factory.RepositorySpecFactory
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeSpec
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldEndWith
+import io.mockk.every
+import io.mockk.mockk
 import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.exists
 import kotlin.io.path.readText
 
-/**
- * Test class for [RepositoryGenerationRepositoryImpl].
- */
 class RepositoryGenerationRepositoryImplTest : BehaviorSpec({
 
-    Given("a repository generation repository") {
-        val repository = RepositoryGenerationRepositoryImpl()
-        val tempDir = Files.createTempDirectory("repo_gen_test")
-        val dataDir = tempDir.resolve("data")
-        val domainDir = tempDir.resolve("domain")
+    val specFactory = mockk<RepositorySpecFactory>()
+    val repository = RepositoryGenerationRepositoryImpl(specFactory)
 
-        afterSpec {
-            tempDir.toFile().deleteRecursively()
-        }
+    Given("a RepositoryGenerationRepository") {
+        val tempDir = Files.createTempDirectory("repo_gen_test")
+        val className = "TestRepository"
 
         When("generating domain layer") {
-            val params = RepositoryParams(
-                dataDir = dataDir,
-                className = "TestRepository",
-                includeDatasource = false,
-                datasourceCombined = false,
-                datasourceRemote = false,
-                datasourceLocal = false,
-                useKoin = false,
-                koinAnnotations = false,
-                selectedDataSources = emptyList()
-            )
             val packageName = "com.example.domain.repository"
-            
-            val resultPath = repository.generateDomainLayer(params, packageName, domainDir)
+            val params = mockParams(tempDir, className)
 
-            Then("it should create the file") {
-                Files.exists(resultPath)
+            val dummySpec = FileSpec.builder(packageName, className)
+                .addType(TypeSpec.interfaceBuilder(className).build())
+                .addFileComment("This has `data` in it")
+                .build()
+
+            every { specFactory.createDomainInterface(packageName, params) } returns dummySpec
+
+            val resultPath = repository.generateDomainLayer(params, packageName, tempDir)
+
+            Then("it should write file to correct path") {
+                resultPath.exists() shouldBe true
             }
-            Then("it should contain the interface definition") {
+
+            Then("it should sanitize content replacing backticks") {
                 val content = resultPath.readText()
-                content shouldContain "package com.example.domain.repository"
+                content shouldContain "This has data in it"
+            }
+
+            Then("it should contain generated class") {
+                val content = resultPath.readText()
                 content shouldContain "interface TestRepository"
             }
         }
 
-        When("generating data layer with Hilt") {
-            val params = RepositoryParams(
-                dataDir = dataDir,
-                className = "TestRepository",
-                includeDatasource = false,
-                datasourceCombined = false,
-                datasourceRemote = false,
-                datasourceLocal = false,
-                useKoin = false,
-                koinAnnotations = false,
-                selectedDataSources = emptyList()
-            )
+        When("generating data layer") {
             val dataPackage = "com.example.data.repository"
             val domainPackage = "com.example.domain.repository"
+            val params = mockParams(tempDir, className)
+
+            val dummySpec = FileSpec.builder(dataPackage, "${className}Impl")
+                .addType(TypeSpec.classBuilder("${className}Impl").build())
+                .build()
+
+            every { specFactory.createDataImplementation(dataPackage, domainPackage, params) } returns dummySpec
 
             val resultPath = repository.generateDataLayer(params, dataPackage, domainPackage)
 
-            Then("it should create the file") {
-                Files.exists(resultPath)
+            Then("it should write file") {
+                resultPath.exists() shouldBe true
             }
-            Then("it should contain the implementation definition") {
-                val content = resultPath.readText()
-                content shouldContain "package com.example.data.repository"
-                content shouldContain "class TestRepositoryImpl"
-                content shouldContain "TestRepository"
-                content shouldContain "@Inject"
-            }
-        }
 
-        When("generating data layer with Koin Annotations") {
-            val params = RepositoryParams(
-                dataDir = dataDir,
-                className = "KoinRepository",
-                includeDatasource = false,
-                datasourceCombined = false,
-                datasourceRemote = false,
-                datasourceLocal = false,
-                useKoin = true,
-                koinAnnotations = true,
-                selectedDataSources = emptyList()
-            )
-            val dataPackage = "com.example.data.repository"
-            val domainPackage = "com.example.domain.repository"
-
-            val resultPath = repository.generateDataLayer(params, dataPackage, domainPackage)
-
-            Then("it should contain the Single annotation") {
-                val content = resultPath.readText()
-                content shouldContain "@Single"
-                content shouldContain "import org.koin.core.annotation.Single"
-            }
-        }
-
-        When("generating data layer with datasources") {
-            val params = RepositoryParams(
-                dataDir = dataDir,
-                className = "DsRepository",
-                includeDatasource = true,
-                datasourceCombined = false,
-                datasourceRemote = true,
-                datasourceLocal = true,
-                useKoin = false,
-                koinAnnotations = false,
-                selectedDataSources = emptyList()
-            )
-            val dataPackage = "com.example.data.repository"
-            val domainPackage = "com.example.domain.repository"
-
-            val resultPath = repository.generateDataLayer(params, dataPackage, domainPackage)
-
-            Then("it should inject datasources") {
-                val content = resultPath.readText()
-                content shouldContain "dsRemoteDataSource: DsRemoteDataSource"
-                content shouldContain "dsLocalDataSource: DsLocalDataSource"
+            Then("it should end with correct filename") {
+                resultPath.toString() shouldEndWith "TestRepositoryImpl.kt"
             }
         }
     }
 })
+
+private fun mockParams(tempDir: Path, className: String) = RepositoryParams(
+    dataDir = tempDir.resolve("data"),
+    className = className,
+    includeDatasource = false,
+    datasourceCombined = false,
+    datasourceRemote = false,
+    datasourceLocal = false,
+    diStrategy = DiStrategy.Hilt
+)

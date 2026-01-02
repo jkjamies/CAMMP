@@ -9,7 +9,6 @@ data class RepositoryParams(
     val datasourceCombined: Boolean,
     val datasourceRemote: Boolean,
     val datasourceLocal: Boolean,
-    val useKoin: Boolean,
-    val koinAnnotations: Boolean,
+    val diStrategy: DiStrategy,
     val selectedDataSources: List<String> = emptyList(),
 )

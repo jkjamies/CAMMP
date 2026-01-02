@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.usecasegenerator.domain.repository
 
+import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
 import java.nio.file.Path
 
 data class UseCaseMergeOutcome(val outPath: Path, val status: String)
@@ -12,6 +13,6 @@ interface UseCaseDiModuleRepository {
         useCaseSimpleName: String,
         useCaseFqn: String,
         repositoryFqns: List<String>,
-        useKoin: Boolean,
+        diStrategy: DiStrategy,
     ): UseCaseMergeOutcome
 }

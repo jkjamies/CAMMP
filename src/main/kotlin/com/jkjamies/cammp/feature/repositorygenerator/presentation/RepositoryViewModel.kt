@@ -2,6 +2,7 @@ package com.jkjamies.cammp.feature.repositorygenerator.presentation
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryGenerator
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -33,6 +34,13 @@ class RepositoryViewModel(
                     _state.update { it.copy(errorMessage = err) }
                     return
                 }
+
+                val diStrategy = if (s.diKoin) {
+                    DiStrategy.Koin(useAnnotations = s.diKoinAnnotations)
+                } else {
+                    DiStrategy.Hilt
+                }
+
                 val params = RepositoryParams(
                     dataDir = Paths.get(s.domainPackage),
                     className = s.name,
@@ -40,8 +48,7 @@ class RepositoryViewModel(
                     datasourceCombined = s.datasourceCombined,
                     datasourceRemote = s.datasourceRemote,
                     datasourceLocal = s.datasourceLocal,
-                    useKoin = s.diKoin,
-                    koinAnnotations = s.diKoinAnnotations,
+                    diStrategy = diStrategy,
                     selectedDataSources = s.selectedDataSources.toList().sorted(),
                 )
                 _state.update { it.copy(isGenerating = true, errorMessage = null, lastGeneratedMessage = null) }
