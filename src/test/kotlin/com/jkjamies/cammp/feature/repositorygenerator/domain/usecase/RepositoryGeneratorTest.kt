@@ -1,100 +1,71 @@
 package com.jkjamies.cammp.feature.repositorygenerator.domain.usecase
 
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
-import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
-import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModuleRepository
-import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.MergeOutcome
-import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
-import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.RepositoryGenerationRepository
+import com.jkjamies.cammp.feature.repositorygenerator.domain.step.RepositoryStep
+import com.jkjamies.cammp.feature.repositorygenerator.domain.step.StepResult
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.result.shouldBeFailure
+import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.mockk.clearAllMocks
-import io.mockk.every
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.unmockkAll
-import java.nio.file.Path
+import java.nio.file.Paths
 
 class RepositoryGeneratorTest : BehaviorSpec({
 
-    beforeContainer {
-        clearAllMocks()
-    }
+    val step1 = mockk<RepositoryStep>()
+    val step2 = mockk<RepositoryStep>()
+    val steps = setOf(step1, step2)
+    val generator = RepositoryGenerator(steps)
 
-    afterSpec {
-        unmockkAll()
-    }
+    val params = RepositoryParams(
+        dataDir = Paths.get("data"),
+        className = "TestRepo",
+        includeDatasource = false,
+        datasourceCombined = false,
+        datasourceRemote = false,
+        datasourceLocal = false,
+        diStrategy = DiStrategy.Hilt
+    )
 
-    Given("a repository generator") {
-        val mockModulePkgRepo = mockk<ModulePackageRepository>()
-        val mockDiRepo = mockk<DiModuleRepository>()
-        val mockDsRepo = mockk<DatasourceScaffoldRepository>()
-        val mockGenRepo = mockk<RepositoryGenerationRepository>()
+    Given("A RepositoryGenerator with steps") {
 
-        val useCase = RepositoryGenerator(
-            modulePkgRepo = mockModulePkgRepo,
-            diRepo = mockDiRepo,
-            dsRepo = mockDsRepo,
-            generationRepo = mockGenRepo
-        )
+        When("All steps succeed") {
+            coEvery { step1.execute(params) } returns StepResult.Success("Step 1 done")
+            coEvery { step2.execute(params) } returns StepResult.Success("Step 2 done")
 
-        When("invoked with valid params") {
-            val params = RepositoryParams(
-                dataDir = Path.of("src/main/kotlin/com/test/data"),
-                className = "TestRepository",
-                includeDatasource = true,
-                datasourceCombined = false,
-                datasourceRemote = true,
-                datasourceLocal = false,
-                useKoin = false,
-                koinAnnotations = false,
-                selectedDataSources = emptyList()
-            )
+            val result = generator(params)
 
-            // Mock behavior
-            every { mockModulePkgRepo.findModulePackage(any()) } answers {
-                val dir = firstArg<Path>()
-                when {
-                    dir.endsWith("data") -> "com.test.data"
-                    dir.endsWith("domain") -> "com.test.domain"
-                    dir.endsWith("di") -> "com.test.di"
-                    else -> ""
-                }
+            Then("Result should be success") {
+                result.shouldBeSuccess()
             }
-            
-            every { 
-                mockDiRepo.mergeRepositoryModule(any(), any(), any(), any(), any(), any()) 
-            } returns MergeOutcome(Path.of("di/Module.kt"), "merged")
-            
-            every {
-                mockDiRepo.mergeDataSourceModule(any(), any(), any(), any())
-            } returns MergeOutcome(Path.of("di/DsModule.kt"), "merged")
 
-            every {
-                mockDsRepo.generate(any(), any(), any(), any(), any(), any())
-            } returns listOf("- Datasource: Generated")
+            Then("Result message should contain step messages") {
+                val msg = result.getOrNull()
+                msg shouldContain "Step 1 done"
+                msg shouldContain "Step 2 done"
+            }
 
-            every {
-                mockGenRepo.generateDomainLayer(any(), any(), any())
-            } returns Path.of("domain/Repo.kt")
+            Then("All steps should be executed") {
+                coVerify(exactly = 1) { step1.execute(params) }
+                coVerify(exactly = 1) { step2.execute(params) }
+            }
+        }
 
-            every {
-                mockGenRepo.generateDataLayer(any(), any(), any())
-            } returns Path.of("data/RepoImpl.kt")
+        When("A step fails") {
+            val error = RuntimeException("Step failed")
+            coEvery { step1.execute(params) } returns StepResult.Success("Step 1 done")
+            coEvery { step2.execute(params) } returns StepResult.Failure(error)
 
-            val deepDataDir = Path.of("project/app/src/main/kotlin/com/test/data")
-            val deepParams = params.copy(dataDir = deepDataDir)
+            val result = generator(params)
 
-            val result = useCase(deepParams)
-
-            Then("it should return success message") {
-                result.isSuccess shouldBe true
-                val message = result.getOrNull() ?: ""
-                message shouldContain "Repository generation completed"
-                message shouldContain "Domain: domain/Repo.kt"
-                message shouldContain "Data: data/RepoImpl.kt"
-                message shouldContain "DI: di/Module.kt"
-                message shouldContain "Datasource: Generated"
+            Then("Result should be failure") {
+                result.shouldBeFailure {
+                    it shouldBe error
+                }
             }
         }
     }

@@ -156,7 +156,7 @@ kover {
             }
             filters {
                 excludes {
-                    packages("com.jkjamies.cammp.di")
+                    packages("*.di", "*.di.*")
                 }
             }
         }

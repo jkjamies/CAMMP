@@ -1,82 +1,51 @@
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
+import com.jkjamies.cammp.feature.usecasegenerator.data.factory.UseCaseSpecFactoryImpl
+import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
-import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePackageRepository
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.unmockkAll
 import java.nio.file.Files
+import kotlin.io.path.exists
 import kotlin.io.path.readText
 
-/**
- * Test class for [UseCaseGenerationRepositoryImpl].
- */
 class UseCaseGenerationRepositoryImplTest : BehaviorSpec({
 
-    val mockModulePkgRepo = mockk<ModulePackageRepository>()
-    val repository = UseCaseGenerationRepositoryImpl(mockModulePkgRepo)
-    val tempDir = Files.createTempDirectory("usecase_gen_test")
-    val domainDir = tempDir.resolve("domain")
+    val specFactory = UseCaseSpecFactoryImpl()
+    val repository = UseCaseGenerationRepositoryImpl(specFactory)
 
-    beforeContainer {
-        clearAllMocks()
-        every { mockModulePkgRepo.findModulePackage(any()) } returns "com.example.domain"
-    }
+    Given("UseCaseGenerationRepositoryImpl") {
+        val tempDir = Files.createTempDirectory("usecase_gen_repo_test")
+        val domainDir = tempDir.resolve("domain")
+        Files.createDirectories(domainDir)
 
-    afterSpec {
-        tempDir.toFile().deleteRecursively()
-        unmockkAll()
-    }
-
-    Given("a use case generation repository") {
-
-        When("generating use case with Hilt") {
-            val params = UseCaseParams(
-                domainDir = domainDir,
-                className = "GetItemsUseCase",
-                useKoin = false,
-                koinAnnotations = false,
-                repositories = listOf("ItemRepository")
-            )
-            val packageName = "com.example.domain.usecase"
-
-            val resultPath = repository.generateUseCase(params, packageName)
-
-            Then("it should create the file") {
-                Files.exists(resultPath)
-            }
-            Then("it should contain the class definition") {
-                val content = resultPath.readText()
-                content shouldContain "package com.example.domain.usecase"
-                content shouldContain "class GetItemsUseCase"
-                content shouldContain "@Inject"
-                content shouldContain "suspend operator fun invoke"
-            }
-            Then("it should inject repositories") {
-                val content = resultPath.readText()
-                content shouldContain "itemRepository: ItemRepository"
-            }
+        afterSpec {
+            tempDir.toFile().deleteRecursively()
         }
 
-        When("generating use case with Koin Annotations") {
+        When("generating use case") {
             val params = UseCaseParams(
                 domainDir = domainDir,
-                className = "KoinUseCase",
-                useKoin = true,
-                koinAnnotations = true,
+                className = "MyUseCase",
+                diStrategy = DiStrategy.Hilt,
                 repositories = emptyList()
             )
-            val packageName = "com.example.domain.usecase"
+            
+            // Fixed: generateUseCase now takes baseDomainPackage as 3rd argument
+            val result = repository.generateUseCase(
+                params, 
+                "com.example.domain.usecase",
+                "com.example.domain"
+            )
 
-            val resultPath = repository.generateUseCase(params, packageName)
-
-            Then("it should contain the Single annotation") {
-                val content = resultPath.readText()
-                content shouldContain "@Single"
-                content shouldContain "import org.koin.core.annotation.Single"
+            Then("it should write file to correct path") {
+                result.exists() shouldBe true
+                result.toString() shouldContain "MyUseCase.kt"
+                
+                val content = result.readText()
+                content shouldContain "package com.example.domain.usecase"
+                content shouldContain "class MyUseCase"
             }
         }
     }

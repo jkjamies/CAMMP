@@ -109,7 +109,7 @@ class AliasesRepositoryImpl(
                 dependencies.add(DependencyDefinition.Library("HILT_COMPILER", "hilt-compiler", "com.google.dagger", "hilt-android-compiler", "2.57.2"))
                 dependencies.add(DependencyDefinition.Library("HILT_NAVIGATION", "compose-hilt-navigation", "androidx.hilt", "hilt-navigation-compose", "1.3.0"))
                 dependencies.add(DependencyDefinition.Plugin("HILT", "hilt", "com.google.dagger.hilt.android", "2.57.2"))
-                dependencies.add(DependencyDefinition.Plugin("KSP", "ksp", "com.google.devtools.ksp", "2.3.1"))
+                dependencies.add(DependencyDefinition.Plugin("KSP", "ksp", "com.google.devtools.ksp", "2.3.4"))
             }
             DiMode.KOIN -> {
                 dependencies.add(DependencyDefinition.Library("KOIN", "koin", "io.insert-koin", "koin-android", "3.5.0"))
@@ -120,7 +120,7 @@ class AliasesRepositoryImpl(
                 dependencies.add(DependencyDefinition.Library("KOIN_ANNOTATIONS", "koin-annotations", "io.insert-koin", "koin-annotations", "1.3.0"))
                 dependencies.add(DependencyDefinition.Library("KOIN_KSP_COMPILER", "koin-ksp-compiler", "io.insert-koin", "koin-ksp-compiler", "1.3.0"))
                 dependencies.add(DependencyDefinition.Library("KOIN_NAVIGATION", "compose-koin-navigation", "io.insert-koin", "koin-androidx-compose", "3.5.0"))
-                dependencies.add(DependencyDefinition.Plugin("KSP", "ksp", "com.google.devtools.ksp", "2.3.1"))
+                dependencies.add(DependencyDefinition.Plugin("KSP", "ksp", "com.google.devtools.ksp", "2.3.4"))
             }
         }
 

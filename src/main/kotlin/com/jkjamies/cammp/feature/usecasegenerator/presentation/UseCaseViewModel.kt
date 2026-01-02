@@ -2,6 +2,7 @@ package com.jkjamies.cammp.feature.usecasegenerator.presentation
 
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.UseCaseGenerator
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
+import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.LoadRepositories
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -35,11 +36,17 @@ class UseCaseViewModel(
                 }
                 val normalizedName = normalizeName(s.name)
                 val domainDir = Paths.get(s.domainPackage)
+                
+                val diStrategy = if (s.diKoin) {
+                    DiStrategy.Koin(useAnnotations = s.diKoinAnnotations)
+                } else {
+                    DiStrategy.Hilt
+                }
+
                 val params = UseCaseParams(
                     domainDir = domainDir,
                     className = normalizedName,
-                    useKoin = s.diKoin,
-                    koinAnnotations = s.diKoinAnnotations,
+                    diStrategy = diStrategy,
                     repositories = s.selectedRepositories.toList().sorted(),
                 )
                 _state.update { it.copy(isGenerating = true, errorMessage = null, lastGeneratedPath = null) }

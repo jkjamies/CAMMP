@@ -2,27 +2,23 @@ package com.jkjamies.cammp.feature.repositorygenerator.domain.repository
 
 import java.nio.file.Path
 
-data class DatasourceOptions(
-    val include: Boolean,
-    val combined: Boolean,
-    val remote: Boolean,
-    val local: Boolean,
-    val useKoin: Boolean,
-    val koinAnnotations: Boolean,
-)
-
 interface DatasourceScaffoldRepository {
+    /** Generates the DataSource interface in the data module. */
+    fun generateInterface(
+        directory: Path,
+        packageName: String,
+        className: String
+    ): Path
+
     /**
-     * Generates datasource interface(s) in the data module and implementation(s) in sibling modules.
-     * Optionally merges DI module via the provided flags.
-     * Returns a list of human-friendly result lines (paths with statuses).
+     * Generates the DataSource implementation in the target module.
      */
-    fun generate(
-        dataDir: Path,
-        dataBasePkg: String,
-        repositoryBaseName: String,
-        diDir: Path?,
-        diPackage: String?,
-        options: DatasourceOptions,
-    ): List<String>
+    fun generateImplementation(
+        directory: Path,
+        packageName: String,
+        className: String,
+        interfacePackage: String,
+        interfaceName: String,
+        useKoin: Boolean
+    ): Path
 }
