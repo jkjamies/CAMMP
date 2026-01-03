@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data.datasource
 
+import com.jkjamies.cammp.feature.repositorygenerator.datasource.RepoDiModuleDataSourceImpl
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain

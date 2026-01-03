@@ -2,6 +2,7 @@ package com.jkjamies.cammp.feature.repositorygenerator.data.factory
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -16,41 +17,57 @@ interface RepositorySpecFactory {
     fun createDomainInterface(packageName: String, params: RepositoryParams): FileSpec
     fun createDataImplementation(dataPackage: String, domainPackage: String, params: RepositoryParams): FileSpec
 }
-
 @ContributesBinding(AppScope::class)
 @Inject
 class RepositorySpecFactoryImpl : RepositorySpecFactory {
+
     override fun createDomainInterface(packageName: String, params: RepositoryParams): FileSpec {
         return FileSpec.builder(packageName, params.className)
-            .addType(TypeSpec.interfaceBuilder(params.className).build())
+            .addType(
+                TypeSpec.interfaceBuilder(params.className)
+                    .build()
+            )
             .build()
     }
 
-    override fun createDataImplementation(
-        dataPackage: String,
-        domainPackage: String,
-        params: RepositoryParams
-    ): FileSpec {
-        val domainInterface = ClassName(domainPackage, params.className)
-        val implName = "${params.className}Impl"
-        val constructorBuilder = FunSpec.constructorBuilder()
+    override fun createDataImplementation(dataPackage: String, domainPackage: String, params: RepositoryParams): FileSpec {
+        val domainClassName = ClassName(domainPackage, params.className)
+        val implClassName = "${params.className}Impl"
+        val classBuilder = TypeSpec.classBuilder(implClassName)
+            .addSuperinterface(domainClassName)
 
+        if (params.diStrategy is DiStrategy.Koin && params.diStrategy.useAnnotations) {
+            classBuilder.addAnnotation(AnnotationSpec.builder(ClassName("org.koin.core.annotation", "Single")).build())
+        }
+
+        val constructorBuilder = FunSpec.constructorBuilder()
         if (params.diStrategy is DiStrategy.Hilt) {
             constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
         }
 
-        val classBuilder = TypeSpec.classBuilder(implName)
-            .addSuperinterface(domainInterface)
+        val baseName = params.className
+        val dataBasePkg = dataPackage.substringBeforeLast(".repository")
 
-        params.selectedDataSources.forEach { fqn ->
+        val generatedFqns = buildList {
+            if (params.includeDatasource) {
+                if (params.datasourceCombined) {
+                    add("$dataBasePkg.dataSource.${baseName}DataSource")
+                } else {
+                    if (params.datasourceRemote) add("$dataBasePkg.remoteDataSource.${baseName}RemoteDataSource")
+                    if (params.datasourceLocal) add("$dataBasePkg.localDataSource.${baseName}LocalDataSource")
+                }
+            }
+        }
+        val allFqns: List<String> = (params.selectedDataSources + generatedFqns).distinct()
+
+        allFqns.forEach { fqn ->
             val simpleName = fqn.substringAfterLast('.')
-            val pkg = fqn.substringBeforeLast('.')
-            val typeName = ClassName(pkg, simpleName)
-            val propName = simpleName.replaceFirstChar { it.lowercase() }
-            constructorBuilder.addParameter(propName, typeName)
+            val paramName = simpleName.replaceFirstChar { it.lowercase() }
+            val className = ClassName(fqn.substringBeforeLast('.'), simpleName)
+            constructorBuilder.addParameter(paramName, className)
             classBuilder.addProperty(
-                PropertySpec.builder(propName, typeName)
-                    .initializer(propName)
+                PropertySpec.builder(paramName, className)
+                    .initializer(paramName)
                     .addModifiers(KModifier.PRIVATE)
                     .build()
             )
@@ -58,7 +75,7 @@ class RepositorySpecFactoryImpl : RepositorySpecFactory {
 
         classBuilder.primaryConstructor(constructorBuilder.build())
 
-        return FileSpec.builder(dataPackage, implName)
+        return FileSpec.builder(dataPackage, implClassName)
             .addType(classBuilder.build())
             .build()
     }

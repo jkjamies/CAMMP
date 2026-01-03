@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
+import com.jkjamies.cammp.feature.usecasegenerator.data.factory.UseCaseSpecFactoryImpl
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import io.kotest.core.spec.style.BehaviorSpec
