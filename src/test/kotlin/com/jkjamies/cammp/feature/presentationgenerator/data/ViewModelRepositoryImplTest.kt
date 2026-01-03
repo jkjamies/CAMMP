@@ -1,182 +1,64 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
+import com.jkjamies.cammp.feature.presentationgenerator.data.factory.ViewModelSpecFactory
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeSpec
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
+import io.mockk.every
+import io.mockk.mockk
 import java.nio.file.Files
+import kotlin.io.path.exists
 import kotlin.io.path.readText
-import kotlin.io.path.writeText
 
+/**
+ * Test for [ViewModelRepositoryImpl].
+ */
 class ViewModelRepositoryImplTest : BehaviorSpec({
 
-    Given("a ViewModel repository") {
-        val repository = ViewModelRepositoryImpl()
-        val tempDir = Files.createTempDirectory("viewmodel_gen_test")
+    val specFactory = mockk<ViewModelSpecFactory>()
+    val repository = ViewModelRepositoryImpl(specFactory)
+
+    Given("ViewModelRepositoryImpl") {
+        val tempDir = Files.createTempDirectory("viewmodel_repo_test")
+        val packageName = "com.example"
+        val params = PresentationParams(
+            moduleDir = tempDir,
+            screenName = "Test",
+            patternStrategy = PresentationPatternStrategy.MVVM,
+            diStrategy = DiStrategy.Hilt
+        )
 
         afterSpec {
             tempDir.toFile().deleteRecursively()
         }
 
-        When("generating a basic ViewModel") {
-            val packageName = "com.example.test"
-            val screenName = "TestScreen"
-            
-            val result = repository.generateViewModel(
-                targetDir = tempDir,
-                packageName = packageName,
-                screenName = screenName,
-                diHilt = false,
-                diKoin = false,
-                diKoinAnnotations = false,
-                patternMVI = false,
-                useCaseFqns = emptyList()
-            )
+        When("generating ViewModel (New File)") {
+            every { specFactory.create(any(), any()) } returns FileSpec.builder(packageName, "TestViewModel")
+                .addType(TypeSpec.classBuilder("TestViewModel").build())
+                .build()
 
-            Then("it should create the file") {
-                result.status shouldBe GenerationStatus.CREATED
-                Files.exists(result.path) shouldBe true
-            }
+            val result = repository.generateViewModel(tempDir, packageName, params)
 
-            Then("it should contain the basic structure") {
-                val content = result.path.readText()
-                content shouldContain "package com.example.test"
-                content shouldContain "class TestScreenViewModel"
-                content shouldContain ": ViewModel()"
+            Then("it should write file") {
+                result.status.name shouldBe "CREATED"
+                result.path.exists() shouldBe true
+                result.path.readText() shouldBe FileSpec.builder(packageName, "TestViewModel")
+                    .addType(TypeSpec.classBuilder("TestViewModel").build())
+                    .build().toString()
             }
         }
 
-        When("generating a ViewModel that already exists") {
-            val packageName = "com.example.test"
-            val screenName = "ExistingScreen"
-            val existingFile = tempDir.resolve("${screenName}ViewModel.kt")
-            existingFile.writeText("// Existing content")
+        When("generating ViewModel (Existing File)") {
+            tempDir.resolve("TestViewModel.kt")
             
-            val result = repository.generateViewModel(
-                targetDir = tempDir,
-                packageName = packageName,
-                screenName = screenName,
-                diHilt = false,
-                diKoin = false,
-                diKoinAnnotations = false,
-                patternMVI = false,
-                useCaseFqns = emptyList()
-            )
+            val result = repository.generateViewModel(tempDir, packageName, params)
 
-            Then("it should skip generation") {
-                result.status shouldBe GenerationStatus.SKIPPED
-                result.path.readText() shouldBe "// Existing content"
-            }
-        }
-
-        When("generating a Hilt ViewModel") {
-            val packageName = "com.example.test"
-            val screenName = "HiltScreen"
-            
-            val result = repository.generateViewModel(
-                targetDir = tempDir,
-                packageName = packageName,
-                screenName = screenName,
-                diHilt = true,
-                diKoin = false,
-                diKoinAnnotations = false,
-                patternMVI = false,
-                useCaseFqns = emptyList()
-            )
-
-            Then("it should contain Hilt annotations") {
-                val content = result.path.readText()
-                content shouldContain "@HiltViewModel"
-                content shouldContain "@Inject constructor"
-            }
-        }
-
-        When("generating a Koin ViewModel") {
-            val packageName = "com.example.test"
-            val screenName = "KoinScreen"
-            
-            val result = repository.generateViewModel(
-                targetDir = tempDir,
-                packageName = packageName,
-                screenName = screenName,
-                diHilt = false,
-                diKoin = true,
-                diKoinAnnotations = false,
-                patternMVI = false,
-                useCaseFqns = emptyList()
-            )
-
-            Then("it should be internal") {
-                val content = result.path.readText()
-                content shouldContain "internal class KoinScreenViewModel"
-            }
-        }
-
-        When("generating a Koin Annotated ViewModel") {
-            val packageName = "com.example.test"
-            val screenName = "KoinAnnotatedScreen"
-            
-            val result = repository.generateViewModel(
-                targetDir = tempDir,
-                packageName = packageName,
-                screenName = screenName,
-                diHilt = false,
-                diKoin = true,
-                diKoinAnnotations = true,
-                patternMVI = false,
-                useCaseFqns = emptyList()
-            )
-
-            Then("it should contain Koin annotations") {
-                val content = result.path.readText()
-                content shouldContain "@KoinViewModel"
-                content shouldContain "import org.koin.android.annotation.KoinViewModel"
-            }
-        }
-
-        When("generating an MVI ViewModel") {
-            val packageName = "com.example.test"
-            val screenName = "MviScreen"
-            
-            val result = repository.generateViewModel(
-                targetDir = tempDir,
-                packageName = packageName,
-                screenName = screenName,
-                diHilt = false,
-                diKoin = false,
-                diKoinAnnotations = false,
-                patternMVI = true,
-                useCaseFqns = emptyList()
-            )
-
-            Then("it should contain intent handler") {
-                val content = result.path.readText()
-                content shouldContain "fun handleIntent(intent: MviScreenIntent)"
-            }
-        }
-
-        When("generating a ViewModel with UseCases") {
-            val packageName = "com.example.test"
-            val screenName = "UseCaseScreen"
-            val useCases = listOf("com.example.domain.usecase.GetSomethingUseCase")
-            
-            val result = repository.generateViewModel(
-                targetDir = tempDir,
-                packageName = packageName,
-                screenName = screenName,
-                diHilt = false,
-                diKoin = false,
-                diKoinAnnotations = false,
-                patternMVI = false,
-                useCaseFqns = useCases
-            )
-
-            Then("it should inject the use case with lowercased parameter name") {
-                val content = result.path.readText()
-                content shouldContain "private val getSomethingUseCase: GetSomethingUseCase"
-                content shouldContain "import com.example.domain.usecase.GetSomethingUseCase"
-                // Verify constructor parameter
-                content shouldContain "getSomethingUseCase: GetSomethingUseCase"
+            Then("it should skip") {
+                result.status.name shouldBe "SKIPPED"
             }
         }
     }

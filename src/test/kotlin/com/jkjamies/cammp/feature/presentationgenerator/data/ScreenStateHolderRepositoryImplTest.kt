@@ -1,34 +1,50 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
+import com.jkjamies.cammp.feature.presentationgenerator.data.factory.ScreenStateHolderSpecFactory
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeSpec
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
+import io.mockk.every
+import io.mockk.mockk
 import java.nio.file.Files
-import kotlin.io.path.readText
+import kotlin.io.path.exists
 
+/**
+ * Test for [ScreenStateHolderRepositoryImpl].
+ */
 class ScreenStateHolderRepositoryImplTest : BehaviorSpec({
 
-    val tempDir = Files.createTempDirectory("screenstate_gen_test")
+    val specFactory = mockk<ScreenStateHolderSpecFactory>()
+    val repository = ScreenStateHolderRepositoryImpl(specFactory)
 
-    afterSpec {
-        tempDir.toFile().deleteRecursively()
-    }
+    Given("ScreenStateHolderRepositoryImpl") {
+        val tempDir = Files.createTempDirectory("screen_state_repo_test")
+        val packageName = "com.example"
+        val params = PresentationParams(
+            moduleDir = tempDir,
+            screenName = "Test",
+            patternStrategy = PresentationPatternStrategy.MVVM,
+            diStrategy = DiStrategy.Hilt
+        )
 
-    Given("a ScreenStateHolder repository") {
-        val fs = FileSystemRepositoryImpl()
-        val repo = ScreenStateHolderRepositoryImpl(fs)
+        afterSpec {
+            tempDir.toFile().deleteRecursively()
+        }
 
         When("generating ScreenStateHolder") {
-            val result = repo.generateScreenStateHolder(tempDir, "com.example", "Test")
+            every { specFactory.create(any(), any()) } returns FileSpec.builder(packageName, "TestStateHolder")
+                .addType(TypeSpec.classBuilder("TestStateHolder").build())
+                .build()
 
-            Then("it should create the file") {
-                result.status shouldBe GenerationStatus.CREATED
-                val content = result.path.readText()
-                content shouldContain "internal class TestStateHolder"
-                content shouldContain "@Composable"
-                content shouldContain "internal fun rememberTestStateHolder"
-                content shouldContain "@Stable"
+            val result = repository.generateScreenStateHolder(tempDir, packageName, params)
+
+            Then("it should write file") {
+                result.status.name shouldBe "CREATED"
+                result.path.exists() shouldBe true
             }
         }
     }

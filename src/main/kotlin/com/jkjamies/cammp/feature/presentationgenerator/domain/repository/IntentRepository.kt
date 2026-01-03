@@ -1,6 +1,7 @@
 package com.jkjamies.cammp.feature.presentationgenerator.domain.repository
 
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import java.nio.file.Path
 
 /**
@@ -12,12 +13,12 @@ interface IntentRepository {
      *
      * @param targetDir The directory where the file should be generated.
      * @param packageName The package name.
-     * @param screenName The name of the screen.
+     * @param params The presentation parameters.
      * @return The result of the file generation.
      */
     fun generateIntent(
         targetDir: Path,
         packageName: String,
-        screenName: String
+        params: PresentationParams
     ): FileGenerationResult
 }

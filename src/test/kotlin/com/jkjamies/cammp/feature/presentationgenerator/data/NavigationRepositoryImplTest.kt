@@ -1,79 +1,63 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
+import com.jkjamies.cammp.feature.presentationgenerator.data.factory.NavigationSpecFactory
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeSpec
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
+import io.mockk.every
+import io.mockk.mockk
 import java.nio.file.Files
-import kotlin.io.path.readText
-import kotlin.io.path.writeText
+import kotlin.io.path.exists
 
+/**
+ * Test for [NavigationRepositoryImpl].
+ */
 class NavigationRepositoryImplTest : BehaviorSpec({
 
-    val tempDir = Files.createTempDirectory("nav_gen_test")
+    val specFactory = mockk<NavigationSpecFactory>()
+    val repository = NavigationRepositoryImpl(specFactory)
 
-    afterSpec {
-        tempDir.toFile().deleteRecursively()
-    }
+    Given("NavigationRepositoryImpl") {
+        val tempDir = Files.createTempDirectory("nav_repo_test")
+        val packageName = "com.example"
+        val params = PresentationParams(
+            moduleDir = tempDir,
+            screenName = "Test",
+            patternStrategy = PresentationPatternStrategy.MVVM,
+            diStrategy = DiStrategy.Hilt
+        )
 
-    Given("a Navigation repository") {
-        val fs = FileSystemRepositoryImpl()
-        val repo = NavigationRepositoryImpl(fs)
-
-        When("generating NavigationHost") {
-            val result = repo.generateNavigationHost(tempDir, "com.example", "TestNavHost")
-
-            Then("it should create the file") {
-                result.status shouldBe GenerationStatus.CREATED
-                val content = result.path.readText()
-                content shouldContain "fun TestNavHost"
-                content shouldContain "NavHost(navController"
-            }
+        afterSpec {
+            tempDir.toFile().deleteRecursively()
         }
 
-        When("generating NavigationHost that already exists") {
-            val existingFile = tempDir.resolve("ExistingNavHost.kt")
-            existingFile.writeText("// Existing content")
-            
-            val result = repo.generateNavigationHost(tempDir, "com.example", "ExistingNavHost")
+        When("generating Navigation Host") {
+            every { specFactory.createHost(any(), any()) } returns FileSpec.builder(packageName, "NavHost")
+                .addType(TypeSpec.classBuilder("NavHost").build())
+                .build()
 
-            Then("it should skip generation") {
-                result.status shouldBe GenerationStatus.SKIPPED
-                result.path.readText() shouldBe "// Existing content"
+            val result = repository.generateNavigationHost(tempDir, packageName, "NavHost")
+
+            Then("it should write file") {
+                result.status.name shouldBe "CREATED"
+                result.path.exists() shouldBe true
             }
         }
 
         When("generating Destination") {
-            val result = repo.generateDestination(tempDir, "com.example", "TestScreen", "testscreen")
+            every { specFactory.createDestination(any(), any(), any()) } returns FileSpec.builder(packageName, "Dest")
+                .addType(TypeSpec.classBuilder("Dest").build())
+                .build()
 
-            Then("it should create the file") {
-                result.status shouldBe GenerationStatus.CREATED
-                val content = result.path.readText()
-                content shouldContain "object TestScreenDestination"
-                content shouldContain "fun NavGraphBuilder.testScreen"
-                content shouldContain "composable<TestScreenDestination>"
-            }
-        }
+            val result = repository.generateDestination(tempDir, packageName, params, "folder")
 
-        When("generating Destination with uppercase ScreenName") {
-            val result = repo.generateDestination(tempDir, "com.example", "UppercaseScreen", "uppercasescreen")
-
-            Then("it should lowercase the screen name for the extension function") {
-                result.status shouldBe GenerationStatus.CREATED
-                val content = result.path.readText()
-                content shouldContain "fun NavGraphBuilder.uppercaseScreen"
-            }
-        }
-
-        When("generating Destination that already exists") {
-            val existingFile = tempDir.resolve("ExistingScreenDestination.kt")
-            existingFile.writeText("// Existing destination content")
-
-            val result = repo.generateDestination(tempDir, "com.example", "ExistingScreen", "existingscreen")
-
-            Then("it should skip generation") {
-                result.status shouldBe GenerationStatus.SKIPPED
-                result.path.readText() shouldBe "// Existing destination content"
+            Then("it should write file") {
+                result.status.name shouldBe "CREATED"
+                result.path.exists() shouldBe true
             }
         }
     }

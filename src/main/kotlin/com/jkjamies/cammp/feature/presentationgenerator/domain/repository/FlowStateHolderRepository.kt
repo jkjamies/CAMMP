@@ -1,6 +1,7 @@
 package com.jkjamies.cammp.feature.presentationgenerator.domain.repository
 
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import java.nio.file.Path
 
 /**
@@ -13,11 +14,13 @@ interface FlowStateHolderRepository {
      * @param targetDir The directory where the file should be generated.
      * @param packageName The package name.
      * @param flowName The name of the flow.
+     * @param params The presentation parameters.
      * @return The result of the file generation.
      */
     fun generateFlowStateHolder(
         targetDir: Path,
         packageName: String,
-        flowName: String
+        flowName: String,
+        params: PresentationParams
     ): FileGenerationResult
 }

@@ -1,11 +1,14 @@
 package com.jkjamies.cammp.feature.presentationgenerator.domain.usecase
 
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
+import com.jkjamies.cammp.feature.presentationgenerator.domain.step.PresentationStep
+import com.jkjamies.cammp.feature.presentationgenerator.domain.step.StepResult
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,8 +21,10 @@ import java.nio.file.Paths
  */
 class PresentationGeneratorTest : BehaviorSpec({
 
-    val repository = mockk<PresentationRepository>()
-    val generator = PresentationGenerator(repository)
+    val step1 = mockk<PresentationStep>()
+    val step2 = mockk<PresentationStep>()
+    val steps = setOf(step1, step2)
+    val generator = PresentationGenerator(steps)
 
     beforeContainer {
         clearAllMocks()
@@ -30,50 +35,42 @@ class PresentationGeneratorTest : BehaviorSpec({
     }
 
     Given("a presentation generator") {
+        val params = PresentationParams(
+            moduleDir = Paths.get("/fake/path"),
+            screenName = "TestScreen",
+            patternStrategy = PresentationPatternStrategy.MVVM,
+            diStrategy = DiStrategy.Hilt
+        )
 
-        When("invoking the generator with valid params") {
-            val params = PresentationParams(
-                moduleDir = Paths.get("/fake/path"),
-                screenName = "TestScreen",
-                patternMVI = false,
-                patternMVVM = true,
-                diHilt = false,
-                diKoin = false,
-                diKoinAnnotations = false
-            )
-            coEvery { repository.generate(params) } returns PresentationResult(
-                created = listOf("file.kt"),
-                skipped = emptyList(),
-                message = "Success"
-            )
+        When("invoking the generator") {
+            coEvery { step1.execute(params) } returns StepResult.Success("Step 1 done")
+            coEvery { step2.execute(params) } returns StepResult.Success("Step 2 done")
 
             val result = generator(params)
 
-            Then("it should call the repository's generate method") {
-                coVerify(exactly = 1) { repository.generate(params) }
+            Then("it should execute all steps") {
+                coVerify(exactly = 1) { step1.execute(params) }
+                coVerify(exactly = 1) { step2.execute(params) }
             }
 
-            Then("it should return a success result") {
+            Then("it should return a success result with messages") {
                 result.shouldBeSuccess()
+                val message = result.getOrNull() ?: ""
+                message shouldContain "Step 1 done"
+                message shouldContain "Step 2 done"
             }
         }
 
-        When("invoking the generator with a blank screen name") {
-            val params = PresentationParams(
-                moduleDir = Paths.get("/fake/path"),
-                screenName = " ",
-                patternMVI = false,
-                patternMVVM = true,
-                diHilt = false,
-                diKoin = false,
-                diKoinAnnotations = false
-            )
+        When("a step fails") {
+            val error = RuntimeException("Step failed")
+            coEvery { step1.execute(params) } returns StepResult.Success("Step 1 done")
+            coEvery { step2.execute(params) } returns StepResult.Failure(error)
 
             val result = generator(params)
 
-            Then("it should fail without calling the repository") {
-                coVerify(exactly = 0) { repository.generate(any()) }
+            Then("it should return a failure result") {
                 result.isFailure shouldBe true
+                result.exceptionOrNull() shouldBe error
             }
         }
     }

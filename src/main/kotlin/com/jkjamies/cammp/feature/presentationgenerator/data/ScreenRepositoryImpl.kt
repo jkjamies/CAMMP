@@ -1,14 +1,12 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
 import dev.zacsweers.metro.AppScope
+import com.jkjamies.cammp.feature.presentationgenerator.data.factory.ScreenSpecFactory
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenRepository
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterSpec
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import java.nio.file.Path
@@ -20,53 +18,29 @@ import kotlin.io.path.writeText
  */
 @ContributesBinding(AppScope::class)
 @Inject
-class ScreenRepositoryImpl : ScreenRepository {
+class ScreenRepositoryImpl(
+    private val specFactory: ScreenSpecFactory
+) : ScreenRepository {
 
     override fun generateScreen(
         targetDir: Path,
         packageName: String,
-        screenName: String,
-        diHilt: Boolean,
-        diKoin: Boolean
+        params: PresentationParams
     ): FileGenerationResult {
-        val viewModelName = "${screenName}ViewModel"
-        val viewModelClass = ClassName(packageName, viewModelName)
+        val screenName = params.screenName
+        val fileName = "$screenName.kt"
+        val target = targetDir.resolve(fileName)
 
-        val composableAnnotation = ClassName("androidx.compose.runtime", "Composable")
-
-        val viewModelInjection = if (diHilt) {
-            com.squareup.kotlinpoet.MemberName("androidx.hilt.navigation.compose", "hiltViewModel")
-        } else {
-            // Koin (both annotated and standard) uses koinViewModel
-            com.squareup.kotlinpoet.MemberName("org.koin.compose.viewmodel", "koinViewModel")
+        if (target.exists()) {
+            return FileGenerationResult(target, GenerationStatus.SKIPPED, fileName)
         }
 
-        val screenFunc = FunSpec.builder(screenName)
-            .addAnnotation(composableAnnotation)
-            .addModifiers(KModifier.INTERNAL)
-            .addParameter(
-                ParameterSpec.builder("viewModel", viewModelClass)
-                    .defaultValue("%M()", viewModelInjection)
-                    .build()
-            )
-            .addComment("TODO: implement Screen UI using state from viewModel")
-            .build()
+        val diHilt = params.diStrategy is DiStrategy.Hilt
+        val diKoin = params.diStrategy is DiStrategy.Koin
 
-        val fileSpec = FileSpec.builder(packageName, screenName)
-            .addFunction(screenFunc)
-            .build()
+        val fileSpec = specFactory.create(packageName, screenName, diHilt, diKoin)
 
-        val outFile = targetDir.resolve("$screenName.kt")
-        val exists = outFile.exists()
-
-        if (!exists) {
-            outFile.writeText(fileSpec.toString())
-        }
-
-        return FileGenerationResult(
-            fileName = "$screenName.kt",
-            path = outFile,
-            status = if (exists) GenerationStatus.SKIPPED else GenerationStatus.CREATED
-        )
+        target.writeText(fileSpec.toString())
+        return FileGenerationResult(target, GenerationStatus.CREATED, fileName)
     }
 }

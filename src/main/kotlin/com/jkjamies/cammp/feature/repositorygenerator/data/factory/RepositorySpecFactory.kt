@@ -17,6 +17,7 @@ interface RepositorySpecFactory {
     fun createDomainInterface(packageName: String, params: RepositoryParams): FileSpec
     fun createDataImplementation(dataPackage: String, domainPackage: String, params: RepositoryParams): FileSpec
 }
+
 @ContributesBinding(AppScope::class)
 @Inject
 class RepositorySpecFactoryImpl : RepositorySpecFactory {

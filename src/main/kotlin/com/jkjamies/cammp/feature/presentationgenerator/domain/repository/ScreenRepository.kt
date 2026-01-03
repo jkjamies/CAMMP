@@ -1,6 +1,7 @@
 package com.jkjamies.cammp.feature.presentationgenerator.domain.repository
 
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import java.nio.file.Path
 
 /**
@@ -12,16 +13,12 @@ interface ScreenRepository {
      *
      * @param targetDir The directory where the file should be generated.
      * @param packageName The package name for the generated file.
-     * @param screenName The name of the screen.
-     * @param diHilt Whether to use Hilt.
-     * @param diKoin Whether to use Koin.
+     * @param params The presentation parameters.
      * @return The result of the file generation.
      */
     fun generateScreen(
         targetDir: Path,
         packageName: String,
-        screenName: String,
-        diHilt: Boolean,
-        diKoin: Boolean
+        params: PresentationParams
     ): FileGenerationResult
 }

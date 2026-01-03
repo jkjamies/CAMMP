@@ -1,86 +1,50 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
+import com.jkjamies.cammp.feature.presentationgenerator.data.factory.ScreenSpecFactory
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeSpec
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
+import io.mockk.every
+import io.mockk.mockk
 import java.nio.file.Files
-import kotlin.io.path.readText
+import kotlin.io.path.exists
 
+/**
+ * Test for [ScreenRepositoryImpl].
+ */
 class ScreenRepositoryImplTest : BehaviorSpec({
 
-    Given("a Screen repository") {
-        val repository = ScreenRepositoryImpl()
-        val tempDir = Files.createTempDirectory("screen_gen_test")
+    val specFactory = mockk<ScreenSpecFactory>()
+    val repository = ScreenRepositoryImpl(specFactory)
+
+    Given("ScreenRepositoryImpl") {
+        val tempDir = Files.createTempDirectory("screen_repo_test")
+        val packageName = "com.example"
+        val params = PresentationParams(
+            moduleDir = tempDir,
+            screenName = "Test",
+            patternStrategy = PresentationPatternStrategy.MVVM,
+            diStrategy = DiStrategy.Hilt
+        )
 
         afterSpec {
             tempDir.toFile().deleteRecursively()
         }
 
-        When("generating a basic Screen") {
-            val packageName = "com.example.test"
-            val screenName = "TestScreen"
-            
-            val result = repository.generateScreen(
-                targetDir = tempDir,
-                packageName = packageName,
-                screenName = screenName,
-                diHilt = false,
-                diKoin = false
-            )
+        When("generating Screen") {
+            every { specFactory.create(any(), any(), any(), any()) } returns FileSpec.builder(packageName, "Test")
+                .addType(TypeSpec.classBuilder("Test").build())
+                .build()
 
-            Then("it should create the file") {
-                result.status shouldBe GenerationStatus.CREATED
-                Files.exists(result.path) shouldBe true
-            }
+            val result = repository.generateScreen(tempDir, packageName, params)
 
-            Then("it should contain the Composable") {
-                val content = result.path.readText()
-                content shouldContain "@Composable"
-                content shouldContain "internal fun TestScreen("
-            }
-
-            Then("it should use koinViewModel by default") {
-                val content = result.path.readText()
-                content shouldContain "viewModel: TestScreenViewModel = koinViewModel()"
-            }
-        }
-
-        When("generating a Hilt Screen") {
-            val packageName = "com.example.test"
-            val screenName = "HiltScreen"
-            
-            val result = repository.generateScreen(
-                targetDir = tempDir,
-                packageName = packageName,
-                screenName = screenName,
-                diHilt = true,
-                diKoin = false
-            )
-
-            Then("it should use hiltViewModel") {
-                val content = result.path.readText()
-                content shouldContain "viewModel: HiltScreenViewModel = hiltViewModel()"
-                content shouldContain "import androidx.hilt.navigation.compose.hiltViewModel"
-            }
-        }
-
-        When("generating a Koin Screen") {
-            val packageName = "com.example.test"
-            val screenName = "KoinScreen"
-            
-            val result = repository.generateScreen(
-                targetDir = tempDir,
-                packageName = packageName,
-                screenName = screenName,
-                diHilt = false,
-                diKoin = true
-            )
-
-            Then("it should use koinViewModel") {
-                val content = result.path.readText()
-                content shouldContain "viewModel: KoinScreenViewModel = koinViewModel()"
-                content shouldContain "import org.koin.compose.viewmodel.koinViewModel"
+            Then("it should write file") {
+                result.status.name shouldBe "CREATED"
+                result.path.exists() shouldBe true
             }
         }
     }

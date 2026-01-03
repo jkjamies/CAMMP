@@ -1,8 +1,9 @@
 package com.jkjamies.cammp.feature.presentationgenerator.presentation
 
 import app.cash.turbine.test
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.usecase.PresentationGenerator
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldContain
@@ -110,22 +111,15 @@ class PresentationViewModelTest : BehaviorSpec({
             val params = PresentationParams(
                 moduleDir = Paths.get("/test/dir"),
                 screenName = "MyScreen",
-                patternMVI = true,
-                patternMVVM = false,
-                diHilt = true,
-                diKoin = false,
-                diKoinAnnotations = false,
+                patternStrategy = PresentationPatternStrategy.MVI,
+                diStrategy = DiStrategy.Hilt,
                 includeNavigation = false,
                 useFlowStateHolder = false,
                 useScreenStateHolder = false,
                 selectedUseCases = emptyList()
             )
-            val presResult = PresentationResult(
-                created = listOf("file1.kt"),
-                skipped = listOf("file2.kt"),
-                message = "Success"
-            )
-            coEvery { generator(params) } returns Result.success(presResult)
+            
+            coEvery { generator(params) } returns Result.success("Success")
 
             viewModel.handleIntent(PresentationIntent.SetDirectory("/test/dir"))
             viewModel.handleIntent(PresentationIntent.SetScreenName("MyScreen"))
@@ -146,8 +140,6 @@ class PresentationViewModelTest : BehaviorSpec({
                     val finalState = awaitItem()
                     finalState.isGenerating shouldBe false
                     finalState.lastMessage shouldBe "Success"
-                    finalState.lastCreated shouldBe listOf("file1.kt")
-                    finalState.lastSkipped shouldBe listOf("file2.kt")
                 }
             }
         }
@@ -156,11 +148,8 @@ class PresentationViewModelTest : BehaviorSpec({
             val params = PresentationParams(
                 moduleDir = Paths.get("/test/dir"),
                 screenName = "MyScreen",
-                patternMVI = true,
-                patternMVVM = false,
-                diHilt = true,
-                diKoin = false,
-                diKoinAnnotations = false,
+                patternStrategy = PresentationPatternStrategy.MVI,
+                diStrategy = DiStrategy.Hilt,
                 includeNavigation = false,
                 useFlowStateHolder = false,
                 useScreenStateHolder = false,

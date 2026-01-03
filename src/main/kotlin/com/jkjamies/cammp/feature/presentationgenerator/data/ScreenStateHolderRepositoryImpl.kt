@@ -1,19 +1,16 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
 import dev.zacsweers.metro.AppScope
+import com.jkjamies.cammp.feature.presentationgenerator.data.factory.ScreenStateHolderSpecFactory
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FileSystemRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ScreenStateHolderRepository
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.TypeSpec
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.writeText
 
 /**
  * Implementation of [ScreenStateHolderRepository] that generates Screen State Holder classes using KotlinPoet.
@@ -21,14 +18,15 @@ import kotlin.io.path.exists
 @ContributesBinding(AppScope::class)
 @Inject
 class ScreenStateHolderRepositoryImpl(
-    private val fs: FileSystemRepository
+    private val specFactory: ScreenStateHolderSpecFactory
 ) : ScreenStateHolderRepository {
 
     override fun generateScreenStateHolder(
         targetDir: Path,
         packageName: String,
-        screenName: String
+        params: PresentationParams
     ): FileGenerationResult {
+        val screenName = params.screenName
         val className = "${screenName}StateHolder"
         val fileName = "$className.kt"
         val target = targetDir.resolve(fileName)
@@ -37,31 +35,9 @@ class ScreenStateHolderRepositoryImpl(
             return FileGenerationResult(target, GenerationStatus.SKIPPED, fileName)
         }
 
-        val composableAnnotation = ClassName("androidx.compose.runtime", "Composable")
-        val stableAnnotation = ClassName("androidx.compose.runtime", "Stable")
-        val rememberFunction = ClassName("androidx.compose.runtime", "remember")
-        val stateHolderClassName = ClassName(packageName, className)
+        val fileSpec = specFactory.create(packageName, screenName)
 
-        val rememberFun = FunSpec.builder("remember$className")
-            .addModifiers(KModifier.INTERNAL)
-            .addAnnotation(composableAnnotation)
-            .returns(stateHolderClassName)
-            .beginControlFlow("return %T()", rememberFunction)
-            .addStatement("%T()", stateHolderClassName)
-            .endControlFlow()
-            .build()
-
-        val stateHolderClass = TypeSpec.classBuilder(className)
-            .addModifiers(KModifier.INTERNAL)
-            .addAnnotation(stableAnnotation)
-            .build()
-
-        val fileSpec = FileSpec.builder(packageName, className)
-            .addFunction(rememberFun)
-            .addType(stateHolderClass)
-            .build()
-
-        fs.writeText(target, fileSpec.toString(), overwriteIfExists = false)
+        target.writeText(fileSpec.toString())
         return FileGenerationResult(target, GenerationStatus.CREATED, fileName)
     }
 }
