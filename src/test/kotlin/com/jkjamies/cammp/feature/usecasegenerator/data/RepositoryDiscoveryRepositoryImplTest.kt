@@ -1,6 +1,6 @@
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
-import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePackageRepository
+import com.jkjamies.cammp.feature.usecasegenerator.data.datasource.PackageMetadataDataSource
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
@@ -15,7 +15,7 @@ import java.nio.file.Files
  */
 class RepositoryDiscoveryRepositoryImplTest : BehaviorSpec({
 
-    val mockModulePkgRepo = mockk<ModulePackageRepository>()
+    val mockPackageMetadataDataSource = mockk<PackageMetadataDataSource>()
 
     beforeContainer {
         clearAllMocks()
@@ -26,7 +26,7 @@ class RepositoryDiscoveryRepositoryImplTest : BehaviorSpec({
     }
 
     Given("a RepositoryDiscoveryRepositoryImpl") {
-        val repository = RepositoryDiscoveryRepositoryImpl(mockModulePkgRepo)
+        val repository = RepositoryDiscoveryRepositoryImpl(mockPackageMetadataDataSource)
 
         When("loadRepositories is called with an invalid path") {
             val result = repository.loadRepositories("/invalid/path")
@@ -38,7 +38,7 @@ class RepositoryDiscoveryRepositoryImplTest : BehaviorSpec({
 
         When("loadRepositories is called with a valid path containing repositories") {
             val tempDir = Files.createTempDirectory("test_repo_discovery")
-            
+
             val srcMainKotlin = tempDir.resolve("src/main/kotlin")
             val packagePath = srcMainKotlin.resolve("com/example/domain/repository")
             Files.createDirectories(packagePath)
@@ -46,14 +46,14 @@ class RepositoryDiscoveryRepositoryImplTest : BehaviorSpec({
             Files.createFile(packagePath.resolve("AuthRepository.kt"))
             Files.createFile(packagePath.resolve("UserRepository.kt"))
 
-            every { mockModulePkgRepo.findModulePackage(any()) } returns "com.example.domain.usecase"
+            every { mockPackageMetadataDataSource.findModulePackage(any()) } returns "com.example.domain.usecase"
 
             val result = repository.loadRepositories(tempDir.toString())
 
             Then("it should return the list of repository names") {
                 result shouldBe listOf("AuthRepository", "UserRepository")
             }
-            
+
             tempDir.toFile().deleteRecursively()
         }
 
@@ -64,7 +64,7 @@ class RepositoryDiscoveryRepositoryImplTest : BehaviorSpec({
              Then("it should return an empty list") {
                  result.shouldBeEmpty()
              }
-             
+
              Files.deleteIfExists(tempFile)
         }
     }

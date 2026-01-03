@@ -1,8 +1,8 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
 import dev.zacsweers.metro.AppScope
+import com.jkjamies.cammp.feature.repositorygenerator.data.datasource.PackageMetadataDataSource
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceDiscoveryRepository
-import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import java.nio.file.Files
@@ -13,7 +13,7 @@ import kotlin.io.path.isDirectory
 @ContributesBinding(AppScope::class)
 @Inject
 class DataSourceDiscoveryRepositoryImpl(
-    private val modulePackageRepo: ModulePackageRepository
+    private val packageMetadataDataSource: PackageMetadataDataSource
 ) : DataSourceDiscoveryRepository {
     override fun loadDataSourcesByType(dataModulePath: String): Map<String, List<String>> {
         return try {
@@ -21,7 +21,7 @@ class DataSourceDiscoveryRepositoryImpl(
             val kotlinRoot = moduleDir.resolve("src/main/kotlin")
             if (!kotlinRoot.exists()) return emptyMap()
 
-            val basePkg = modulePackageRepo.findModulePackage(moduleDir)
+            val basePkg = packageMetadataDataSource.findModulePackage(moduleDir)
 
             val combinedPkg = "$basePkg.dataSource"
             val remotePkg = "$basePkg.remoteDataSource"

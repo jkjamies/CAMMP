@@ -1,6 +1,7 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
 import dev.zacsweers.metro.AppScope
+import com.jkjamies.cammp.feature.presentationgenerator.data.datasource.PackageMetadataDataSource
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
@@ -8,7 +9,6 @@ import com.jkjamies.cammp.feature.presentationgenerator.domain.model.Presentatio
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FileSystemRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FlowStateHolderRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.IntentRepository
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ModulePackageRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.NavigationRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationDiModuleRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationRepository
@@ -29,7 +29,7 @@ import kotlin.io.path.exists
  * components of a screen, such as the ViewModel, Screen, UIState, etc.
  *
  * @param fs The [FileSystemRepository] for file operations.
- * @param modulePkgRepo The [ModulePackageRepository] for inferring package names.
+ * @param packageMetadataDataSource The [PackageMetadataDataSource] for inferring package names.
  * @param diRepo The [PresentationDiModuleRepository] for DI module generation.
  * @param uiStateRepo The [UiStateRepository] for UI state generation.
  * @param screenStateHolderRepo The [ScreenStateHolderRepository] for screen state holder generation.
@@ -43,7 +43,7 @@ import kotlin.io.path.exists
 @Inject
 class PresentationRepositoryImpl(
     private val fs: FileSystemRepository,
-    private val modulePkgRepo: ModulePackageRepository,
+    private val packageMetadataDataSource: PackageMetadataDataSource,
     private val diRepo: PresentationDiModuleRepository,
     private val uiStateRepo: UiStateRepository,
     private val screenStateHolderRepo: ScreenStateHolderRepository,
@@ -169,7 +169,7 @@ class PresentationRepositoryImpl(
                 val diPackage = if (pkg.endsWith(".presentation")) {
                     pkg.replace(".presentation", ".di")
                 } else {
-                    val found = modulePkgRepo.findModulePackage(diDir)
+                    val found = packageMetadataDataSource.findModulePackage(diDir)
                     found ?: "$pkg.di"
                 }
 
@@ -223,7 +223,7 @@ class PresentationRepositoryImpl(
     }
 
     private fun inferPresentationPackage(moduleDir: Path): String {
-        val existing = modulePkgRepo.findModulePackage(moduleDir)
+        val existing = packageMetadataDataSource.findModulePackage(moduleDir)
         return existing ?: "com.example.presentation"
     }
 

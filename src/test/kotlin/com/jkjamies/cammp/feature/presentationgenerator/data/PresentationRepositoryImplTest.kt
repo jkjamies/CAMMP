@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
+import com.jkjamies.cammp.feature.presentationgenerator.data.datasource.PackageMetadataDataSource
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
@@ -30,7 +31,7 @@ import kotlin.io.path.createDirectories
 class PresentationRepositoryImplTest : BehaviorSpec({
 
     val fs = mockk<FileSystemRepository>(relaxed = true)
-    val modulePkgRepo = mockk<ModulePackageRepository>(relaxed = true)
+    val packageMetadataDataSource = mockk<PackageMetadataDataSource>(relaxed = true)
     val diRepo = mockk<PresentationDiModuleRepository>(relaxed = true)
     val uiStateRepo = mockk<UiStateRepository>(relaxed = true)
     val screenStateHolderRepo = mockk<ScreenStateHolderRepository>(relaxed = true)
@@ -42,7 +43,7 @@ class PresentationRepositoryImplTest : BehaviorSpec({
 
     val presentationRepository = PresentationRepositoryImpl(
         fs,
-        modulePkgRepo,
+        packageMetadataDataSource,
         diRepo,
         uiStateRepo,
         screenStateHolderRepo,
@@ -77,7 +78,7 @@ class PresentationRepositoryImplTest : BehaviorSpec({
                 diKoin = false,
                 diKoinAnnotations = false
             )
-            every { modulePkgRepo.findModulePackage(any()) } returns "com.example.test"
+            every { packageMetadataDataSource.findModulePackage(any()) } returns "com.example.test"
             coEvery { screenRepo.generateScreen(any(), any(), any(), any(), any()) } returns FileGenerationResult(
                 mockk(),
                 GenerationStatus.CREATED,
@@ -113,7 +114,7 @@ class PresentationRepositoryImplTest : BehaviorSpec({
                 diKoin = false,
                 diKoinAnnotations = false
             )
-            every { modulePkgRepo.findModulePackage(any()) } returns "com.example.test"
+            every { packageMetadataDataSource.findModulePackage(any()) } returns "com.example.test"
             coEvery { intentRepo.generateIntent(any(), any(), any()) } returns FileGenerationResult(
                 mockk(),
                 GenerationStatus.CREATED,
@@ -138,7 +139,7 @@ class PresentationRepositoryImplTest : BehaviorSpec({
                 diKoinAnnotations = false,
                 useScreenStateHolder = true
             )
-            every { modulePkgRepo.findModulePackage(any()) } returns "com.example.test"
+            every { packageMetadataDataSource.findModulePackage(any()) } returns "com.example.test"
             coEvery { screenStateHolderRepo.generateScreenStateHolder(any(), any(), any()) } returns FileGenerationResult(
                 mockk(),
                 GenerationStatus.CREATED,
@@ -163,7 +164,7 @@ class PresentationRepositoryImplTest : BehaviorSpec({
                 diKoinAnnotations = false,
                 useFlowStateHolder = true
             )
-            every { modulePkgRepo.findModulePackage(any()) } returns "com.example.test.presentation"
+            every { packageMetadataDataSource.findModulePackage(any()) } returns "com.example.test.presentation"
             coEvery { flowStateHolderRepo.generateFlowStateHolder(any(), any(), any()) } returns FileGenerationResult(
                 mockk(),
                 GenerationStatus.CREATED,
@@ -188,7 +189,7 @@ class PresentationRepositoryImplTest : BehaviorSpec({
                 diKoinAnnotations = false,
                 includeNavigation = true
             )
-            every { modulePkgRepo.findModulePackage(any()) } returns "com.example.test.presentation"
+            every { packageMetadataDataSource.findModulePackage(any()) } returns "com.example.test.presentation"
             coEvery { navigationRepo.generateNavigationHost(any(), any(), any()) } returns FileGenerationResult(
                 mockk(),
                 GenerationStatus.CREATED,
@@ -225,7 +226,7 @@ class PresentationRepositoryImplTest : BehaviorSpec({
                 diKoinAnnotations = false,
                 includeNavigation = true
             )
-            every { modulePkgRepo.findModulePackage(any()) } returns "com.example.test.presentation"
+            every { packageMetadataDataSource.findModulePackage(any()) } returns "com.example.test.presentation"
             coEvery { navigationRepo.generateNavigationHost(any(), any(), any()) } returns FileGenerationResult(
                 mockk(),
                 GenerationStatus.CREATED,
@@ -258,8 +259,8 @@ class PresentationRepositoryImplTest : BehaviorSpec({
                 diKoin = true,
                 diKoinAnnotations = false
             )
-            every { modulePkgRepo.findModulePackage(moduleDir) } returns "com.example.test.presentation"
-            every { modulePkgRepo.findModulePackage(diDir) } returns "com.example.test.di"
+            every { packageMetadataDataSource.findModulePackage(moduleDir) } returns "com.example.test.presentation"
+            every { packageMetadataDataSource.findModulePackage(diDir) } returns "com.example.test.di"
             coEvery { diRepo.mergeViewModelModule(any(), any(), any(), any(), any()) } returns PresentationMergeOutcome(
                 mockk(),
                 "created"
