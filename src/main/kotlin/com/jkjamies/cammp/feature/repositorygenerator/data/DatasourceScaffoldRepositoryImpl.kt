@@ -1,11 +1,8 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
 import dev.zacsweers.metro.AppScope
+import com.jkjamies.cammp.feature.repositorygenerator.data.factory.DataSourceSpecFactory
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.TypeSpec
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import java.nio.file.Path
@@ -14,7 +11,9 @@ import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
 @Inject
-class DatasourceScaffoldRepositoryImpl : DatasourceScaffoldRepository {
+class DatasourceScaffoldRepositoryImpl(
+    private val specFactory: DataSourceSpecFactory
+) : DatasourceScaffoldRepository {
 
     override fun generateInterface(
         directory: Path,
@@ -22,11 +21,9 @@ class DatasourceScaffoldRepositoryImpl : DatasourceScaffoldRepository {
         className: String
     ): Path {
         directory.createDirectories()
-        val fileSpec = FileSpec.builder(packageName, className)
-            .addType(TypeSpec.interfaceBuilder(className).build())
-            .build()
+        val fileSpec = specFactory.createInterface(packageName, className)
         val outFile = directory.resolve("$className.kt")
-        outFile.writeText(fileSpec.toString().replace("`data`", "data"))
+        outFile.writeText(fileSpec.toString())
         return outFile
     }
 
@@ -39,25 +36,15 @@ class DatasourceScaffoldRepositoryImpl : DatasourceScaffoldRepository {
         useKoin: Boolean
     ): Path {
         directory.createDirectories()
-        val ifaceClassName = ClassName(interfacePackage, interfaceName)
-        val implClassName = className
-        
-        val constructorBuilder = FunSpec.constructorBuilder()
-        if (!useKoin) {
-            constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
-        }
-        
-        val fileSpec = FileSpec.builder(packageName, implClassName)
-            .addType(
-                TypeSpec.classBuilder(implClassName)
-                    .addSuperinterface(ifaceClassName)
-                    .primaryConstructor(constructorBuilder.build())
-                    .build()
-            )
-            .build()
-            
-        val outFile = directory.resolve("$implClassName.kt")
-        outFile.writeText(fileSpec.toString().replace("`data`", "data"))
+        val fileSpec = specFactory.createImplementation(
+            packageName = packageName,
+            className = className,
+            interfacePackage = interfacePackage,
+            interfaceName = interfaceName,
+            useKoin = useKoin
+        )
+        val outFile = directory.resolve("$className.kt")
+        outFile.writeText(fileSpec.toString())
         return outFile
     }
 }
