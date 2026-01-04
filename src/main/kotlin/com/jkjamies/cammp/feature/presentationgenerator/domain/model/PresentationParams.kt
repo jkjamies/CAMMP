@@ -2,21 +2,23 @@ package com.jkjamies.cammp.feature.presentationgenerator.domain.model
 
 import java.nio.file.Path
 
+sealed interface DiStrategy {
+    data object Hilt : DiStrategy
+    data class Koin(val useAnnotations: Boolean) : DiStrategy
+}
+
+sealed interface PresentationPatternStrategy {
+    data object MVI : PresentationPatternStrategy
+    data object MVVM : PresentationPatternStrategy
+}
+
 data class PresentationParams(
     val moduleDir: Path,
     val screenName: String,
-    // Pattern options
-    val patternMVI: Boolean,
-    val patternMVVM: Boolean,
-    // DI options
-    val diHilt: Boolean,
-    val diKoin: Boolean,
-    val diKoinAnnotations: Boolean,
-    // Navigation (Compose Navigation) scaffolding
+    val patternStrategy: PresentationPatternStrategy,
+    val diStrategy: DiStrategy,
     val includeNavigation: Boolean = false,
-    // State holders
     val useFlowStateHolder: Boolean = false,
     val useScreenStateHolder: Boolean = false,
-    // Selected use cases to inject into ViewModel (FQNs or simple names depending on UI)
     val selectedUseCases: List<String> = emptyList(),
 )

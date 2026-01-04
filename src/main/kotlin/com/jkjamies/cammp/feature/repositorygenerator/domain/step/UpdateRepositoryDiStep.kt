@@ -18,7 +18,7 @@ class UpdateRepositoryDiStep(
     override suspend fun execute(params: RepositoryParams): StepResult {
         // Skip logic: If no DI strategy is chosen, this does nothing.
         if (params.diStrategy !is DiStrategy.Hilt && params.diStrategy !is DiStrategy.Koin) {
-            return StepResult.Success(null) 
+            return StepResult.Success(null)
         }
 
         return try {
@@ -26,14 +26,12 @@ class UpdateRepositoryDiStep(
                 ?: return StepResult.Success("- DI: Skipped (no di module found)")
 
             val diPackage = modulePkgRepo.findModulePackage(diDir)
-            
-            // Resolve packages again (logic could be shared in a helper, but isolated here for now)
-            val dataExisting = modulePkgRepo.findModulePackage(params.dataDir)
-            val dataBase = if (dataExisting.contains(".data")) dataExisting.substringBefore(".data") + ".data" else dataExisting
-            
-            val domainDir = params.dataDir.parent?.resolve("domain")!!
-            val domainExisting = modulePkgRepo.findModulePackage(domainDir)
-            val domainBase = if (domainExisting.contains(".domain")) domainExisting.substringBefore(".domain") + ".domain" else domainExisting
+
+            val dataBase = modulePkgRepo.findModulePackage(params.dataDir)
+
+            val domainDir = params.dataDir.parent?.resolve("domain")
+                ?: error("Could not locate sibling domain module for ${params.dataDir}")
+            val domainBase = modulePkgRepo.findModulePackage(domainDir)
 
             val domainFqn = "$domainBase.repository"
             val dataFqn = "$dataBase.repository"

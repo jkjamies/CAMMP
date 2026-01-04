@@ -1,25 +1,29 @@
 package com.jkjamies.cammp.feature.presentationgenerator.domain.usecase
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationResult
+import com.jkjamies.cammp.feature.presentationgenerator.domain.step.PresentationStep
+import com.jkjamies.cammp.feature.presentationgenerator.domain.step.StepResult
 import dev.zacsweers.metro.Inject
 
-/**
- * Generates presentation layer files for a screen.
- *
- * @param repository The [PresentationRepository] to use for generation.
- */
 @Inject
 class PresentationGenerator(
-    private val repository: PresentationRepository,
+    private val steps: Set<PresentationStep>
 ) {
-    /**
-     * @param p The [PresentationParams] for generating the screen.
-     * @return A [Result] containing the [PresentationResult], or an exception.
-     */
-    operator fun invoke(p: PresentationParams): Result<PresentationResult> = runCatching {
-        require(p.screenName.isNotBlank()) { "Screen name is required" }
-        repository.generate(p)
+    suspend operator fun invoke(params: PresentationParams): Result<String> = runCatching {
+        val results = mutableListOf<String>()
+        
+        for (step in steps) {
+            when (val result = step.execute(params)) {
+                is StepResult.Success -> {
+                    if (result.message != null) {
+                        results.add(result.message)
+                    }
+                }
+                is StepResult.Failure -> throw result.error
+            }
+        }
+
+        val title = "Presentation generation completed:"
+        (sequenceOf(title) + results.asSequence()).joinToString("\n")
     }
 }

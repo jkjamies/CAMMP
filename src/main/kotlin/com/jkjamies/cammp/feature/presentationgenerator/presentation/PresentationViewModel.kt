@@ -1,6 +1,8 @@
 package com.jkjamies.cammp.feature.presentationgenerator.presentation
 
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.usecase.PresentationGenerator
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -11,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.nio.file.Paths
 
 @AssistedInject
 class PresentationViewModel(
@@ -63,38 +66,35 @@ class PresentationViewModel(
             it.copy(
                 isGenerating = true,
                 errorMessage = null,
-                lastMessage = null,
-                lastCreated = emptyList(),
-                lastSkipped = emptyList()
+                lastMessage = null
             )
         }
 
         scope.launch {
-            val result = kotlin.runCatching {
+            val result = run {
+                val patternStrategy =
+                    if (s.patternMVI) PresentationPatternStrategy.MVI else PresentationPatternStrategy.MVVM
+                val diStrategy = if (s.diKoin) DiStrategy.Koin(s.diKoinAnnotations) else DiStrategy.Hilt
+
                 val params = PresentationParams(
-                    moduleDir = java.nio.file.Paths.get(s.directory),
+                    moduleDir = Paths.get(s.directory),
                     screenName = s.screenName,
-                    patternMVI = s.patternMVI,
-                    patternMVVM = s.patternMVVM,
-                    diHilt = s.diHilt,
-                    diKoin = s.diKoin,
-                    diKoinAnnotations = s.diKoinAnnotations,
+                    patternStrategy = patternStrategy,
+                    diStrategy = diStrategy,
                     includeNavigation = s.includeNavigation,
                     useFlowStateHolder = s.useFlowStateHolder,
                     useScreenStateHolder = s.useScreenStateHolder,
                     selectedUseCases = s.selectedUseCases.toList().sorted(),
                 )
                 generator(params)
-            }.getOrThrow()
+            }
 
             result.fold(
                 onSuccess = { r ->
                     _state.update {
                         it.copy(
                             isGenerating = false,
-                            lastMessage = r.message,
-                            lastCreated = r.created,
-                            lastSkipped = r.skipped,
+                            lastMessage = r,
                             errorMessage = null,
                         )
                     }

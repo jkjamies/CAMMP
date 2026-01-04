@@ -1,22 +1,16 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
 import dev.zacsweers.metro.AppScope
+import com.jkjamies.cammp.feature.presentationgenerator.data.factory.UiStateSpecFactory
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
-import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FileSystemRepository
+import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.UiStateRepository
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asTypeName
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.writeText
 
 /**
  * Implementation of [UiStateRepository] that generates UI State data classes using KotlinPoet.
@@ -24,15 +18,15 @@ import kotlin.io.path.exists
 @ContributesBinding(AppScope::class)
 @Inject
 class UiStateRepositoryImpl(
-    private val fs: FileSystemRepository
+    private val specFactory: UiStateSpecFactory
 ) : UiStateRepository {
 
     override fun generateUiState(
         targetDir: Path,
         packageName: String,
-        screenName: String
+        params: PresentationParams
     ): FileGenerationResult {
-        val uiStateName = "${screenName}UiState"
+        val uiStateName = "${params.screenName}UiState"
         val fileName = "$uiStateName.kt"
         val target = targetDir.resolve(fileName)
 
@@ -40,40 +34,9 @@ class UiStateRepositoryImpl(
             return FileGenerationResult(target, GenerationStatus.SKIPPED, fileName)
         }
 
-        val uiStateClass = TypeSpec.classBuilder(uiStateName)
-            .addModifiers(KModifier.INTERNAL, KModifier.DATA)
-            .addAnnotation(ClassName("androidx.compose.runtime", "Immutable"))
-            .primaryConstructor(
-                FunSpec.constructorBuilder()
-                    .addParameter(
-                        ParameterSpec.builder("isLoading", Boolean::class)
-                            .defaultValue("false")
-                            .build()
-                    )
-                    .addParameter(
-                        ParameterSpec.builder("error", String::class.asTypeName().copy(nullable = true))
-                            .defaultValue("null")
-                            .build()
-                    )
-                    .build()
-            )
-            .addProperty(
-                PropertySpec.builder("isLoading", Boolean::class)
-                    .initializer("isLoading")
-                    .build()
-            )
-            .addProperty(
-                PropertySpec.builder("error", String::class.asTypeName().copy(nullable = true))
-                    .initializer("error")
-                    .build()
-            )
-            .build()
+        val fileSpec = specFactory.create(packageName, params.screenName)
 
-        val fileSpec = FileSpec.builder(packageName, uiStateName)
-            .addType(uiStateClass)
-            .build()
-
-        fs.writeText(target, fileSpec.toString(), overwriteIfExists = false)
+        target.writeText(fileSpec.toString())
         return FileGenerationResult(target, GenerationStatus.CREATED, fileName)
     }
 }
