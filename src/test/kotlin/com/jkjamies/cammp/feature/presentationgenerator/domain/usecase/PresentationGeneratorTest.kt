@@ -5,73 +5,74 @@ import com.jkjamies.cammp.feature.presentationgenerator.domain.model.Presentatio
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.step.PresentationStep
 import com.jkjamies.cammp.feature.presentationgenerator.domain.step.StepResult
+import com.jkjamies.cammp.feature.presentationgenerator.testutil.TestFiles
 import io.kotest.core.spec.style.BehaviorSpec
-import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import io.mockk.clearAllMocks
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.mockk
-import io.mockk.unmockkAll
-import java.nio.file.Paths
+import java.nio.file.Path
 
 /**
- * Test class for [PresentationGenerator].
+ * Tests for [PresentationGenerator].
  */
 class PresentationGeneratorTest : BehaviorSpec({
 
-    val step1 = mockk<PresentationStep>()
-    val step2 = mockk<PresentationStep>()
-    val steps = setOf(step1, step2)
-    val generator = PresentationGenerator(steps)
+    fun params(moduleDir: Path) = PresentationParams(
+        moduleDir = moduleDir,
+        screenName = "Home",
+        patternStrategy = PresentationPatternStrategy.MVI,
+        diStrategy = DiStrategy.Hilt,
+    )
 
-    beforeContainer {
-        clearAllMocks()
-    }
+    Given("PresentationGenerator") {
 
-    afterSpec {
-        unmockkAll()
-    }
+        When("all steps succeed") {
+            Then("it should return title + non-null messages") {
+                TestFiles.withTempDir("pg_usecase") { dir ->
+                    val steps = linkedSetOf(
+                        object : PresentationStep {
+                            override suspend fun execute(params: PresentationParams): StepResult =
+                                StepResult.Success("- A")
+                        },
+                        object : PresentationStep {
+                            override suspend fun execute(params: PresentationParams): StepResult =
+                                StepResult.Success(null)
+                        },
+                        object : PresentationStep {
+                            override suspend fun execute(params: PresentationParams): StepResult =
+                                StepResult.Success("- B")
+                        }
+                    )
 
-    Given("a presentation generator") {
-        val params = PresentationParams(
-            moduleDir = Paths.get("/fake/path"),
-            screenName = "TestScreen",
-            patternStrategy = PresentationPatternStrategy.MVVM,
-            diStrategy = DiStrategy.Hilt
-        )
+                    val generator = PresentationGenerator(steps)
 
-        When("invoking the generator") {
-            coEvery { step1.execute(params) } returns StepResult.Success("Step 1 done")
-            coEvery { step2.execute(params) } returns StepResult.Success("Step 2 done")
-
-            val result = generator(params)
-
-            Then("it should execute all steps") {
-                coVerify(exactly = 1) { step1.execute(params) }
-                coVerify(exactly = 1) { step2.execute(params) }
-            }
-
-            Then("it should return a success result with messages") {
-                result.shouldBeSuccess()
-                val message = result.getOrNull() ?: ""
-                message shouldContain "Step 1 done"
-                message shouldContain "Step 2 done"
+                    val result = generator(params(dir))
+                    result.isSuccess shouldBe true
+                    result.getOrThrow() shouldBe "Presentation generation completed:\n- A\n- B"
+                }
             }
         }
 
         When("a step fails") {
-            val error = RuntimeException("Step failed")
-            coEvery { step1.execute(params) } returns StepResult.Success("Step 1 done")
-            coEvery { step2.execute(params) } returns StepResult.Failure(error)
+            Then("it should return a failure") {
+                TestFiles.withTempDir("pg_usecase") { dir ->
+                    val boom = IllegalStateException("boom")
 
-            val result = generator(params)
+                    val steps = linkedSetOf(
+                        object : PresentationStep {
+                            override suspend fun execute(params: PresentationParams): StepResult = StepResult.Success("- A")
+                        },
+                        object : PresentationStep {
+                            override suspend fun execute(params: PresentationParams): StepResult = StepResult.Failure(boom)
+                        }
+                    )
 
-            Then("it should return a failure result") {
-                result.isFailure shouldBe true
-                result.exceptionOrNull() shouldBe error
+                    val generator = PresentationGenerator(steps)
+
+                    val result = generator(params(dir))
+                    result.isFailure shouldBe true
+                    result.exceptionOrNull() shouldBe boom
+                }
             }
         }
     }
 })
+

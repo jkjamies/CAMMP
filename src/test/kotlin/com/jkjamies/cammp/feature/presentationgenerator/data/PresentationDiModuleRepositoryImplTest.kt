@@ -1,124 +1,162 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
+import com.jkjamies.cammp.feature.presentationgenerator.testutil.TestFiles
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
-import java.nio.file.Files
 import kotlin.io.path.createDirectories
 import kotlin.io.path.readText
-import kotlin.io.path.writeText
 
+/**
+ * Tests for [PresentationDiModuleRepositoryImpl].
+ */
 class PresentationDiModuleRepositoryImplTest : BehaviorSpec({
 
-    Given("a DI module repository") {
-        val repository = PresentationDiModuleRepositoryImpl()
-        val tempDir = Files.createTempDirectory("di_gen_test")
+    Given("PresentationDiModuleRepositoryImpl") {
 
-        afterSpec {
-            tempDir.toFile().deleteRecursively()
-        }
+        When("module file does not exist") {
+            Then("it should create a new module") {
+                TestFiles.withTempDir("pg_dimodule") { dir ->
+                    val repo = PresentationDiModuleRepositoryImpl()
+                    val diDir = dir.resolve("di").also { it.createDirectories() }
 
-        When("merging a new ViewModel module") {
-            val diDir = tempDir.resolve("di")
-            val diPackage = "com.example.di"
-            val viewModelSimpleName = "TestViewModel"
-            val viewModelFqn = "com.example.presentation.TestViewModel"
-            val dependencyCount = 2
-            
-            val result = repository.mergeViewModelModule(
-                diDir = diDir,
-                diPackage = diPackage,
-                viewModelSimpleName = viewModelSimpleName,
-                viewModelFqn = viewModelFqn,
-                dependencyCount = dependencyCount
-            )
+                    val out = repo.mergeViewModelModule(
+                        diDir = diDir,
+                        diPackage = "com.example.di",
+                        viewModelSimpleName = "HomeViewModel",
+                        viewModelFqn = "com.example.presentation.home.HomeViewModel",
+                        dependencyCount = 2,
+                    )
 
-            Then("it should create the file") {
-                result.status shouldBe "created"
-                Files.exists(result.outPath) shouldBe true
-            }
-
-            Then("it should contain the module definition") {
-                val content = result.outPath.readText()
-                content shouldContain "package com.example.di"
-                content shouldContain "val viewModelModule"
-                content shouldContain "module {"
-                content shouldContain "viewModel { TestViewModel(get(), get()) }"
-                content shouldContain "import com.example.presentation.TestViewModel"
-            }
-        }
-
-        When("merging into an existing ViewModel module") {
-            val diDir = tempDir.resolve("di_existing")
-            val diPackage = "com.example.di"
-            val viewModelSimpleName = "NewViewModel"
-            val viewModelFqn = "com.example.presentation.NewViewModel"
-            
-            val existingFile = diDir.resolve("src/main/kotlin/com/example/di/ViewModelModule.kt")
-            existingFile.parent.createDirectories()
-            existingFile.writeText(
-                """
-                package com.example.di
-                
-                import org.koin.dsl.module
-                import org.koin.androidx.viewmodel.dsl.viewModel
-                
-                val viewModelModule = module {
+                    out.status shouldBe "created"
+                    val text = out.outPath.readText()
+                    text.contains("module") shouldBe true
+                    text.contains("viewModel { HomeViewModel(get(), get()) }") shouldBe true
+                    text.contains("import com.example.presentation.home.HomeViewModel") shouldBe true
                 }
-                """.trimIndent()
-            )
-            
-            val result = repository.mergeViewModelModule(
-                diDir = diDir,
-                diPackage = diPackage,
-                viewModelSimpleName = viewModelSimpleName,
-                viewModelFqn = viewModelFqn,
-                dependencyCount = 0
-            )
-
-            Then("it should update the file") {
-                result.status shouldBe "updated"
-            }
-
-            Then("it should contain the new binding") {
-                val content = result.outPath.readText()
-                content shouldContain "viewModel { NewViewModel() }"
-                content shouldContain "import com.example.presentation.NewViewModel"
             }
         }
 
-        When("merging a duplicate binding") {
-            val diDir = tempDir.resolve("di_duplicate")
-            val diPackage = "com.example.di"
-            val viewModelSimpleName = "DuplicateViewModel"
-            val viewModelFqn = "com.example.presentation.DuplicateViewModel"
-            
-            val existingFile = diDir.resolve("src/main/kotlin/com/example/di/ViewModelModule.kt")
-            existingFile.parent.createDirectories()
-            existingFile.writeText(
-                """
-                package com.example.di
-                
-                import org.koin.dsl.module
-                import org.koin.androidx.viewmodel.dsl.viewModel
-                import com.example.presentation.DuplicateViewModel
-                
-                val viewModelModule = module {
-                    viewModel { DuplicateViewModel() }
-                }
-                """.trimIndent()
-            )
-            
-            val result = repository.mergeViewModelModule(
-                diDir = diDir,
-                diPackage = diPackage,
-                viewModelSimpleName = viewModelSimpleName,
-                viewModelFqn = viewModelFqn,
-                dependencyCount = 0
-            )
+        When("module file exists and already contains binding") {
+            Then("it should return exists") {
+                TestFiles.withTempDir("pg_dimodule") { dir ->
+                    val repo = PresentationDiModuleRepositoryImpl()
+                    val diDir = dir.resolve("di").also { it.createDirectories() }
 
-            Then("it should report as exists") {
-                result.status shouldBe "exists"
+                    // First create
+                    repo.mergeViewModelModule(
+                        diDir = diDir,
+                        diPackage = "com.example.di",
+                        viewModelSimpleName = "HomeViewModel",
+                        viewModelFqn = "com.example.presentation.home.HomeViewModel",
+                        dependencyCount = 0,
+                    )
+
+                    val out = repo.mergeViewModelModule(
+                        diDir = diDir,
+                        diPackage = "com.example.di",
+                        viewModelSimpleName = "HomeViewModel",
+                        viewModelFqn = "com.example.presentation.home.HomeViewModel",
+                        dependencyCount = 1,
+                    )
+
+                    out.status shouldBe "exists"
+                }
+            }
+        }
+
+        When("module file exists and needs a new binding") {
+            Then("it should insert import and binding") {
+                TestFiles.withTempDir("pg_dimodule") { dir ->
+                    val repo = PresentationDiModuleRepositoryImpl()
+                    val diDir = dir.resolve("di").also { it.createDirectories() }
+
+                    // Create with one VM
+                    repo.mergeViewModelModule(
+                        diDir = diDir,
+                        diPackage = "com.example.di",
+                        viewModelSimpleName = "FirstViewModel",
+                        viewModelFqn = "com.example.presentation.first.FirstViewModel",
+                        dependencyCount = 0,
+                    )
+
+                    val out = repo.mergeViewModelModule(
+                        diDir = diDir,
+                        diPackage = "com.example.di",
+                        viewModelSimpleName = "SecondViewModel",
+                        viewModelFqn = "com.example.presentation.second.SecondViewModel",
+                        dependencyCount = 1,
+                    )
+
+                    out.status shouldBe "updated"
+
+                    val text = out.outPath.readText()
+                    text.contains("import com.example.presentation.second.SecondViewModel") shouldBe true
+                    text.contains("viewModel { SecondViewModel(get()) }") shouldBe true
+                }
+            }
+        }
+
+        When("module file exists with no imports") {
+            Then("it should insert import after package line") {
+                TestFiles.withTempDir("pg_dimodule_noimports") { dir ->
+                    val repo = PresentationDiModuleRepositoryImpl()
+                    val diDir = dir.resolve("di").also { it.createDirectories() }
+
+                    val diTargetDir = diDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
+                    val outFile = diTargetDir.resolve("ViewModelModule.kt")
+                    outFile.toFile().writeText(
+                        """
+                        package com.example.di
+                        
+                        val viewModelModule = module {
+                        }
+                        """.trimIndent()
+                    )
+
+                    val out = repo.mergeViewModelModule(
+                        diDir = diDir,
+                        diPackage = "com.example.di",
+                        viewModelSimpleName = "XViewModel",
+                        viewModelFqn = "com.example.presentation.x.XViewModel",
+                        dependencyCount = 0,
+                    )
+
+                    out.status shouldBe "updated"
+                    val text = out.outPath.readText()
+                    text.contains("import com.example.presentation.x.XViewModel") shouldBe true
+                    text.contains("viewModel { XViewModel() }") shouldBe true
+                }
+            }
+        }
+
+        When("module file exists with no package declaration") {
+            Then("it should insert import at top") {
+                TestFiles.withTempDir("pg_dimodule_nopackage") { dir ->
+                    val repo = PresentationDiModuleRepositoryImpl()
+                    val diDir = dir.resolve("di").also { it.createDirectories() }
+
+                    val diTargetDir = diDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
+                    val outFile = diTargetDir.resolve("ViewModelModule.kt")
+                    outFile.toFile().writeText(
+                        """
+                        val viewModelModule = module {
+                        }
+                        """.trimIndent()
+                    )
+
+                    val out = repo.mergeViewModelModule(
+                        diDir = diDir,
+                        diPackage = "com.example.di",
+                        viewModelSimpleName = "YViewModel",
+                        viewModelFqn = "com.example.presentation.y.YViewModel",
+                        dependencyCount = 1,
+                    )
+
+                    out.status shouldBe "updated"
+                    val text = out.outPath.readText()
+                    text.lines().first().trim() shouldBe "import com.example.presentation.y.YViewModel"
+                    text.contains("viewModel { YViewModel(get()) }") shouldBe true
+                }
             }
         }
     }
