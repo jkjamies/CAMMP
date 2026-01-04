@@ -4,6 +4,8 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import dev.zacsweers.metro.AppScope
@@ -20,13 +22,14 @@ class FlowStateHolderSpecFactoryImpl : FlowStateHolderSpecFactory {
 
     override fun create(packageName: String, flowName: String): FileSpec {
         val navHostController = ClassName("androidx.navigation", "NavHostController")
-        val rememberNavController = ClassName("androidx.navigation.compose", "rememberNavController")
+        val rememberNavController = MemberName("androidx.navigation.compose", "rememberNavController")
         val composableAnnotation = ClassName("androidx.compose.runtime", "Composable")
-        val remember = ClassName("androidx.compose.runtime", "remember")
+        val remember = MemberName("androidx.compose.runtime", "remember")
         val coroutineScope = ClassName("kotlinx.coroutines", "CoroutineScope")
-        val rememberCoroutineScope = ClassName("androidx.compose.runtime", "rememberCoroutineScope")
+        val rememberCoroutineScope = MemberName("androidx.compose.runtime", "rememberCoroutineScope")
 
-        val classBuilder = TypeSpec.classBuilder(flowName)
+        val stateHolderClass = TypeSpec.classBuilder(flowName)
+            .addModifiers(KModifier.INTERNAL)
             .primaryConstructor(
                 FunSpec.constructorBuilder()
                     .addParameter("navController", navHostController)
@@ -45,31 +48,35 @@ class FlowStateHolderSpecFactoryImpl : FlowStateHolderSpecFactory {
                     .addModifiers(KModifier.PRIVATE)
                     .build()
             )
+            .build()
 
-        val companion = TypeSpec.companionObjectBuilder()
-            .addFunction(
-                FunSpec.builder("remember${flowName.replace("StateHolder", "")}")
-                    .addAnnotation(composableAnnotation)
-                    .addParameter("navController", navHostController.copy(nullable = true))
-                    .addParameter("scope", coroutineScope.copy(nullable = true))
-                    .addStatement(
-                        "val navController = navController ?: %M()",
-                        rememberNavController
-                    )
-                    .addStatement("val scope = scope ?: %M()", rememberCoroutineScope)
-                    .addStatement(
-                        "return %M(navController, scope) { %T(navController, scope) }",
-                        remember,
-                        ClassName(packageName, flowName)
-                    )
+        // e.g. flowName = ProfileFlowStateHolder -> rememberProfileFlowState
+        val rememberFunName = "remember${flowName.removeSuffix("StateHolder")}State"
+
+        val rememberFun = FunSpec.builder(rememberFunName)
+            .addAnnotation(composableAnnotation)
+            .addModifiers(KModifier.INTERNAL)
+            .returns(ClassName(packageName, flowName))
+            .addParameter(
+                ParameterSpec.builder("navController", navHostController)
+                    .defaultValue("%M()", rememberNavController)
                     .build()
+            )
+            .addParameter(
+                ParameterSpec.builder("scope", coroutineScope)
+                    .defaultValue("%M()", rememberCoroutineScope)
+                    .build()
+            )
+            .addStatement(
+                "return %M(\n    navController,\n    scope\n) {\n    %T(\n        navController,\n        scope\n    )\n}",
+                remember,
+                ClassName(packageName, flowName)
             )
             .build()
 
-        classBuilder.addType(companion)
-
         return FileSpec.builder(packageName, flowName)
-            .addType(classBuilder.build())
+            .addFunction(rememberFun)
+            .addType(stateHolderClass)
             .build()
     }
 }

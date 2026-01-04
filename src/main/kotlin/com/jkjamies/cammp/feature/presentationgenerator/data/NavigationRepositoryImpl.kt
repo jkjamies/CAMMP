@@ -54,8 +54,17 @@ class NavigationRepositoryImpl(
         }
 
         val fileSpec = specFactory.createDestination(packageName, screenName, screenFolder)
+        val comments = specFactory.getDestinationComments(
+            screenName = screenName,
+            screenNameLower = screenName.replaceFirstChar { it.lowercase() }
+        )
 
-        target.writeText(fileSpec.toString())
+        val content = buildString {
+            append(fileSpec.toString())
+            append(comments)
+        }
+
+        target.writeText(content)
         return FileGenerationResult(target, GenerationStatus.CREATED, fileName)
     }
 }

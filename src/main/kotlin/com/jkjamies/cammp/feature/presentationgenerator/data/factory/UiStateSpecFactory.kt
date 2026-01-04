@@ -1,6 +1,7 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data.factory
 
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.TypeSpec
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -17,7 +18,7 @@ class UiStateSpecFactoryImpl : UiStateSpecFactory {
     override fun create(packageName: String, screenName: String): FileSpec {
         val uiStateName = "${screenName}UiState"
         val classBuilder = TypeSpec.classBuilder(uiStateName)
-            .addModifiers(com.squareup.kotlinpoet.KModifier.DATA)
+            .addModifiers(KModifier.INTERNAL, KModifier.DATA)
             .primaryConstructor(
                 com.squareup.kotlinpoet.FunSpec.constructorBuilder()
                     .addParameter(

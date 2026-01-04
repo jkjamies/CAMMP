@@ -20,8 +20,12 @@ class IntentSpecFactoryImpl : IntentSpecFactory {
     override fun create(packageName: String, params: PresentationParams): FileSpec {
         val intentName = "${params.screenName}Intent"
         val sealedInterface = TypeSpec.interfaceBuilder(intentName)
-            .addModifiers(KModifier.SEALED)
-            .addType(TypeSpec.objectBuilder("NoOp").addSuperinterface(ClassName(packageName, intentName)).build())
+            .addModifiers(KModifier.INTERNAL, KModifier.SEALED)
+            .addType(
+                TypeSpec.objectBuilder("NoOp")
+                    .addSuperinterface(ClassName(packageName, intentName))
+                    .build()
+            )
             .build()
 
         return FileSpec.builder(packageName, intentName)

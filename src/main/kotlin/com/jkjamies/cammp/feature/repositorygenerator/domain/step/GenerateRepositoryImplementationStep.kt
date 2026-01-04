@@ -16,13 +16,11 @@ class GenerateRepositoryImplementationStep(
 
     override suspend fun execute(params: RepositoryParams): StepResult {
         return try {
-            val dataExisting = modulePkgRepo.findModulePackage(params.dataDir)
-            val dataBase = truncateAt(dataExisting, ".data")
+            val dataBase = modulePkgRepo.findModulePackage(params.dataDir)
 
             val domainDir = params.dataDir.parent?.resolve("domain")
                 ?: error("Could not locate sibling domain module for ${params.dataDir}")
-            val domainExisting = modulePkgRepo.findModulePackage(domainDir)
-            val domainBase = truncateAt(domainExisting, ".domain")
+            val domainBase = modulePkgRepo.findModulePackage(domainDir)
 
             val domainFull = "$domainBase.repository"
             val dataFull = "$dataBase.repository"
@@ -32,11 +30,5 @@ class GenerateRepositoryImplementationStep(
         } catch (e: Exception) {
             StepResult.Failure(e)
         }
-    }
-
-    private fun truncateAt(pkg: String?, marker: String): String {
-        if (pkg == null) return ""
-        val idx = pkg.indexOf(marker)
-        return if (idx >= 0) pkg.substring(0, idx + marker.length) else pkg
     }
 }

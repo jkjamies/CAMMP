@@ -171,9 +171,10 @@ tasks {
     publishPlugin {
         dependsOn(patchChangelog)
     }
-    
+
     test {
         useJUnitPlatform()
+        systemProperty("kotest.framework.config.fqn", "com.jkjamies.cammp.ProjectConfig")
     }
 }
 

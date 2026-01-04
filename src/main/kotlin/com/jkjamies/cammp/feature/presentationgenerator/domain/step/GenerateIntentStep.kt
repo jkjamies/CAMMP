@@ -24,12 +24,12 @@ class GenerateIntentStep(
 
         return try {
             val sanitizedName = sanitizeScreenName(params.screenName)
-            val pkg = inferPresentationPackage(params.moduleDir)
+            val basePkg = inferPresentationPackage(params.moduleDir)
             val kotlinDir = params.moduleDir.resolve("src/main/kotlin").also { if (!it.exists()) it.createDirectories() }
-            val pkgDir = kotlinDir.resolve(pkg.replace('.', '/')).also { if (!it.exists()) it.createDirectories() }
+            val pkgDir = kotlinDir.resolve(basePkg.replace('.', '/')).also { if (!it.exists()) it.createDirectories() }
             val folder = sanitizedName.replaceFirstChar { it.lowercase() }
             val targetDir = pkgDir.resolve(folder).also { if (!it.exists()) it.createDirectories() }
-            val screenPackage = "$pkg.$folder"
+            val screenPackage = "$basePkg.$folder"
 
             val result = intentRepo.generateIntent(
                 targetDir = targetDir,
