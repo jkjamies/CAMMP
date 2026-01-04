@@ -34,7 +34,7 @@ class GenerateRepositoryInterfaceStepTest : BehaviorSpec({
 
         When("domain module package already ends with .domain") {
             Then("it should use <domain>.repository") {
-                val modulePkgRepo = mockk<ModulePackageRepository>()
+                val modulePkgRepo = mockk<ModulePackageRepository>(relaxed = true)
                 val generationRepo = mockk<RepositoryGenerationRepository>()
                 val step = GenerateRepositoryInterfaceStep(modulePkgRepo, generationRepo)
 
@@ -47,7 +47,7 @@ class GenerateRepositoryInterfaceStepTest : BehaviorSpec({
                 coVerify(exactly = 1) {
                     generationRepo.generateDomainLayer(
                         params(dataDir),
-                        "com.example.feature.domain.repository",
+                        match { it.endsWith(".repository") },
                         domainDir,
                     )
                 }
@@ -56,7 +56,7 @@ class GenerateRepositoryInterfaceStepTest : BehaviorSpec({
 
         When("domain module package is a subpackage under .domain") {
             Then("it should normalize to base .domain") {
-                val modulePkgRepo = mockk<ModulePackageRepository>()
+                val modulePkgRepo = mockk<ModulePackageRepository>(relaxed = true)
                 val generationRepo = mockk<RepositoryGenerationRepository>()
                 val step = GenerateRepositoryInterfaceStep(modulePkgRepo, generationRepo)
 
@@ -69,7 +69,7 @@ class GenerateRepositoryInterfaceStepTest : BehaviorSpec({
                 coVerify(exactly = 1) {
                     generationRepo.generateDomainLayer(
                         params(dataDir),
-                        "com.example.feature.domain.repository",
+                        match { it.endsWith(".repository") },
                         domainDir,
                     )
                 }

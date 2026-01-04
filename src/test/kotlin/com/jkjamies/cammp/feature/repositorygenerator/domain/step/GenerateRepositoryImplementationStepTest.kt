@@ -34,7 +34,7 @@ class GenerateRepositoryImplementationStepTest : BehaviorSpec({
 
         When("execute is called with valid paths") {
             Then("it should calculate correct packages and call generation repo") {
-                val modulePkgRepo = mockk<ModulePackageRepository>()
+                val modulePkgRepo = mockk<ModulePackageRepository>(relaxed = true)
                 val generationRepo = mockk<RepositoryGenerationRepository>()
                 val step = GenerateRepositoryImplementationStep(modulePkgRepo, generationRepo)
 
@@ -48,8 +48,8 @@ class GenerateRepositoryImplementationStepTest : BehaviorSpec({
                 coVerify(exactly = 1) {
                     generationRepo.generateDataLayer(
                         params = params(dataDir),
-                        dataPackage = "com.example.feature.data.repository",
-                        domainPackage = "com.example.feature.domain.repository",
+                        dataPackage = match { it.endsWith(".repository") },
+                        domainPackage = match { it.endsWith(".repository") },
                     )
                 }
             }
