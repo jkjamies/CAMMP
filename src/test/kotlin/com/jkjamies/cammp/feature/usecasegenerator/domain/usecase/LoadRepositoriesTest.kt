@@ -3,39 +3,38 @@ package com.jkjamies.cammp.feature.usecasegenerator.domain.usecase
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.RepositoryDiscoveryRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.unmockkAll
-import io.mockk.verify
 
 /**
- * Test class for [LoadRepositories].
+ * Tests for [LoadRepositories].
+ *
+ * Reference: `src/main/kotlin/com/jkjamies/cammp/feature/usecasegenerator/domain/usecase/LoadRepositories.kt`
  */
 class LoadRepositoriesTest : BehaviorSpec({
 
-    beforeContainer {
-        clearAllMocks()
+    class RepositoryDiscoveryRepositoryFake(
+        private val result: List<String>,
+    ) : RepositoryDiscoveryRepository {
+        val calls = mutableListOf<String>()
+
+        override fun loadRepositories(domainModulePath: String): List<String> {
+            calls.add(domainModulePath)
+            return result
+        }
     }
 
-    afterSpec {
-        unmockkAll()
-    }
-
-    Given("a LoadRepositories use case") {
-        val mockRepo = mockk<RepositoryDiscoveryRepository>()
-        val loadRepositories = LoadRepositories(mockRepo)
+    Given("LoadRepositories") {
         val domainModulePath = "/path/to/domain"
         val expectedRepositories = listOf("AuthRepository", "UserRepository")
 
         When("invoked with a domain module path") {
-            every { mockRepo.loadRepositories(domainModulePath) } returns expectedRepositories
+            Then("it should return the list from RepositoryDiscoveryRepository") {
+                val repo = RepositoryDiscoveryRepositoryFake(expectedRepositories)
+                val loadRepositories = LoadRepositories(repo)
 
-            val result = loadRepositories(domainModulePath)
+                val result = loadRepositories(domainModulePath)
 
-            Then("it should return the list of repositories from the repository") {
                 result shouldBe expectedRepositories
-                verify { mockRepo.loadRepositories(domainModulePath) }
+                repo.calls shouldBe listOf(domainModulePath)
             }
         }
     }

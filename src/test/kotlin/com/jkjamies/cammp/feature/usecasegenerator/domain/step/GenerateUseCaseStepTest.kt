@@ -2,78 +2,72 @@ package com.jkjamies.cammp.feature.usecasegenerator.domain.step
 
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
-import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePackageRepository
-import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationRepository
+import com.jkjamies.cammp.feature.usecasegenerator.testutil.ModulePackageRepositoryFake
+import com.jkjamies.cammp.feature.usecasegenerator.testutil.UseCaseGenerationRepositoryFake
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.coEvery
-import io.mockk.coVerify
-import io.mockk.every
-import io.mockk.mockk
+import java.nio.file.Path
 import java.nio.file.Paths
 
+/**
+ * Tests for [GenerateUseCaseStep].
+ */
 class GenerateUseCaseStepTest : BehaviorSpec({
 
-    val modulePkgRepo = mockk<ModulePackageRepository>()
-    val generationRepo = mockk<UseCaseGenerationRepository>()
-    val step = GenerateUseCaseStep(generationRepo, modulePkgRepo)
+    fun params(domainDir: Path, className: String = "MyUseCase") = UseCaseParams(
+        domainDir = domainDir,
+        className = className,
+        diStrategy = DiStrategy.Hilt,
+        repositories = emptyList(),
+    )
 
-    Given("a GenerateUseCaseStep") {
+    Given("GenerateUseCaseStep") {
         val domainDir = Paths.get("/project/feature/domain")
-        val params = UseCaseParams(
-            domainDir = domainDir,
-            className = "MyUseCase",
-            diStrategy = DiStrategy.Hilt,
-            repositories = emptyList()
-        )
 
-        When("execute is called and package is a standard domain module") {
-            every { modulePkgRepo.findModulePackage(domainDir) } returns "com.example.feature.domain"
-            coEvery { generationRepo.generateUseCase(any(), any(), any()) } returns Paths.get("/out/MyUseCase.kt")
-
-            val result = step.execute(params)
-
-            Then("it should generate use case in .usecase subpackage") {
-                result.shouldBeInstanceOf<StepResult.Success>()
-                coVerify {
-                    generationRepo.generateUseCase(
-                        params,
-                        "com.example.feature.domain.usecase",
-                        "com.example.feature.domain"
-                    )
+        When("package is a standard domain module") {
+            Then("it should generate in .usecase subpackage") {
+                val pkgRepo = ModulePackageRepositoryFake(mapping = mapOf(domainDir to "com.example.feature.domain"))
+                val genRepo = UseCaseGenerationRepositoryFake { _, useCasePkg, domainPkg ->
+                    useCasePkg shouldBe "com.example.feature.domain.usecase"
+                    domainPkg shouldBe "com.example.feature.domain"
+                    Paths.get("/out/MyUseCase.kt")
                 }
+                val step = GenerateUseCaseStep(genRepo, pkgRepo)
+
+                val result = step.execute(params(domainDir))
+                result.shouldBeInstanceOf<StepResult.Success>()
+
+                genRepo.calls.single().packageName shouldBe "com.example.feature.domain.usecase"
+                genRepo.calls.single().baseDomainPackage shouldBe "com.example.feature.domain"
             }
         }
 
-        When("execute is called and package is already a usecase module") {
-            every { modulePkgRepo.findModulePackage(domainDir) } returns "com.example.feature.domain.usecase"
-            coEvery { generationRepo.generateUseCase(any(), any(), any()) } returns Paths.get("/out/MyUseCase.kt")
-
-            val result = step.execute(params)
-
-            Then("it should use the existing package") {
-                result.shouldBeInstanceOf<StepResult.Success>()
-                coVerify {
-                    generationRepo.generateUseCase(
-                        params,
-                        "com.example.feature.domain.usecase",
-                        "com.example.feature.domain"
-                    )
+        When("package is already a usecase module") {
+            Then("it should not append .usecase again") {
+                val pkgRepo = ModulePackageRepositoryFake(mapping = mapOf(domainDir to "com.example.feature.domain.usecase"))
+                val genRepo = UseCaseGenerationRepositoryFake { _, useCasePkg, _ ->
+                    useCasePkg shouldBe "com.example.feature.domain.usecase"
+                    Paths.get("/out/MyUseCase.kt")
                 }
+                val step = GenerateUseCaseStep(genRepo, pkgRepo)
+
+                val result = step.execute(params(domainDir))
+                result.shouldBeInstanceOf<StepResult.Success>()
+                genRepo.calls.single().packageName shouldBe "com.example.feature.domain.usecase"
             }
         }
 
-        When("repository throws an exception") {
-            val expectedError = RuntimeException("Disk error")
-            every { modulePkgRepo.findModulePackage(domainDir) } returns "com.example.feature.domain"
-            coEvery { generationRepo.generateUseCase(any(), any(), any()) } throws expectedError
-
-            val result = step.execute(params)
-
+        When("repository throws") {
             Then("it should return Failure") {
+                val error = RuntimeException("Disk error")
+                val pkgRepo = ModulePackageRepositoryFake(mapping = mapOf(domainDir to "com.example.feature.domain"))
+                val genRepo = UseCaseGenerationRepositoryFake { _, _, _ -> throw error }
+                val step = GenerateUseCaseStep(genRepo, pkgRepo)
+
+                val result = step.execute(params(domainDir))
                 result.shouldBeInstanceOf<StepResult.Failure>()
-                (result as StepResult.Failure).error shouldBe expectedError
+                result.error shouldBe error
             }
         }
     }

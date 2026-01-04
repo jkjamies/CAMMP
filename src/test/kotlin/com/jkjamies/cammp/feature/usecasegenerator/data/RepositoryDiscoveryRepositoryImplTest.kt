@@ -4,68 +4,105 @@ import com.jkjamies.cammp.feature.usecasegenerator.data.datasource.PackageMetada
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
-import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.unmockkAll
 import java.nio.file.Files
 
 /**
- * Test class for [RepositoryDiscoveryRepositoryImpl].
+ * Tests for [RepositoryDiscoveryRepositoryImpl].
  */
 class RepositoryDiscoveryRepositoryImplTest : BehaviorSpec({
 
-    val mockPackageMetadataDataSource = mockk<PackageMetadataDataSource>()
-
-    beforeContainer {
-        clearAllMocks()
+    fun newRepo(): Pair<PackageMetadataDataSource, RepositoryDiscoveryRepositoryImpl> {
+        val ds = mockk<PackageMetadataDataSource>()
+        return ds to RepositoryDiscoveryRepositoryImpl(ds)
     }
 
-    afterSpec {
-        unmockkAll()
-    }
-
-    Given("a RepositoryDiscoveryRepositoryImpl") {
-        val repository = RepositoryDiscoveryRepositoryImpl(mockPackageMetadataDataSource)
+    Given("RepositoryDiscoveryRepositoryImpl") {
 
         When("loadRepositories is called with an invalid path") {
-            val result = repository.loadRepositories("/invalid/path")
-
             Then("it should return an empty list") {
-                result.shouldBeEmpty()
+                val (_, repo) = newRepo()
+                repo.loadRepositories("/invalid/path").shouldBeEmpty()
             }
         }
 
         When("loadRepositories is called with a valid path containing repositories") {
-            val tempDir = Files.createTempDirectory("test_repo_discovery")
-
-            val srcMainKotlin = tempDir.resolve("src/main/kotlin")
-            val packagePath = srcMainKotlin.resolve("com/example/domain/repository")
-            Files.createDirectories(packagePath)
-
-            Files.createFile(packagePath.resolve("AuthRepository.kt"))
-            Files.createFile(packagePath.resolve("UserRepository.kt"))
-
-            every { mockPackageMetadataDataSource.findModulePackage(any()) } returns "com.example.domain.usecase"
-
-            val result = repository.loadRepositories(tempDir.toString())
-
             Then("it should return the list of repository names") {
-                result shouldBe listOf("AuthRepository", "UserRepository")
-            }
+                val tempDir = Files.createTempDirectory("test_repo_discovery")
+                val (ds, repo) = newRepo()
 
-            tempDir.toFile().deleteRecursively()
+                val srcMainKotlin = tempDir.resolve("src/main/kotlin")
+                val packagePath = srcMainKotlin.resolve("com/example/domain/repository")
+                Files.createDirectories(packagePath)
+                Files.createFile(packagePath.resolve("AuthRepository.kt"))
+                Files.createFile(packagePath.resolve("UserRepository.kt"))
+
+                every { ds.findModulePackage(any()) } returns "com.example.domain.usecase"
+
+                repo.loadRepositories(tempDir.toString()) shouldBe listOf("AuthRepository", "UserRepository")
+
+                tempDir.toFile().deleteRecursively()
+            }
         }
 
         When("loadRepositories encounters an exception") {
-             val tempFile = Files.createTempFile("test_file", ".txt")
-             val result = repository.loadRepositories(tempFile.toString())
+            Then("it should return an empty list") {
+                val tempFile = Files.createTempFile("test_file", ".txt")
+                val (_, repo) = newRepo()
 
-             Then("it should return an empty list") {
-                 result.shouldBeEmpty()
-             }
+                repo.loadRepositories(tempFile.toString()).shouldBeEmpty()
+                Files.deleteIfExists(tempFile)
+            }
+        }
 
-             Files.deleteIfExists(tempFile)
+        When("loadRepositories resolves repository package by stripping .usecase") {
+            Then("it should map <base>.domain.usecase to <base>.domain.repository") {
+                val tempDir = Files.createTempDirectory("test_repo_discovery_usecase")
+                val (ds, repo) = newRepo()
+
+                // Simulate a discovered usecase package
+                every { ds.findModulePackage(any()) } returns "com.example.feature.domain.usecase"
+
+                // Create the repository directory the implementation should look for:
+                // com/example/feature/domain/repository
+                val repoDir = tempDir
+                    .resolve("src/main/kotlin")
+                    .resolve("com/example/feature/domain/repository")
+                Files.createDirectories(repoDir)
+                Files.createFile(repoDir.resolve("ARepository.kt"))
+
+                repo.loadRepositories(tempDir.toString()) shouldBe listOf("ARepository")
+
+                tempDir.toFile().deleteRecursively()
+            }
+        }
+
+        When("src/main/kotlin does not exist") {
+            Then("it should return empty list") {
+                val tempDir = Files.createTempDirectory("test_repo_discovery_no_src")
+                val (ds, repo) = newRepo()
+                every { ds.findModulePackage(any()) } returns "com.example.feature.domain.usecase"
+
+                // No src/main/kotlin created
+                repo.loadRepositories(tempDir.toString()).shouldBeEmpty()
+
+                tempDir.toFile().deleteRecursively()
+            }
+        }
+
+        When("repository package directory does not exist") {
+            Then("it should return empty list") {
+                val tempDir = Files.createTempDirectory("test_repo_discovery_no_repo_dir")
+                val (ds, repo) = newRepo()
+                every { ds.findModulePackage(any()) } returns "com.example.feature.domain.usecase"
+                Files.createDirectories(tempDir.resolve("src/main/kotlin"))
+
+                // repo package path is missing
+                repo.loadRepositories(tempDir.toString()).shouldBeEmpty()
+
+                tempDir.toFile().deleteRecursively()
+            }
         }
     }
 })

@@ -3,75 +3,61 @@ package com.jkjamies.cammp.feature.usecasegenerator.domain.usecase
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.step.StepResult
-import com.jkjamies.cammp.feature.usecasegenerator.domain.step.UseCaseStep
+import com.jkjamies.cammp.feature.usecasegenerator.testutil.UseCaseStepFake
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.mockk
-import io.mockk.slot
 import java.nio.file.Paths
 
+/**
+ * Tests for [UseCaseGenerator].
+ */
 class UseCaseGeneratorTest : BehaviorSpec({
 
-    val step1 = mockk<UseCaseStep>()
-    val step2 = mockk<UseCaseStep>()
-    val steps = setOf(step1, step2)
-    val generator = UseCaseGenerator(steps)
+    Given("a UseCaseGenerator") {
+        val params = UseCaseParams(
+            domainDir = Paths.get("domain"),
+            className = "Test",
+            diStrategy = DiStrategy.Hilt,
+            repositories = emptyList(),
+        )
 
-    val params = UseCaseParams(
-        domainDir = Paths.get("domain"),
-        className = "Test",
-        diStrategy = DiStrategy.Hilt
-    )
+        When("all steps succeed and one returns a path") {
+            Then("it should return success and normalize className passed to steps") {
+                val step1 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(null))))
+                val step2 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(Paths.get("domain/TestUseCase.kt")))))
+                val generator = UseCaseGenerator(setOf(step1, step2))
 
-    Given("A UseCaseGenerator with steps") {
+                val result = generator(params)
 
-        When("All steps succeed and return a path") {
-            val expectedPath = Paths.get("domain/TestUseCase.kt")
-            
-            val slot1 = slot<UseCaseParams>()
-            val slot2 = slot<UseCaseParams>()
+                result.shouldBeSuccess { it shouldBe Paths.get("domain/TestUseCase.kt") }
 
-            coEvery { step1.execute(capture(slot1)) } returns StepResult.Success(null)
-            coEvery { step2.execute(capture(slot2)) } returns StepResult.Success(expectedPath)
-
-            val result = generator(params)
-
-            Then("Result should be success with correct path") {
-                result.shouldBeSuccess {
-                    it shouldBe expectedPath
-                }
-            }
-
-            Then("Params passed to steps should have normalized class name") {
-                slot1.captured.className shouldBe "TestUseCase"
-                slot2.captured.className shouldBe "TestUseCase"
+                step1.calls.single().className shouldBe "TestUseCase"
+                step2.calls.single().className shouldBe "TestUseCase"
             }
         }
 
-        When("Steps succeed but no path returned") {
-            coEvery { step1.execute(any()) } returns StepResult.Success(null)
-            coEvery { step2.execute(any()) } returns StepResult.Success(null)
+        When("steps succeed but no path is returned") {
+            Then("it should return failure") {
+                val step1 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(null))))
+                val step2 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(null))))
+                val generator = UseCaseGenerator(setOf(step1, step2))
 
-            val result = generator(params)
-
-            Then("Result should be failure with IllegalStateException") {
+                val result = generator(params)
                 result.shouldBeFailure<IllegalStateException>()
             }
         }
 
-        When("A step fails") {
-            val error = RuntimeException("Boom")
-            coEvery { step1.execute(any()) } returns StepResult.Failure(error)
-            
-            val result = generator(params)
+        When("a step fails") {
+            Then("it should return failure with the original error") {
+                val error = RuntimeException("Boom")
+                val step1 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Failure(error))))
+                val step2 = UseCaseStepFake()
+                val generator = UseCaseGenerator(setOf(step1, step2))
 
-            Then("Result should be failure") {
-                result.shouldBeFailure {
-                    it shouldBe error
-                }
+                val result = generator(params)
+                result.shouldBeFailure { it shouldBe error }
             }
         }
     }
