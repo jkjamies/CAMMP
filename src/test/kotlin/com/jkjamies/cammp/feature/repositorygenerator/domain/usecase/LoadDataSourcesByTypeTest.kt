@@ -3,10 +3,8 @@ package com.jkjamies.cammp.feature.repositorygenerator.domain.usecase
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceDiscoveryRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.unmockkAll
 import io.mockk.verify
 
 /**
@@ -14,31 +12,23 @@ import io.mockk.verify
  */
 class LoadDataSourcesByTypeTest : BehaviorSpec({
 
-    beforeContainer {
-        clearAllMocks()
-    }
-
-    afterSpec {
-        unmockkAll()
-    }
-
-    Given("a LoadDataSourcesByType use case") {
-        val mockRepo = mockk<DataSourceDiscoveryRepository>()
-        val loadDataSourcesByType = LoadDataSourcesByType(mockRepo)
-        val dataModulePath = "/path/to/data"
-        val expectedDataSources = mapOf(
-            "Remote" to listOf("com.example.data.datasource.RemoteDataSource"),
-            "Local" to listOf("com.example.data.datasource.LocalDataSource")
-        )
+    Given("LoadDataSourcesByType") {
 
         When("invoked with a data module path") {
-            every { mockRepo.loadDataSourcesByType(dataModulePath) } returns expectedDataSources
+            Then("it returns the map of data sources from the repository") {
+                val repo = mockk<DataSourceDiscoveryRepository>()
+                val useCase = LoadDataSourcesByType(repo)
 
-            val result = loadDataSourcesByType(dataModulePath)
+                val dataModulePath = "/path/to/data"
+                val expected = mapOf(
+                    "Remote" to listOf("com.example.data.datasource.RemoteDataSource"),
+                    "Local" to listOf("com.example.data.datasource.LocalDataSource"),
+                )
 
-            Then("it should return the map of data sources from the repository") {
-                result shouldBe expectedDataSources
-                verify { mockRepo.loadDataSourcesByType(dataModulePath) }
+                every { repo.loadDataSourcesByType(dataModulePath) } returns expected
+
+                useCase(dataModulePath) shouldBe expected
+                verify(exactly = 1) { repo.loadDataSourcesByType(dataModulePath) }
             }
         }
     }

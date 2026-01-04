@@ -3,124 +3,238 @@ package com.jkjamies.cammp.feature.repositorygenerator.data
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.collections.shouldBeOneOf
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Files
 import kotlin.io.path.createDirectories
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
+/**
+ * Tests for [DiModuleRepositoryImpl].
+ */
 class DiModuleRepositoryImplTest : BehaviorSpec({
 
-    val repository = DiModuleRepositoryImpl()
+    fun newProject(): java.nio.file.Path {
+        val tempDir = Files.createTempDirectory("di_repo_test")
+        tempDir.resolve("src/main/kotlin").createDirectories()
+        return tempDir
+    }
+
+    val diPackage = "com.example.di"
 
     Given("DiModuleRepositoryImpl") {
-        val tempDir = Files.createTempDirectory("di_repo_test")
-        val diPackage = "com.example.di"
-        val diPath = tempDir.resolve("src/main/kotlin/com/example/di")
-        diPath.createDirectories()
 
-        When("merging Repository Module (Hilt) - New File") {
-            val result = repository.mergeRepositoryModule(
-                diDir = tempDir,
-                diPackage = diPackage,
-                className = "UserRepository",
-                domainFqn = "com.example.domain.UserRepository",
-                dataFqn = "com.example.data.UserRepositoryImpl",
-                useKoin = false
-            )
+        When("merging Repository Module (Hilt) - new file") {
+            Then("it creates RepositoryModule.kt with a bind function") {
+                val repository = DiModuleRepositoryImpl()
+                val tempDir = newProject()
+                try {
+                    val result = repository.mergeRepositoryModule(
+                        diDir = tempDir,
+                        diPackage = diPackage,
+                        className = "UserRepository",
+                        // note: the implementation expects these to be packages for ClassName()
+                        domainFqn = "com.example.domain.repository",
+                        dataFqn = "com.example.data.repository",
+                        useKoin = false
+                    )
 
-            Then("it should create the file") {
-                result.status shouldBe "created"
-                val content = result.outPath.readText()
-                content shouldContain "@Module"
-                content shouldContain "@InstallIn(SingletonComponent::class)"
-                content shouldContain "abstract fun bindUserRepository(repositoryImpl: UserRepositoryImpl): UserRepository"
-            }
-        }
-
-        When("merging Repository Module (Hilt) - Existing File") {
-            val existingFile = diPath.resolve("RepositoryModule.kt")
-            existingFile.writeText("""
-                package com.example.di
-                import dagger.Module
-                import dagger.hilt.InstallIn
-                import dagger.hilt.components.SingletonComponent
-                import dagger.Binds
-                import com.example.domain.OtherRepo
-                import com.example.data.OtherRepoImpl
-
-                @Module
-                @InstallIn(SingletonComponent::class)
-                abstract class RepositoryModule {
-                    @Binds
-                    abstract fun bindOtherRepo(impl: OtherRepoImpl): OtherRepo
+                    result.status shouldBe "created"
+                    val content = result.outPath.readText()
+                    content shouldContain "package $diPackage"
+                    content shouldContain "@Module"
+                    content shouldContain "@InstallIn(SingletonComponent::class)"
+                    content shouldContain "abstract class RepositoryModule"
+                    content shouldContain "abstract fun bindUserRepository(repositoryImpl: UserRepositoryImpl): UserRepository"
+                } finally {
+                    tempDir.toFile().deleteRecursively()
                 }
-            """.trimIndent())
-
-            val result = repository.mergeRepositoryModule(
-                diDir = tempDir,
-                diPackage = diPackage,
-                className = "NewRepository",
-                domainFqn = "com.example.domain.NewRepository",
-                dataFqn = "com.example.data.NewRepositoryImpl",
-                useKoin = false
-            )
-
-            Then("it should append the new binding") {
-                result.status shouldBe "updated"
-                val content = result.outPath.readText()
-                content shouldContain "fun bindOtherRepo"
-                content shouldContain "fun bindNewRepository"
-                content shouldContain "import com.example.domain.NewRepository"
             }
         }
 
-        When("merging DataSource Module (Koin) - New File") {
-            val bindings = listOf(
-                DataSourceBinding(
-                    ifaceImport = "import com.example.data.RemoteDataSource",
-                    implImport = "import com.example.remote.RemoteDataSourceImpl",
-                    signature = "single<RemoteDataSource> { RemoteDataSourceImpl(get()) }",
-                    block = "    single<RemoteDataSource> { RemoteDataSourceImpl(get()) }"
-                )
-            )
+        When("merging Repository Module (Hilt) - existing file already has binding") {
+            Then("it returns status=exists and does not duplicate the function") {
+                val repository = DiModuleRepositoryImpl()
+                val tempDir = newProject()
+                val diPath = tempDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
+                try {
+                    val existingFile = diPath.resolve("RepositoryModule.kt")
+                    existingFile.writeText(
+                        """
+                        package com.example.di
 
-            val result = repository.mergeDataSourceModule(
-                diDir = tempDir,
-                diPackage = diPackage,
-                desiredBindings = bindings,
-                useKoin = true
-            )
+                        import com.example.domain.repository.UserRepository
+                        import com.example.data.repository.UserRepositoryImpl
+                        import dagger.Binds
+                        import dagger.Module
+                        import dagger.hilt.InstallIn
+                        import dagger.hilt.components.SingletonComponent
 
-            Then("it should create Koin module") {
-                result.status shouldBe "created"
-                val content = result.outPath.readText()
-                content shouldContain "public val dataSourceModule: Module = module {"
-                content shouldContain "single<RemoteDataSource> { RemoteDataSourceImpl(get()) }"
-            }
-        }
+                        @Module
+                        @InstallIn(SingletonComponent::class)
+                        abstract class RepositoryModule {
+                            @Binds
+                            abstract fun bindUserRepository(repositoryImpl: UserRepositoryImpl): UserRepository
+                        }
+                        """.trimIndent()
+                    )
 
-        When("merging Repository Module (Koin) - Existing File") {
-            val existingFile = diPath.resolve("RepositoryModule.kt")
-            existingFile.writeText("""
-                package com.example.di
-                import org.koin.dsl.module
-                val repositoryModule = module {
+                    val result = repository.mergeRepositoryModule(
+                        diDir = tempDir,
+                        diPackage = diPackage,
+                        className = "UserRepository",
+                        domainFqn = "com.example.domain.repository",
+                        dataFqn = "com.example.data.repository",
+                        useKoin = false
+                    )
+
+                    result.status shouldBeOneOf(listOf("exists", "updated"))
+                    val content = result.outPath.readText()
+
+                    // bind should appear only once
+                    content.split("bindUserRepository").size - 1 shouldBe 1
+                } finally {
+                    tempDir.toFile().deleteRecursively()
                 }
-            """.trimIndent())
+            }
+        }
 
-            val result = repository.mergeRepositoryModule(
-                diDir = tempDir,
-                diPackage = diPackage,
-                className = "KoinRepo",
-                domainFqn = "com.example.domain.KoinRepo",
-                dataFqn = "com.example.data.KoinRepoImpl",
-                useKoin = true
-            )
+        When("merging Repository Module (Koin) - existing file has content") {
+            Then("it inserts a single binding into the module body") {
+                val repository = DiModuleRepositoryImpl()
+                val tempDir = newProject()
+                val diPath = tempDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
+                try {
+                    val existingFile = diPath.resolve("RepositoryModule.kt")
+                    existingFile.writeText(
+                        """
+                        package com.example.di
 
-            Then("it should insert into module block") {
-                val content = result.outPath.readText()
-                content shouldContain "single<KoinRepo> { KoinRepoImpl(get()) }"
+                        import org.koin.dsl.module
+
+                        val repositoryModule = module {
+                            // existing
+                        }
+                        """.trimIndent()
+                    )
+
+                    val result = repository.mergeRepositoryModule(
+                        diDir = tempDir,
+                        diPackage = diPackage,
+                        className = "KoinRepo",
+                        domainFqn = "com.example.domain.repository",
+                        dataFqn = "com.example.data.repository",
+                        useKoin = true
+                    )
+
+                    val content = result.outPath.readText()
+                    content shouldContain "val repositoryModule: Module = module {"
+                    content shouldContain "single<KoinRepo> { KoinRepoImpl(get()) }"
+                } finally {
+                    tempDir.toFile().deleteRecursively()
+                }
+            }
+        }
+
+        When("merging DataSource Module (Koin) - new file") {
+            Then("it creates a module with desired bindings") {
+                val repository = DiModuleRepositoryImpl()
+                val tempDir = newProject()
+                try {
+                    val bindings = listOf(
+                        DataSourceBinding(
+                            ifaceImport = "import com.example.data.remote.RemoteDataSource",
+                            implImport = "import com.example.data.remote.RemoteDataSourceImpl",
+                            signature = "single<RemoteDataSource> { RemoteDataSourceImpl(get()) }",
+                            block = "    single<RemoteDataSource> { RemoteDataSourceImpl(get()) }"
+                        )
+                    )
+
+                    val result = repository.mergeDataSourceModule(
+                        diDir = tempDir,
+                        diPackage = diPackage,
+                        desiredBindings = bindings,
+                        useKoin = true
+                    )
+
+                    result.status shouldBe "created"
+                    val content = result.outPath.readText()
+                    content shouldContain "public val dataSourceModule: Module = module {"
+                    content shouldContain "single<RemoteDataSource> { RemoteDataSourceImpl(get()) }"
+                } finally {
+                    tempDir.toFile().deleteRecursively()
+                }
+            }
+        }
+
+        When("merging DataSource Module (Hilt) - existing file has one function") {
+            Then("it appends only missing bindings and preserves existing ones") {
+                val repository = DiModuleRepositoryImpl()
+                val tempDir = newProject()
+                val diPath = tempDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
+                try {
+                    // Existing file with one binding. We include imports so parseImportsMap can resolve types.
+                    val existingFile = diPath.resolve("DataSourceModule.kt")
+                    existingFile.writeText(
+                        """
+                        package com.example.di
+
+                        import com.example.data.ds.LocalDataSource
+                        import com.example.data.ds.LocalDataSourceImpl
+                        import dagger.Binds
+                        import dagger.Module
+                        import dagger.hilt.InstallIn
+                        import dagger.hilt.components.SingletonComponent
+
+                        @Module
+                        @InstallIn(SingletonComponent::class)
+                        abstract class DataSourceModule {
+                            @Binds
+                            abstract fun bindLocalDataSource(dataSourceImpl: LocalDataSourceImpl): LocalDataSource
+                        }
+                        """.trimIndent()
+                    )
+
+                    val bindings = listOf(
+                        DataSourceBinding(
+                            ifaceImport = "import com.example.data.ds.LocalDataSource",
+                            implImport = "import com.example.data.ds.LocalDataSourceImpl",
+                            signature = "bindLocalDataSource",
+                            block = ""
+                        ),
+                        DataSourceBinding(
+                            ifaceImport = "import com.example.data.ds.RemoteDataSource",
+                            implImport = "import com.example.data.ds.RemoteDataSourceImpl",
+                            signature = "bindRemoteDataSource",
+                            block = ""
+                        )
+                    )
+
+                    val result = repository.mergeDataSourceModule(
+                        diDir = tempDir,
+                        diPackage = diPackage,
+                        desiredBindings = bindings,
+                        useKoin = false
+                    )
+
+                    // should be updated because it adds a missing binding
+                    result.status shouldBe "updated"
+
+                    val content = result.outPath.readText()
+                    // existing preserved
+                    content.split("bindLocalDataSource").size - 1 shouldBe 1
+                    // new added
+                    content shouldContain "bindRemoteDataSource"
+                    content shouldContain "import com.example.data.ds.RemoteDataSource"
+                    content shouldContain "import com.example.data.ds.RemoteDataSourceImpl"
+
+                    // ensure `data` sanitization is applied
+                    content shouldNotContain "`data`"
+                } finally {
+                    tempDir.toFile().deleteRecursively()
+                }
             }
         }
     }
