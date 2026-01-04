@@ -14,5 +14,6 @@ class ModulePackageRepositoryImpl(
 ) : ModulePackageRepository {
     override fun findModulePackage(moduleDir: Path): String {
         return dataSource.findModulePackage(moduleDir)
+            ?: error("Could not determine module package for: $moduleDir")
     }
 }

@@ -7,103 +7,100 @@ import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.MergeOut
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.unmockkAll
 import java.nio.file.Paths
 
+/**
+ * Tests for [UpdateRepositoryDiStep].
+ */
 class UpdateRepositoryDiStepTest : BehaviorSpec({
 
-    val modulePkgRepo = mockk<ModulePackageRepository>()
-    val diRepo = mockk<DiModuleRepository>()
-    val step = UpdateRepositoryDiStep(modulePkgRepo, diRepo)
-
-    beforeContainer {
-        clearAllMocks()
-    }
-
-    afterSpec {
-        unmockkAll()
-    }
-
-    Given("an UpdateRepositoryDiStep") {
+    Given("UpdateRepositoryDiStep") {
         val root = Paths.get("/project/feature")
         val dataDir = root.resolve("data")
         val domainDir = root.resolve("domain")
         val diDir = root.resolve("di")
 
+        fun params(di: DiStrategy) = RepositoryParams(
+            dataDir = dataDir,
+            className = "MyRepository",
+            includeDatasource = false,
+            datasourceCombined = false,
+            datasourceRemote = false,
+            datasourceLocal = false,
+            diStrategy = di,
+        )
+
         When("execute is called with Hilt strategy") {
-            val params = RepositoryParams(
-                dataDir = dataDir,
-                className = "MyRepository",
-                includeDatasource = false,
-                datasourceCombined = false,
-                datasourceRemote = false,
-                datasourceLocal = false,
-                diStrategy = DiStrategy.Hilt
-            )
+            Then("it should merge repository module with useKoin=false") {
+                val modulePkgRepo = mockk<ModulePackageRepository>()
+                val diRepo = mockk<DiModuleRepository>()
+                val step = UpdateRepositoryDiStep(modulePkgRepo, diRepo)
 
-            every { modulePkgRepo.findModulePackage(diDir) } returns "com.example.di"
-            every { modulePkgRepo.findModulePackage(dataDir) } returns "com.example.data"
-            every { modulePkgRepo.findModulePackage(domainDir) } returns "com.example.domain"
-            
-            coEvery { 
-                diRepo.mergeRepositoryModule(any(), any(), any(), any(), any(), any()) 
-            } returns MergeOutcome(diDir.resolve("RepositoryModule.kt"), "Updated")
+                every { modulePkgRepo.findModulePackage(diDir) } returns "com.example.di"
+                every { modulePkgRepo.findModulePackage(dataDir) } returns "com.example.data"
+                every { modulePkgRepo.findModulePackage(domainDir) } returns "com.example.domain"
 
-            val result = step.execute(params)
+                coEvery {
+                    diRepo.mergeRepositoryModule(any(), any(), any(), any(), any(), any())
+                } returns MergeOutcome(diDir.resolve("RepositoryModule.kt"), "Updated")
 
-            Then("it should merge repository module") {
-                result.shouldBeInstanceOf<StepResult.Success>()
-                coVerify { 
+                step.execute(params(DiStrategy.Hilt)).shouldBeInstanceOf<StepResult.Success>()
+
+                coVerify(exactly = 1) {
                     diRepo.mergeRepositoryModule(
                         diDir = diDir,
                         diPackage = "com.example.di",
                         className = "MyRepository",
                         domainFqn = "com.example.domain.repository",
                         dataFqn = "com.example.data.repository",
-                        useKoin = false
+                        useKoin = false,
                     )
                 }
             }
         }
 
         When("execute is called with Koin strategy") {
-            val params = RepositoryParams(
-                dataDir = dataDir,
-                className = "MyRepository",
-                includeDatasource = false,
-                datasourceCombined = false,
-                datasourceRemote = false,
-                datasourceLocal = false,
-                diStrategy = DiStrategy.Koin(useAnnotations = false)
-            )
-
-            every { modulePkgRepo.findModulePackage(diDir) } returns "com.example.di"
-            every { modulePkgRepo.findModulePackage(dataDir) } returns "com.example.data"
-            every { modulePkgRepo.findModulePackage(domainDir) } returns "com.example.domain"
-            
-            coEvery { 
-                diRepo.mergeRepositoryModule(any(), any(), any(), any(), any(), any()) 
-            } returns MergeOutcome(diDir.resolve("RepositoryModule.kt"), "Updated")
-
-            val result = step.execute(params)
-
             Then("it should merge repository module with useKoin=true") {
-                result.shouldBeInstanceOf<StepResult.Success>()
-                coVerify { 
+                val modulePkgRepo = mockk<ModulePackageRepository>()
+                val diRepo = mockk<DiModuleRepository>()
+                val step = UpdateRepositoryDiStep(modulePkgRepo, diRepo)
+
+                every { modulePkgRepo.findModulePackage(diDir) } returns "com.example.di"
+                every { modulePkgRepo.findModulePackage(dataDir) } returns "com.example.data"
+                every { modulePkgRepo.findModulePackage(domainDir) } returns "com.example.domain"
+
+                coEvery {
+                    diRepo.mergeRepositoryModule(any(), any(), any(), any(), any(), any())
+                } returns MergeOutcome(diDir.resolve("RepositoryModule.kt"), "Updated")
+
+                step.execute(params(DiStrategy.Koin(useAnnotations = false))).shouldBeInstanceOf<StepResult.Success>()
+
+                coVerify(exactly = 1) {
                     diRepo.mergeRepositoryModule(
                         diDir = diDir,
                         diPackage = "com.example.di",
                         className = "MyRepository",
                         domainFqn = "com.example.domain.repository",
                         dataFqn = "com.example.data.repository",
-                        useKoin = true
+                        useKoin = true,
                     )
                 }
+            }
+        }
+
+        When("modulePkgRepo throws") {
+            Then("it returns Failure") {
+                val modulePkgRepo = mockk<ModulePackageRepository>()
+                val diRepo = mockk<DiModuleRepository>()
+                val step = UpdateRepositoryDiStep(modulePkgRepo, diRepo)
+
+                every { modulePkgRepo.findModulePackage(any()) } throws IllegalStateException("boom")
+
+                step.execute(params(DiStrategy.Hilt)).shouldBeInstanceOf<StepResult.Failure>()
             }
         }
     }

@@ -3,87 +3,106 @@ package com.jkjamies.cammp.feature.repositorygenerator.data
 import com.jkjamies.cammp.feature.repositorygenerator.data.factory.RepositorySpecFactory
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
-import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldEndWith
-import io.mockk.every
-import io.mockk.mockk
+import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 
+/**
+ * Tests for [RepositoryGenerationRepositoryImpl].
+ */
 class RepositoryGenerationRepositoryImplTest : BehaviorSpec({
 
-    val specFactory = mockk<RepositorySpecFactory>()
-    val repository = RepositoryGenerationRepositoryImpl(specFactory)
+    fun params(projectRoot: Path, className: String) = RepositoryParams(
+        dataDir = projectRoot.resolve("data"),
+        className = className,
+        includeDatasource = false,
+        datasourceCombined = false,
+        datasourceRemote = false,
+        datasourceLocal = false,
+        diStrategy = DiStrategy.Hilt,
+    )
 
-    Given("a RepositoryGenerationRepository") {
-        val tempDir = Files.createTempDirectory("repo_gen_test")
-        val className = "TestRepository"
+    Given("RepositoryGenerationRepositoryImpl") {
 
-        When("generating domain layer") {
-            val packageName = "com.example.domain.repository"
-            val params = mockParams(tempDir, className)
+        When("generateDomainLayer") {
+            Then("it writes to <domainDir>/src/main/kotlin/<packagePath>/<ClassName>.kt and sanitizes backticks") {
+                val tmp = Files.createTempDirectory("repo_gen_domain")
+                try {
+                    val specFactory = io.mockk.mockk<RepositorySpecFactory>()
+                    val repo = RepositoryGenerationRepositoryImpl(specFactory)
 
-            val dummySpec = FileSpec.builder(packageName, className)
-                .addType(TypeSpec.interfaceBuilder(className).build())
-                .addFileComment("This has `data` in it")
-                .build()
+                    val className = "TestRepository"
+                    val packageName = "com.example.domain.repository"
+                    val p = params(tmp, className)
 
-            every { specFactory.createDomainInterface(packageName, params) } returns dummySpec
+                    val dummySpec = FileSpec.builder(packageName, className)
+                        .addType(TypeSpec.interfaceBuilder(className).build())
+                        .addFileComment("This has `data` in it")
+                        .build()
 
-            val resultPath = repository.generateDomainLayer(params, packageName, tempDir)
+                    io.mockk.every { specFactory.createDomainInterface(packageName, p) } returns dummySpec
 
-            Then("it should write file to correct path") {
-                resultPath.exists() shouldBe true
-            }
+                    val out = repo.generateDomainLayer(p, packageName, tmp)
 
-            Then("it should sanitize content replacing backticks") {
-                val content = resultPath.readText()
-                content shouldContain "This has data in it"
-            }
+                    out.exists() shouldBe true
+                    out.toString() shouldBe tmp
+                        .resolve("src/main/kotlin/com/example/domain/repository/$className.kt")
+                        .toString()
 
-            Then("it should contain generated class") {
-                val content = resultPath.readText()
-                content shouldContain "interface TestRepository"
+                    val content = out.readText()
+                    content shouldContain "This has data in it"
+                    content shouldNotContain "`data`"
+                    content shouldContain "interface $className"
+                } finally {
+                    tmp.toFile().deleteRecursively()
+                }
             }
         }
 
-        When("generating data layer") {
-            val dataPackage = "com.example.data.repository"
-            val domainPackage = "com.example.domain.repository"
-            val params = mockParams(tempDir, className)
+        When("generateDataLayer") {
+            Then("it writes to <dataDir>/src/main/kotlin/<packagePath>/<ClassName>Impl.kt and rewrites Koin import") {
+                val tmp = Files.createTempDirectory("repo_gen_data")
+                try {
+                    val specFactory = io.mockk.mockk<RepositorySpecFactory>()
+                    val repo = RepositoryGenerationRepositoryImpl(specFactory)
 
-            val dummySpec = FileSpec.builder(dataPackage, "${className}Impl")
-                .addType(TypeSpec.classBuilder("${className}Impl").build())
-                .build()
+                    val className = "TestRepository"
+                    val dataPackage = "com.example.data.repository"
+                    val domainPackage = "com.example.domain.repository"
+                    val p = params(tmp, className)
 
-            every { specFactory.createDataImplementation(dataPackage, domainPackage, params) } returns dummySpec
+                    val dummySpec = FileSpec.builder(dataPackage, "${className}Impl")
+                        .addFileComment("force koin import")
+                        .addImport("org.koin.core.`annotation`", "Single")
+                        .addType(TypeSpec.classBuilder("${className}Impl").build())
+                        .build()
 
-            val resultPath = repository.generateDataLayer(params, dataPackage, domainPackage)
+                    io.mockk.every { specFactory.createDataImplementation(dataPackage, domainPackage, p) } returns dummySpec
 
-            Then("it should write file") {
-                resultPath.exists() shouldBe true
-            }
+                    val out = repo.generateDataLayer(p, dataPackage, domainPackage)
 
-            Then("it should end with correct filename") {
-                resultPath.toString() shouldEndWith "TestRepositoryImpl.kt"
+                    out.exists() shouldBe true
+                    out.toString() shouldBe p.dataDir
+                        .resolve("src/main/kotlin/com/example/data/repository/${className}Impl.kt")
+                        .toString()
+
+                    val content = out.readText()
+                    content shouldContain "class ${className}Impl"
+                    // both transformations should be applied
+                    content shouldNotContain "`data`"
+                    content shouldNotContain "import org.koin.core.`annotation`.Single"
+                    content shouldContain "import org.koin.core.annotation.Single"
+                } finally {
+                    tmp.toFile().deleteRecursively()
+                }
             }
         }
     }
 })
-
-private fun mockParams(tempDir: Path, className: String) = RepositoryParams(
-    dataDir = tempDir.resolve("data"),
-    className = className,
-    includeDatasource = false,
-    datasourceCombined = false,
-    datasourceRemote = false,
-    datasourceLocal = false,
-    diStrategy = DiStrategy.Hilt
-)
