@@ -3,48 +3,38 @@ package com.jkjamies.cammp.feature.usecasegenerator.data
 import com.jkjamies.cammp.feature.usecasegenerator.data.datasource.PackageMetadataDataSource
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.unmockkAll
-import java.nio.file.Paths
+import java.nio.file.Path
 
 /**
- * Test for [ModulePackageRepositoryImpl].
+ * Tests for [ModulePackageRepositoryImpl].
  */
 class ModulePackageRepositoryImplTest : BehaviorSpec({
 
-    val dataSource = mockk<PackageMetadataDataSource>()
-    val repository = ModulePackageRepositoryImpl(dataSource)
-
-    beforeContainer {
-        clearAllMocks()
+    fun newRepo(): Pair<PackageMetadataDataSource, ModulePackageRepositoryImpl> {
+        val ds = mockk<PackageMetadataDataSource>()
+        return ds to ModulePackageRepositoryImpl(ds)
     }
 
-    afterSpec {
-        unmockkAll()
-    }
+    Given("ModulePackageRepositoryImpl") {
+        val modulePath = Path.of("/path/to/module")
 
-    Given("a ModulePackageRepositoryImpl") {
-        val modulePath = Paths.get("/path/to/module")
+        When("data source returns a package") {
+            Then("it should delegate and return it") {
+                val (ds, repo) = newRepo()
+                every { ds.findModulePackage(modulePath) } returns "com.example.domain.usecase"
 
-        When("findModulePackage is called") {
-            every { dataSource.findModulePackage(modulePath) } returns "com.example.domain.usecase"
-            
-            val result = repository.findModulePackage(modulePath)
-            
-            Then("it delegates to dataSource and returns the result") {
-                result shouldBe "com.example.domain.usecase"
+                repo.findModulePackage(modulePath) shouldBe "com.example.domain.usecase"
             }
         }
-        
-        When("findModulePackage from dataSource returns null") {
-            every { dataSource.findModulePackage(modulePath) } returns null
-            
-            val result = repository.findModulePackage(modulePath)
-            
-            Then("it returns null") {
-                result shouldBe null
+
+        When("data source returns null") {
+            Then("it should return null") {
+                val (ds, repo) = newRepo()
+                every { ds.findModulePackage(modulePath) } returns null
+
+                repo.findModulePackage(modulePath) shouldBe null
             }
         }
     }

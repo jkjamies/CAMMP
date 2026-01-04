@@ -170,11 +170,14 @@ kover {
                     classes(
                         "com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationGeneratorScreenKt",
                         "com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationGeneratorScreen*",
+                        "com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseGeneratorScreenKt",
+                        "com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseGeneratorScreen*",
                     )
 
                     // TODO: IntelliJ VFS wiring (covered later via integration tests)
                     classes(
                         "com.jkjamies.cammp.feature.presentationgenerator.datasource.PackageMetadataDataSourceImpl",
+                        "com.jkjamies.cammp.feature.usecasegenerator.datasource.PackageMetadataDataSourceImpl",
                     )
                 }
             }

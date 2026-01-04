@@ -1,15 +1,16 @@
 package com.jkjamies.cammp.feature.usecasegenerator.presentation
 
 import app.cash.turbine.test
+import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.LoadRepositories
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.UseCaseGenerator
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
-import io.mockk.clearAllMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.unmockkAll
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -17,225 +18,341 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import java.nio.file.Paths
 
 /**
- * Test class for [UseCaseViewModel].
+ * Tests for [UseCaseViewModel].
  */
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalStdlibApi::class)
 class UseCaseViewModelTest : BehaviorSpec({
-    
-    val testDispatcher = StandardTestDispatcher()
-    val testScope = TestScope(testDispatcher)
 
-    val mockGenerator = mockk<UseCaseGenerator>()
-    val mockLoadRepositories = mockk<LoadRepositories>()
+    fun newVm(
+        scope: TestScope,
+        generator: UseCaseGenerator,
+        loadRepositories: LoadRepositories,
+        domainPackage: String = "",
+    ) = UseCaseViewModel(
+        domainPackage = domainPackage,
+        scope = scope,
+        generator = generator,
+        loadRepositories = loadRepositories,
+    )
 
-    lateinit var viewModel: UseCaseViewModel
-
-    beforeContainer {
-        clearAllMocks()
-        viewModel = UseCaseViewModel(
-            domainPackage = "",
-            scope = testScope,
-            generator = mockGenerator,
-            loadRepositories = mockLoadRepositories
-        )
-    }
-
-    afterSpec {
-        unmockkAll()
-    }
-
-    Given("a use case view model") {
+    Given("UseCaseViewModel") {
 
         When("initialized") {
-            Then("state should be empty") {
-                viewModel.state.test {
+            Then("it should emit initial state") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val generator = mockk<UseCaseGenerator>()
+                val loadRepos = mockk<LoadRepositories>()
+                val vm = newVm(scope, generator, loadRepos)
+
+                vm.state.test {
                     val state = awaitItem()
                     state.name shouldBe ""
                     state.domainPackage shouldBe ""
-                }
-            }
-        }
-
-        When("use case name is set") {
-            viewModel.handleIntent(UseCaseIntent.SetName("GetItems"))
-            Then("state should update use case name") {
-                viewModel.state.test {
-                    val state = awaitItem()
-                    state.name shouldBe "GetItems"
-                }
-            }
-        }
-
-        When("package name is set with valid domain module") {
-            val path = "/path/to/domain"
-            every { mockLoadRepositories(path) } returns listOf("Repo1", "Repo2")
-
-            viewModel.handleIntent(UseCaseIntent.SetDomainPackage(path))
-
-            Then("state should update package name and load repositories") {
-                viewModel.state.test {
-                    // Initial state
-                    val loadingState = awaitItem()
-                    loadingState.domainPackage shouldBe path
-
-                    testScope.advanceUntilIdle()
-
-                    // Final state
-                    val finalState = awaitItem()
-                    finalState.domainPackage shouldBe path
-                    finalState.availableRepositories shouldBe listOf("Repo1", "Repo2")
-                }
-            }
-        }
-
-        When("package name is set with invalid module") {
-            val path = "/path/to/invalid"
-            viewModel.handleIntent(UseCaseIntent.SetDomainPackage(path))
-
-            Then("state should update package name but clear repositories") {
-                viewModel.state.test {
-                    val state = awaitItem()
-                    state.domainPackage shouldBe path
-                    state.availableRepositories shouldBe emptyList()
-                }
-            }
-        }
-
-        When("Async/Sync is toggled") {
-            viewModel.handleIntent(UseCaseIntent.SetSync(true))
-            Then("Async should be false and Sync true") {
-                viewModel.state.test {
-                    val state = awaitItem()
-                    state.async shouldBe false
-                    state.sync shouldBe true
-                }
-            }
-
-            viewModel.handleIntent(UseCaseIntent.SetAsync(true))
-            Then("Async should be true and Sync false") {
-                viewModel.state.test {
-                    val state = awaitItem()
                     state.async shouldBe true
                     state.sync shouldBe false
+                    cancelAndIgnoreRemainingEvents()
                 }
             }
         }
 
-        When("DI framework is toggled") {
-            viewModel.handleIntent(UseCaseIntent.SetDiKoin(true))
-            Then("Hilt should be disabled and Koin enabled") {
-                viewModel.state.test {
-                    val state = awaitItem()
-                    state.diHilt shouldBe false
-                    state.diKoin shouldBe true
-                }
-            }
-            
-            viewModel.handleIntent(UseCaseIntent.SetDiHilt(true))
-            Then("Koin should be disabled and Hilt enabled") {
-                viewModel.state.test {
-                    val state = awaitItem()
-                    state.diKoin shouldBe false
-                    state.diHilt shouldBe true
-                }
-            }
-        }
-        
-        When("Koin Annotations is toggled") {
-            viewModel.handleIntent(UseCaseIntent.SetDiKoin(true))
-            viewModel.handleIntent(UseCaseIntent.ToggleKoinAnnotations(true))
-            Then("Koin Annotations should be enabled") {
-                viewModel.state.test {
-                    val state = awaitItem()
-                    state.diKoinAnnotations shouldBe true
-                }
-            }
-            
-            viewModel.handleIntent(UseCaseIntent.ToggleKoinAnnotations(false))
-            Then("Koin Annotations should be disabled") {
-                viewModel.state.test {
-                    val state = awaitItem()
-                    state.diKoinAnnotations shouldBe false
+        When("setting name") {
+            Then("it should update state") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val vm = newVm(scope, mockk(), mockk())
+
+                vm.state.test {
+                    awaitItem()
+                    vm.handleIntent(UseCaseIntent.SetName("GetItems"))
+                    awaitItem().name shouldBe "GetItems"
+                    cancelAndIgnoreRemainingEvents()
                 }
             }
         }
 
-        When("Repository selection is toggled") {
-            viewModel.handleIntent(UseCaseIntent.ToggleRepository("UserRepo", true))
-            Then("Selected repositories should contain UserRepo") {
-                viewModel.state.test {
-                    val state = awaitItem()
-                    state.selectedRepositories shouldBe setOf("UserRepo")
-                }
-            }
+        When("setting domain package to a non-domain folder") {
+            Then("it should set an error and clear repositories") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val loadRepos = mockk<LoadRepositories>()
+                val vm = newVm(scope, mockk(), loadRepos)
 
-            viewModel.handleIntent(UseCaseIntent.ToggleRepository("UserRepo", false))
-            Then("Selected repositories should be empty") {
-                viewModel.state.test {
+                vm.state.test {
+                    awaitItem()
+                    vm.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/invalid"))
                     val state = awaitItem()
+                    state.domainPackage shouldBe "/path/to/invalid"
+                    state.errorMessage shouldBe "Selected directory must be a domain module"
+                    state.availableRepositories shouldBe emptyList()
                     state.selectedRepositories shouldBe emptySet()
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                coVerify(exactly = 0) { loadRepos(any()) }
+            }
+        }
+
+        When("setting a valid domain package") {
+            Then("it should load repositories and prune selections") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val generator = mockk<UseCaseGenerator>()
+                val loadRepos = mockk<LoadRepositories>()
+                every { loadRepos("/path/to/domain") } returns listOf("Repo1", "Repo2")
+
+                val vm = newVm(scope, generator, loadRepos)
+
+                vm.state.test {
+                    awaitItem()
+
+                    vm.handleIntent(UseCaseIntent.ToggleRepository("OldRepo", true))
+                    awaitItem().selectedRepositories shouldBe setOf("OldRepo")
+
+                    vm.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
+                    val afterSet = awaitItem()
+                    afterSet.domainPackage shouldBe "/path/to/domain"
+                    afterSet.errorMessage shouldBe null
+
+                    scope.advanceUntilIdle()
+                    val afterLoad = awaitItem()
+                    afterLoad.availableRepositories shouldBe listOf("Repo1", "Repo2")
+                    afterLoad.selectedRepositories shouldBe emptySet() // pruned
+
+                    cancelAndIgnoreRemainingEvents()
                 }
             }
         }
 
-        When("Generate is called with invalid state") {
-            viewModel.handleIntent(UseCaseIntent.SetName("")) // Invalid name
-            viewModel.handleIntent(UseCaseIntent.Generate)
-            Then("error message should be set") {
-                viewModel.state.test {
-                    val state = awaitItem()
-                    state.errorMessage shouldBe "Name is required"
+        When("toggling async/sync") {
+            Then("they should be mutually exclusive") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val vm = newVm(scope, mockk(), mockk())
+
+                vm.state.test {
+                    val initial = awaitItem()
+                    initial.async shouldBe true
+                    initial.sync shouldBe false
+
+                    vm.handleIntent(UseCaseIntent.SetSync(true))
+                    val sync = awaitItem()
+                    sync.sync shouldBe true
+                    sync.async shouldBe false
+
+                    vm.handleIntent(UseCaseIntent.SetAsync(true))
+                    val async = awaitItem()
+                    async.async shouldBe true
+                    async.sync shouldBe false
+
+                    cancelAndIgnoreRemainingEvents()
                 }
             }
         }
 
-        When("Generate is called with valid state") {
-            every { mockLoadRepositories(any()) } returns emptyList()
-            viewModel.handleIntent(UseCaseIntent.SetName("ValidUseCase"))
-            viewModel.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
+        When("toggling DI framework") {
+            Then("Hilt and Koin should be mutually exclusive and annotations reset when leaving koin") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val vm = newVm(scope, mockk(), mockk())
 
-            coEvery { mockGenerator(any()) } returns Result.success(Paths.get("out/UseCase.kt"))
+                vm.state.test {
+                    val initial = awaitItem()
+                    initial.diHilt shouldBe true
+                    initial.diKoin shouldBe false
+                    initial.diKoinAnnotations shouldBe false
 
-            viewModel.handleIntent(UseCaseIntent.Generate)
+                    vm.handleIntent(UseCaseIntent.SetDiKoin(true))
+                    val koin = awaitItem()
+                    koin.diKoin shouldBe true
+                    koin.diHilt shouldBe false
 
-            Then("success path should be set") {
-                viewModel.state.test {
-                    // Initial state (isGenerating = true)
-                    val loadingState = awaitItem()
-                    loadingState.isGenerating shouldBe true
+                    vm.handleIntent(UseCaseIntent.ToggleKoinAnnotations(true))
+                    awaitItem().diKoinAnnotations shouldBe true
 
-                    testScope.advanceUntilIdle()
+                    vm.handleIntent(UseCaseIntent.SetDiHilt(true))
+                    val hilt = awaitItem()
+                    hilt.diHilt shouldBe true
+                    hilt.diKoin shouldBe false
+                    hilt.diKoinAnnotations shouldBe false
 
-                    // Final state
-                    val finalState = awaitItem()
-                    finalState.isGenerating shouldBe false
-                    finalState.lastGeneratedPath shouldBe "out/UseCase.kt"
-                    finalState.errorMessage shouldBe null
+                    cancelAndIgnoreRemainingEvents()
                 }
             }
         }
 
-        When("Generate fails") {
-            every { mockLoadRepositories(any()) } returns emptyList()
-            viewModel.handleIntent(UseCaseIntent.SetName("ValidUseCase"))
-            viewModel.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
-            coEvery { mockGenerator(any()) } returns Result.failure(Exception("Failure"))
+        When("generating with invalid state") {
+            Then("it should set error and not call generator") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val generator = mockk<UseCaseGenerator>()
+                val vm = newVm(scope, generator, mockk())
 
-            viewModel.handleIntent(UseCaseIntent.Generate)
-
-            Then("error message should be set") {
-                viewModel.state.test {
-                    // Initial state (isGenerating = true)
-                    val loadingState = awaitItem()
-                    loadingState.isGenerating shouldBe true
-
-                    testScope.advanceUntilIdle()
-
-                    // Final state
-                    val finalState = awaitItem()
-                    finalState.isGenerating shouldBe false
-                    finalState.errorMessage shouldBe "Failure"
+                vm.state.test {
+                    awaitItem()
+                    vm.handleIntent(UseCaseIntent.Generate)
+                    awaitItem().errorMessage shouldBe "Name is required"
+                    cancelAndIgnoreRemainingEvents()
                 }
+
+                coVerify(exactly = 0) { generator(any()) }
+            }
+        }
+
+        When("generating succeeds") {
+            Then("it should emit generating then final state and call generator with sorted repos") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val generator = mockk<UseCaseGenerator>()
+                val loadRepos = mockk<LoadRepositories>()
+                every { loadRepos("/path/to/domain") } returns emptyList()
+
+                val expectedParams = UseCaseParams(
+                    domainDir = Paths.get("/path/to/domain"),
+                    className = "ValidUseCase",
+                    diStrategy = DiStrategy.Hilt,
+                    repositories = listOf("ARepo", "BRepo"),
+                )
+
+                coEvery { generator(expectedParams) } returns Result.success(Paths.get("out/UseCase.kt"))
+
+                val vm = newVm(scope, generator, loadRepos)
+
+                vm.state.test {
+                    awaitItem()
+
+                    vm.handleIntent(UseCaseIntent.SetName("ValidUseCase"))
+                    awaitItem()
+                    vm.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
+                    awaitItem()
+                    scope.advanceUntilIdle() // allow repo load
+
+                    vm.handleIntent(UseCaseIntent.ToggleRepository("BRepo", true))
+                    awaitItem()
+                    vm.handleIntent(UseCaseIntent.ToggleRepository("ARepo", true))
+                    awaitItem()
+
+                    vm.handleIntent(UseCaseIntent.Generate)
+                    awaitItem().isGenerating shouldBe true
+
+                    scope.advanceUntilIdle()
+                    val final = awaitItem()
+                    final.isGenerating shouldBe false
+                    final.lastGeneratedPath shouldBe "out/UseCase.kt"
+                    final.errorMessage shouldBe null
+
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                coVerify(exactly = 1) { generator(expectedParams) }
+            }
+        }
+
+        When("generating fails") {
+            Then("it should surface exception message") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val generator = mockk<UseCaseGenerator>()
+                val loadRepos = mockk<LoadRepositories>()
+                every { loadRepos("/path/to/domain") } returns emptyList()
+
+                val expectedParams = UseCaseParams(
+                    domainDir = Paths.get("/path/to/domain"),
+                    className = "ValidUseCase",
+                    diStrategy = DiStrategy.Hilt,
+                    repositories = emptyList(),
+                )
+
+                coEvery { generator(expectedParams) } returns Result.failure(IllegalStateException("Failure"))
+
+                val vm = newVm(scope, generator, loadRepos)
+
+                vm.handleIntent(UseCaseIntent.SetName("ValidUseCase"))
+                vm.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
+
+                vm.state.test {
+                    awaitItem()
+                    vm.handleIntent(UseCaseIntent.Generate)
+                    awaitItem().isGenerating shouldBe true
+                    scope.advanceUntilIdle()
+                    val final = awaitItem()
+                    final.isGenerating shouldBe false
+                    final.errorMessage shouldBe "Failure"
+                    cancelAndIgnoreRemainingEvents()
+                }
+            }
+        }
+
+        When("name normalization") {
+            Then("it should append UseCase suffix if missing") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val generator = mockk<UseCaseGenerator>()
+                val loadRepos = mockk<LoadRepositories>()
+                every { loadRepos("/path/to/domain") } returns emptyList()
+
+                val expectedParams = UseCaseParams(
+                    domainDir = Paths.get("/path/to/domain"),
+                    className = "FooUseCase",
+                    diStrategy = DiStrategy.Hilt,
+                    repositories = emptyList(),
+                )
+
+                coEvery { generator(expectedParams) } returns Result.success(Paths.get("out/FooUseCase.kt"))
+
+                val vm = newVm(scope, generator, loadRepos)
+
+                vm.handleIntent(UseCaseIntent.SetName("Foo"))
+                vm.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
+
+                vm.state.test {
+                    awaitItem()
+                    vm.handleIntent(UseCaseIntent.Generate)
+                    awaitItem().isGenerating shouldBe true
+                    scope.advanceUntilIdle()
+                    val final = awaitItem()
+                    final.lastGeneratedPath shouldBe "out/FooUseCase.kt"
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                coVerify(exactly = 1) { generator(expectedParams) }
+            }
+        }
+
+        When("DI strategy is Koin") {
+            Then("it should invoke generator with Koin strategy") {
+                val dispatcher = StandardTestDispatcher()
+                val scope = TestScope(dispatcher)
+                val generator = mockk<UseCaseGenerator>()
+                val loadRepos = mockk<LoadRepositories>()
+                every { loadRepos("/path/to/domain") } returns emptyList()
+
+                val expectedParams = UseCaseParams(
+                    domainDir = Paths.get("/path/to/domain"),
+                    className = "ValidUseCase",
+                    diStrategy = DiStrategy.Koin(useAnnotations = true),
+                    repositories = emptyList(),
+                )
+
+                coEvery { generator(expectedParams) } returns Result.success(Paths.get("out/UseCase.kt"))
+
+                val vm = newVm(scope, generator, loadRepos)
+
+                vm.handleIntent(UseCaseIntent.SetName("ValidUseCase"))
+                vm.handleIntent(UseCaseIntent.SetDomainPackage("/path/to/domain"))
+                vm.handleIntent(UseCaseIntent.SetDiKoin(true))
+                vm.handleIntent(UseCaseIntent.ToggleKoinAnnotations(true))
+
+                vm.state.test {
+                    awaitItem()
+                    vm.handleIntent(UseCaseIntent.Generate)
+                    awaitItem().isGenerating shouldBe true
+                    scope.advanceUntilIdle()
+                    awaitItem()
+                    cancelAndIgnoreRemainingEvents()
+                }
+
+                coVerify(exactly = 1) { generator(expectedParams) }
             }
         }
     }
