@@ -65,5 +65,38 @@ class BuildLogicScaffoldRepositoryImplTest : BehaviorSpec({
                 }
             }
         }
+
+        When("running ensureBuildLogic twice") {
+            Then("it should be repeatable (second run does not throw)") {
+                withTempDir("cammp_buildlogic2") { tmp: Path ->
+                    val repo = BuildLogicScaffoldRepositoryImpl(
+                        fs = fs,
+                        templateRepo = templateRepo,
+                        aliasesRepo = AliasesRepositoryWritingFake(fs),
+                        conventionPluginRepo = ConventionPluginRepositoryWritingFake(fs),
+                        buildLogicSpecFactory = buildLogicSpecFactory,
+                    )
+
+                    val enabled = listOf("domain", "data", "di")
+
+                    // First run should create the baseline structure.
+                    repo.ensureBuildLogic(params(tmp), enabled, DiMode.HILT) shouldBe true
+
+                    val settings = tmp.resolve("build-logic/settings.gradle.kts")
+                    val build = tmp.resolve("build-logic/build.gradle.kts")
+                    fs.exists(settings) shouldBe true
+                    fs.exists(build) shouldBe true
+
+                    val settingsContent = fs.readText(settings)
+                    val buildContent = fs.readText(build)
+
+                    // Second run should not overwrite existing files.
+                    repo.ensureBuildLogic(params(tmp), enabled, DiMode.HILT) shouldBe false
+
+                    fs.readText(settings) shouldBe settingsContent
+                    fs.readText(build) shouldBe buildContent
+                }
+            }
+        }
     }
 })
