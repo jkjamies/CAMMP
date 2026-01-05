@@ -2,6 +2,7 @@ package com.jkjamies.cammp.feature.repositorygenerator.data.factory
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
 import java.nio.file.Paths
@@ -49,10 +50,20 @@ class RepositorySpecFactoryTest : BehaviorSpec({
             }
         }
 
+        When("creating data implementation with Koin annotations") {
+            val params = mockParams("UserRepository", DiStrategy.Koin(useAnnotations = true))
+            val spec = factory.createDataImplementation("p", "d", params)
+            val content = spec.toString()
+
+            Then("it should add Koin @Single annotation") {
+                content shouldContain "import org.koin.core.`annotation`.Single"
+                content shouldContain "@Single"
+            }
+        }
+
         When("creating data implementation with Combined DataSource") {
             val params = mockParams("UserRepository").copy(
-                includeDatasource = true,
-                datasourceCombined = true
+                datasourceStrategy = DatasourceStrategy.Combined,
             )
             val spec = factory.createDataImplementation(
                 "com.example.data.repository",
@@ -69,10 +80,7 @@ class RepositorySpecFactoryTest : BehaviorSpec({
 
         When("creating data implementation with Remote and Local DataSources") {
             val params = mockParams("UserRepository").copy(
-                includeDatasource = true,
-                datasourceCombined = false,
-                datasourceRemote = true,
-                datasourceLocal = true
+                datasourceStrategy = DatasourceStrategy.RemoteAndLocal,
             )
             val spec = factory.createDataImplementation(
                 "com.example.data.repository",
@@ -86,6 +94,40 @@ class RepositorySpecFactoryTest : BehaviorSpec({
                 content shouldContain "import com.example.`data`.remoteDataSource.UserRepositoryRemoteDataSource"
                 content shouldContain "private val userRepositoryLocalDataSource: UserRepositoryLocalDataSource"
                 content shouldContain "import com.example.`data`.localDataSource.UserRepositoryLocalDataSource"
+            }
+        }
+
+        When("creating data implementation with LocalOnly DataSource") {
+            val params = mockParams("UserRepository").copy(
+                datasourceStrategy = DatasourceStrategy.LocalOnly,
+            )
+            val spec = factory.createDataImplementation(
+                "com.example.data.repository",
+                "com.example.domain.repository",
+                params,
+            )
+            val content = spec.toString()
+
+            Then("it should inject LocalDataSource") {
+                content shouldContain "private val userRepositoryLocalDataSource: UserRepositoryLocalDataSource"
+                content shouldContain "import com.example.`data`.localDataSource.UserRepositoryLocalDataSource"
+            }
+        }
+
+        When("creating data implementation with RemoteOnly DataSource") {
+            val params = mockParams("UserRepository").copy(
+                datasourceStrategy = DatasourceStrategy.RemoteOnly,
+            )
+            val spec = factory.createDataImplementation(
+                "com.example.data.repository",
+                "com.example.domain.repository",
+                params,
+            )
+            val content = spec.toString()
+
+            Then("it should inject RemoteDataSource") {
+                content shouldContain "private val userRepositoryRemoteDataSource: UserRepositoryRemoteDataSource"
+                content shouldContain "import com.example.`data`.remoteDataSource.UserRepositoryRemoteDataSource"
             }
         }
 
@@ -111,9 +153,6 @@ class RepositorySpecFactoryTest : BehaviorSpec({
 private fun mockParams(name: String, strategy: DiStrategy = DiStrategy.Hilt) = RepositoryParams(
     dataDir = Paths.get("."),
     className = name,
-    includeDatasource = false,
-    datasourceCombined = false,
-    datasourceRemote = false,
-    datasourceLocal = false,
+    datasourceStrategy = DatasourceStrategy.None,
     diStrategy = strategy
 )

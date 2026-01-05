@@ -1,6 +1,8 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempDir
 import com.jkjamies.cammp.feature.repositorygenerator.data.factory.RepositorySpecFactory
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.squareup.kotlinpoet.FileSpec
@@ -9,7 +11,6 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.readText
@@ -22,10 +23,7 @@ class RepositoryGenerationRepositoryImplTest : BehaviorSpec({
     fun params(projectRoot: Path, className: String) = RepositoryParams(
         dataDir = projectRoot.resolve("data"),
         className = className,
-        includeDatasource = false,
-        datasourceCombined = false,
-        datasourceRemote = false,
-        datasourceLocal = false,
+        datasourceStrategy = DatasourceStrategy.None,
         diStrategy = DiStrategy.Hilt,
     )
 
@@ -33,8 +31,7 @@ class RepositoryGenerationRepositoryImplTest : BehaviorSpec({
 
         When("generateDomainLayer") {
             Then("it writes to <domainDir>/src/main/kotlin/<packagePath>/<ClassName>.kt and sanitizes backticks") {
-                val tmp = Files.createTempDirectory("repo_gen_domain")
-                try {
+                withTempDir("repo_gen_domain") { tmp ->
                     val specFactory = io.mockk.mockk<RepositorySpecFactory>()
                     val repo = RepositoryGenerationRepositoryImpl(specFactory)
 
@@ -60,16 +57,13 @@ class RepositoryGenerationRepositoryImplTest : BehaviorSpec({
                     content shouldContain "This has data in it"
                     content shouldNotContain "`data`"
                     content shouldContain "interface $className"
-                } finally {
-                    tmp.toFile().deleteRecursively()
                 }
             }
         }
 
         When("generateDataLayer") {
             Then("it writes to <dataDir>/src/main/kotlin/<packagePath>/<ClassName>Impl.kt and rewrites Koin import") {
-                val tmp = Files.createTempDirectory("repo_gen_data")
-                try {
+                withTempDir("repo_gen_data") { tmp ->
                     val specFactory = io.mockk.mockk<RepositorySpecFactory>()
                     val repo = RepositoryGenerationRepositoryImpl(specFactory)
 
@@ -95,12 +89,9 @@ class RepositoryGenerationRepositoryImplTest : BehaviorSpec({
 
                     val content = out.readText()
                     content shouldContain "class ${className}Impl"
-                    // both transformations should be applied
                     content shouldNotContain "`data`"
                     content shouldNotContain "import org.koin.core.`annotation`.Single"
                     content shouldContain "import org.koin.core.annotation.Single"
-                } finally {
-                    tmp.toFile().deleteRecursively()
                 }
             }
         }

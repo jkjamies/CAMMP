@@ -2,6 +2,7 @@ package com.jkjamies.cammp.feature.repositorygenerator.domain.step
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
 import io.kotest.core.spec.style.BehaviorSpec
@@ -21,28 +22,20 @@ class GenerateDataSourceInterfaceStepTest : BehaviorSpec({
         val root = Paths.get("/project/feature")
         val dataDir = root.resolve("data")
 
-        fun params(
-            include: Boolean = true,
-            combined: Boolean = true,
-            remote: Boolean = false,
-            local: Boolean = false,
-        ) = RepositoryParams(
+        fun params(strategy: DatasourceStrategy = DatasourceStrategy.Combined) = RepositoryParams(
             dataDir = dataDir,
             className = "User",
-            includeDatasource = include,
-            datasourceCombined = combined,
-            datasourceRemote = remote,
-            datasourceLocal = local,
+            datasourceStrategy = strategy,
             diStrategy = DiStrategy.Hilt,
         )
 
-        When("includeDatasource=false") {
+        When("datasourceStrategy=None") {
             Then("it returns Success and does not call scaffold") {
                 val modulePkgRepo = mockk<ModulePackageRepository>()
                 val scaffoldRepo = mockk<DatasourceScaffoldRepository>()
                 val step = GenerateDataSourceInterfaceStep(modulePkgRepo, scaffoldRepo)
 
-                step.execute(params(include = false)).shouldBeInstanceOf<StepResult.Success>()
+                step.execute(params(strategy = DatasourceStrategy.None)).shouldBeInstanceOf<StepResult.Success>()
                 coVerify(exactly = 0) { scaffoldRepo.generateInterface(any(), any(), any()) }
             }
         }
@@ -61,7 +54,7 @@ class GenerateDataSourceInterfaceStepTest : BehaviorSpec({
 
                 coEvery { scaffoldRepo.generateInterface(expectedDir, expectedPkg, expectedClass) } returns expectedDir.resolve("$expectedClass.kt")
 
-                step.execute(params()).shouldBeInstanceOf<StepResult.Success>()
+                step.execute(params(strategy = DatasourceStrategy.Combined)).shouldBeInstanceOf<StepResult.Success>()
 
                 coVerify(exactly = 1) {
                     scaffoldRepo.generateInterface(
@@ -94,7 +87,7 @@ class GenerateDataSourceInterfaceStepTest : BehaviorSpec({
                 coEvery { scaffoldRepo.generateInterface(remoteDir, remotePkg, remoteClass) } returns remoteDir.resolve("$remoteClass.kt")
                 coEvery { scaffoldRepo.generateInterface(localDir, localPkg, localClass) } returns localDir.resolve("$localClass.kt")
 
-                step.execute(params(combined = false, remote = true, local = true)).shouldBeInstanceOf<StepResult.Success>()
+                step.execute(params(strategy = DatasourceStrategy.RemoteAndLocal)).shouldBeInstanceOf<StepResult.Success>()
 
                 coVerify(exactly = 1) { scaffoldRepo.generateInterface(remoteDir, remotePkg, remoteClass) }
                 coVerify(exactly = 1) { scaffoldRepo.generateInterface(localDir, localPkg, localClass) }
@@ -115,7 +108,7 @@ class GenerateDataSourceInterfaceStepTest : BehaviorSpec({
 
                 coEvery { scaffoldRepo.generateInterface(expectedDir, expectedPkg, expectedClass) } throws IllegalStateException("boom")
 
-                step.execute(params()).shouldBeInstanceOf<StepResult.Failure>()
+                step.execute(params(strategy = DatasourceStrategy.Combined)).shouldBeInstanceOf<StepResult.Failure>()
             }
         }
     }

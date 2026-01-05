@@ -1,6 +1,7 @@
 package com.jkjamies.cammp.feature.repositorygenerator.presentation
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryGenerator
@@ -139,10 +140,7 @@ class RepositoryViewModelTest : BehaviorSpec({
                 captured.className shouldBe "UserRepository"
                 captured.dataDir.toString() shouldBe "/project/feature/data"
                 captured.diStrategy shouldBe DiStrategy.Hilt
-                captured.includeDatasource shouldBe true
-                captured.datasourceCombined shouldBe true
-                captured.datasourceRemote shouldBe false
-                captured.datasourceLocal shouldBe false
+                captured.datasourceStrategy shouldBe DatasourceStrategy.Combined
                 captured.selectedDataSources.shouldContainExactly("com.example.RemoteDS")
 
                 vm.state.value.lastGeneratedMessage shouldBe "Success"

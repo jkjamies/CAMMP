@@ -1,6 +1,7 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data.factory
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -50,12 +51,14 @@ class RepositorySpecFactoryImpl : RepositorySpecFactory {
         val dataBasePkg = dataPackage.substringBeforeLast(".repository")
 
         val generatedFqns = buildList {
-            if (params.includeDatasource) {
-                if (params.datasourceCombined) {
-                    add("$dataBasePkg.dataSource.${baseName}DataSource")
-                } else {
-                    if (params.datasourceRemote) add("$dataBasePkg.remoteDataSource.${baseName}RemoteDataSource")
-                    if (params.datasourceLocal) add("$dataBasePkg.localDataSource.${baseName}LocalDataSource")
+            when (params.datasourceStrategy) {
+                DatasourceStrategy.None -> Unit
+                DatasourceStrategy.Combined -> add("$dataBasePkg.dataSource.${baseName}DataSource")
+                DatasourceStrategy.RemoteOnly -> add("$dataBasePkg.remoteDataSource.${baseName}RemoteDataSource")
+                DatasourceStrategy.LocalOnly -> add("$dataBasePkg.localDataSource.${baseName}LocalDataSource")
+                DatasourceStrategy.RemoteAndLocal -> {
+                    add("$dataBasePkg.remoteDataSource.${baseName}RemoteDataSource")
+                    add("$dataBasePkg.localDataSource.${baseName}LocalDataSource")
                 }
             }
         }

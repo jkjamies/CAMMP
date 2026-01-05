@@ -21,8 +21,12 @@ class VersionCatalogDataSourceImpl(
         version: String?,
         versionRef: String?
     ): String {
+        // If the catalog doesn't exist, don't create it here. Callers that want creation
+        // (e.g. GradleSettingsDataSourceImpl.ensureVersionCatalogPluginAliases) handle that.
+        if (!fs.exists(tomlPath)) return alias
+
         val sections = parseToml(tomlPath)
-        
+
         // Check if library exists
         val existingAlias = findLibraryAlias(sections["libraries"] ?: emptyList(), group, artifact)
         if (existingAlias != null) return existingAlias
@@ -54,6 +58,9 @@ class VersionCatalogDataSourceImpl(
         version: String?,
         versionRef: String?
     ): String {
+        // If the catalog doesn't exist, don't create it here.
+        if (!fs.exists(tomlPath)) return alias
+
         val sections = parseToml(tomlPath)
 
         // Check if plugin exists

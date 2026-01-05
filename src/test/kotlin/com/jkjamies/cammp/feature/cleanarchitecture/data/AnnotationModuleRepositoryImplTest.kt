@@ -1,35 +1,58 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.data
 
-import com.jkjamies.cammp.feature.cleanarchitecture.fakes.FakeFileSystemRepository
+import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempDir
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
-import java.nio.file.Path
 
 /**
- * Test class for [AnnotationModuleRepositoryImpl].
+ * Tests for [AnnotationModuleRepositoryImpl].
  */
 class AnnotationModuleRepositoryImplTest : BehaviorSpec({
 
-    Given("an annotation module repository") {
-        val fakeFs = FakeFileSystemRepository()
-        val repository = AnnotationModuleRepositoryImpl(fakeFs)
+    Given("AnnotationModuleRepositoryImpl") {
+        val fs = FileSystemRepositoryImpl()
+        val repo = AnnotationModuleRepositoryImpl(fs)
 
-        When("generating annotation module") {
-            val outputDir = Path.of("output")
-            val packageName = "com.example.di"
-            val scanPackage = "com.example.feature"
-            val featureName = "myFeature"
+        When("generating a Koin annotations module") {
+            Then("it should write a class with non-backticked annotation imports") {
+                withTempDir("cammp_koin_module") { tmp ->
+                    repo.generate(
+                        outputDirectory = tmp,
+                        packageName = "com.example.feature.di",
+                        scanPackage = "com.example.feature",
+                        featureName = "profile",
+                    )
 
-            repository.generate(outputDir, packageName, scanPackage, featureName)
+                    val outFile = tmp.resolve("ProfileAnnotationsModule.kt")
+                    fs.readText(outFile)!!.also { content ->
+                        content shouldContain "package com.example.feature.di"
+                        content shouldContain "class ProfileAnnotationsModule"
+                        content shouldContain "@Module"
+                        content shouldContain "@ComponentScan(\"com.example.feature\")"
 
-            Then("it should generate correct content") {
-                val content = fakeFs.writtenFiles.values.first()
-                content shouldContain "package com.example.di"
-                content shouldContain "import org.koin.core.annotation.ComponentScan"
-                content shouldContain "import org.koin.core.annotation.Module"
-                content shouldContain "@Module"
-                content shouldContain "@ComponentScan(\"com.example.feature\")"
-                content shouldContain "class MyFeatureAnnotationsModule"
+                        // Ensure kotlinpoet's backticked import is normalized
+                        content shouldContain "import org.koin.core.annotation.ComponentScan"
+                        content shouldContain "import org.koin.core.annotation.Module"
+                    }
+                }
+            }
+        }
+
+        When("featureName is already titlecase") {
+            Then("it should keep the same capitalization") {
+                withTempDir("cammp_koin_module2") { tmp ->
+                    repo.generate(
+                        outputDirectory = tmp,
+                        packageName = "com.example.feature.di",
+                        scanPackage = "com.example.feature",
+                        featureName = "Profile",
+                    )
+
+                    val outFile = tmp.resolve("ProfileAnnotationsModule.kt")
+                    fs.readText(outFile)!!.also { content ->
+                        content shouldContain "class ProfileAnnotationsModule"
+                    }
+                }
             }
         }
     }

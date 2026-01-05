@@ -8,9 +8,10 @@
 
 - Metro Dependency Injection
 - Architecture updates for future scalability
-  - UseCase Generator
-  - Repository Generator
-  - Presentation Generator
+
+### Changed
+
+- All tests updated for better concurrency
 
 ## [0.0.5-alpha] - 2026-01-01
 
