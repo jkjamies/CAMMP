@@ -1,12 +1,12 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempDir
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
 import io.kotest.core.spec.style.BehaviorSpec
-import io.kotest.matchers.shouldBe
 import io.kotest.matchers.collections.shouldBeOneOf
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
-import java.nio.file.Files
 import kotlin.io.path.createDirectories
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
@@ -16,10 +16,9 @@ import kotlin.io.path.writeText
  */
 class DiModuleRepositoryImplTest : BehaviorSpec({
 
-    fun newProject(): java.nio.file.Path {
-        val tempDir = Files.createTempDirectory("di_repo_test")
-        tempDir.resolve("src/main/kotlin").createDirectories()
-        return tempDir
+    fun newProject(root: java.nio.file.Path): java.nio.file.Path {
+        root.resolve("src/main/kotlin").createDirectories()
+        return root
     }
 
     val diPackage = "com.example.di"
@@ -28,14 +27,14 @@ class DiModuleRepositoryImplTest : BehaviorSpec({
 
         When("merging Repository Module (Hilt) - new file") {
             Then("it creates RepositoryModule.kt with a bind function") {
-                val repository = DiModuleRepositoryImpl()
-                val tempDir = newProject()
-                try {
+                withTempDir("di_repo_test") { root ->
+                    val repository = DiModuleRepositoryImpl()
+                    val tempDir = newProject(root)
+
                     val result = repository.mergeRepositoryModule(
                         diDir = tempDir,
                         diPackage = diPackage,
                         className = "UserRepository",
-                        // note: the implementation expects these to be packages for ClassName()
                         domainFqn = "com.example.domain.repository",
                         dataFqn = "com.example.data.repository",
                         useKoin = false
@@ -48,18 +47,17 @@ class DiModuleRepositoryImplTest : BehaviorSpec({
                     content shouldContain "@InstallIn(SingletonComponent::class)"
                     content shouldContain "abstract class RepositoryModule"
                     content shouldContain "abstract fun bindUserRepository(repositoryImpl: UserRepositoryImpl): UserRepository"
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }
 
         When("merging Repository Module (Hilt) - existing file already has binding") {
             Then("it returns status=exists and does not duplicate the function") {
-                val repository = DiModuleRepositoryImpl()
-                val tempDir = newProject()
-                val diPath = tempDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
-                try {
+                withTempDir("di_repo_test_exists") { root ->
+                    val repository = DiModuleRepositoryImpl()
+                    val tempDir = newProject(root)
+                    val diPath = tempDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
+
                     val existingFile = diPath.resolve("RepositoryModule.kt")
                     existingFile.writeText(
                         """
@@ -92,21 +90,18 @@ class DiModuleRepositoryImplTest : BehaviorSpec({
 
                     result.status shouldBeOneOf(listOf("exists", "updated"))
                     val content = result.outPath.readText()
-
-                    // bind should appear only once
                     content.split("bindUserRepository").size - 1 shouldBe 1
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }
 
         When("merging Repository Module (Koin) - existing file has content") {
             Then("it inserts a single binding into the module body") {
-                val repository = DiModuleRepositoryImpl()
-                val tempDir = newProject()
-                val diPath = tempDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
-                try {
+                withTempDir("di_repo_test_koin") { root ->
+                    val repository = DiModuleRepositoryImpl()
+                    val tempDir = newProject(root)
+                    val diPath = tempDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
+
                     val existingFile = diPath.resolve("RepositoryModule.kt")
                     existingFile.writeText(
                         """
@@ -132,17 +127,16 @@ class DiModuleRepositoryImplTest : BehaviorSpec({
                     val content = result.outPath.readText()
                     content shouldContain "val repositoryModule: Module = module {"
                     content shouldContain "single<KoinRepo> { KoinRepoImpl(get()) }"
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }
 
         When("merging DataSource Module (Koin) - new file") {
             Then("it creates a module with desired bindings") {
-                val repository = DiModuleRepositoryImpl()
-                val tempDir = newProject()
-                try {
+                withTempDir("di_repo_test_ds_new") { root ->
+                    val repository = DiModuleRepositoryImpl()
+                    val tempDir = newProject(root)
+
                     val bindings = listOf(
                         DataSourceBinding(
                             ifaceImport = "import com.example.data.remote.RemoteDataSource",
@@ -163,19 +157,17 @@ class DiModuleRepositoryImplTest : BehaviorSpec({
                     val content = result.outPath.readText()
                     content shouldContain "public val dataSourceModule: Module = module {"
                     content shouldContain "single<RemoteDataSource> { RemoteDataSourceImpl(get()) }"
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }
 
         When("merging DataSource Module (Hilt) - existing file has one function") {
             Then("it appends only missing bindings and preserves existing ones") {
-                val repository = DiModuleRepositoryImpl()
-                val tempDir = newProject()
-                val diPath = tempDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
-                try {
-                    // Existing file with one binding. We include imports so parseImportsMap can resolve types.
+                withTempDir("di_repo_test_ds_hilt") { root ->
+                    val repository = DiModuleRepositoryImpl()
+                    val tempDir = newProject(root)
+                    val diPath = tempDir.resolve("src/main/kotlin/com/example/di").also { it.createDirectories() }
+
                     val existingFile = diPath.resolve("DataSourceModule.kt")
                     existingFile.writeText(
                         """
@@ -219,21 +211,14 @@ class DiModuleRepositoryImplTest : BehaviorSpec({
                         useKoin = false
                     )
 
-                    // should be updated because it adds a missing binding
                     result.status shouldBe "updated"
 
                     val content = result.outPath.readText()
-                    // existing preserved
                     content.split("bindLocalDataSource").size - 1 shouldBe 1
-                    // new added
                     content shouldContain "bindRemoteDataSource"
                     content shouldContain "import com.example.data.ds.RemoteDataSource"
                     content shouldContain "import com.example.data.ds.RemoteDataSourceImpl"
-
-                    // ensure `data` sanitization is applied
                     content shouldNotContain "`data`"
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }

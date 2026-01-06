@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.repositorygenerator.domain.usecase
 
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.step.RepositoryStep
@@ -24,10 +25,7 @@ class RepositoryGeneratorTest : BehaviorSpec({
     val params = RepositoryParams(
         dataDir = Paths.get("data"),
         className = "TestRepo",
-        includeDatasource = false,
-        datasourceCombined = false,
-        datasourceRemote = false,
-        datasourceLocal = false,
+        datasourceStrategy = DatasourceStrategy.None,
         diStrategy = DiStrategy.Hilt
     )
 

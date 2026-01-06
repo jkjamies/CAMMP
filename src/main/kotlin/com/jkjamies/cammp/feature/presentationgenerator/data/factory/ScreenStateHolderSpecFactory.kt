@@ -34,8 +34,8 @@ class ScreenStateHolderSpecFactoryImpl : ScreenStateHolderSpecFactory {
             .build()
 
         return FileSpec.builder(packageName, stateHolderName)
-            .addType(classBuilder.build())
             .addFunction(rememberFunc)
+            .addType(classBuilder.build())
             .build()
     }
 }

@@ -1,6 +1,7 @@
 package com.jkjamies.cammp.feature.repositorygenerator.domain.step
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
@@ -57,10 +58,7 @@ class GenerateDataSourceImplementationStepTest : BehaviorSpec({
             val params = RepositoryParams(
                 dataDir = dataDir,
                 className = "User",
-                includeDatasource = true,
-                datasourceCombined = true,
-                datasourceRemote = false,
-                datasourceLocal = false,
+                datasourceStrategy = DatasourceStrategy.Combined,
                 diStrategy = DiStrategy.Hilt
             )
             val result = step.execute(params)
@@ -84,10 +82,7 @@ class GenerateDataSourceImplementationStepTest : BehaviorSpec({
             val params = RepositoryParams(
                 dataDir = dataDir,
                 className = "User",
-                includeDatasource = true,
-                datasourceCombined = false,
-                datasourceRemote = true,
-                datasourceLocal = true,
+                datasourceStrategy = DatasourceStrategy.RemoteAndLocal,
                 diStrategy = DiStrategy.Koin(false)
             )
             val result = step.execute(params)
@@ -117,14 +112,11 @@ class GenerateDataSourceImplementationStepTest : BehaviorSpec({
             }
         }
 
-        When("includeDatasource is false") {
+        When("datasourceStrategy is None") {
             val params = RepositoryParams(
                 dataDir = dataDir,
                 className = "User",
-                includeDatasource = false,
-                datasourceCombined = false,
-                datasourceRemote = false,
-                datasourceLocal = false,
+                datasourceStrategy = DatasourceStrategy.None,
                 diStrategy = DiStrategy.Hilt
             )
             val result = step.execute(params)

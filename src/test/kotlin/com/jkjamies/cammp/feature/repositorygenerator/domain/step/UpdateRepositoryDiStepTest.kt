@@ -1,6 +1,7 @@
 package com.jkjamies.cammp.feature.repositorygenerator.domain.step
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModuleRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.MergeOutcome
@@ -27,10 +28,7 @@ class UpdateRepositoryDiStepTest : BehaviorSpec({
         fun params(di: DiStrategy) = RepositoryParams(
             dataDir = dataDir,
             className = "MyRepository",
-            includeDatasource = false,
-            datasourceCombined = false,
-            datasourceRemote = false,
-            datasourceLocal = false,
+            datasourceStrategy = DatasourceStrategy.None,
             diStrategy = di,
         )
 

@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempDir
 import com.jkjamies.cammp.feature.repositorygenerator.data.factory.DataSourceSpecFactory
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -8,7 +9,6 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.nio.file.Files
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 
@@ -21,8 +21,7 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
 
         When("generateInterface is called") {
             Then("it creates directories, calls the spec factory, and writes <className>.kt") {
-                val tempDir = Files.createTempDirectory("scaffold_interface_test")
-                try {
+                withTempDir("scaffold_interface_test") { tempDir ->
                     val specFactory = mockk<DataSourceSpecFactory>()
                     val repository = DatasourceScaffoldRepositoryImpl(specFactory)
 
@@ -42,16 +41,13 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
                     result.readText() shouldBe dummySpec.toString()
 
                     verify(exactly = 1) { specFactory.createInterface(packageName, className) }
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }
 
         When("generateImplementation is called") {
             Then("it creates directories, calls the spec factory, and writes <className>.kt") {
-                val tempDir = Files.createTempDirectory("scaffold_impl_test")
-                try {
+                withTempDir("scaffold_impl_test") { tempDir ->
                     val specFactory = mockk<DataSourceSpecFactory>()
                     val repository = DatasourceScaffoldRepositoryImpl(specFactory)
 
@@ -97,8 +93,6 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
                             useKoin = useKoin,
                         )
                     }
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }

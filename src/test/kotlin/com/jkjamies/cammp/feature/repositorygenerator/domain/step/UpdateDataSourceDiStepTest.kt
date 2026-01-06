@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.repositorygenerator.domain.step
 
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
@@ -57,10 +58,7 @@ class UpdateDataSourceDiStepTest : BehaviorSpec({
             val params = RepositoryParams(
                 dataDir = dataDir,
                 className = "User",
-                includeDatasource = true,
-                datasourceCombined = true,
-                datasourceRemote = false,
-                datasourceLocal = false,
+                datasourceStrategy = DatasourceStrategy.Combined,
                 diStrategy = DiStrategy.Koin(useAnnotations = false)
             )
 
@@ -92,10 +90,7 @@ class UpdateDataSourceDiStepTest : BehaviorSpec({
             val params = RepositoryParams(
                 dataDir = dataDir,
                 className = "User",
-                includeDatasource = true,
-                datasourceCombined = true,
-                datasourceRemote = false,
-                datasourceLocal = false,
+                datasourceStrategy = DatasourceStrategy.Combined,
                 diStrategy = DiStrategy.Hilt
             )
 

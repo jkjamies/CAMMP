@@ -4,6 +4,7 @@ import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryG
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
@@ -41,13 +42,19 @@ class RepositoryViewModel(
                     DiStrategy.Hilt
                 }
 
+                val datasourceStrategy = when {
+                    !s.includeDatasource -> DatasourceStrategy.None
+                    s.datasourceCombined -> DatasourceStrategy.Combined
+                    s.datasourceRemote && s.datasourceLocal -> DatasourceStrategy.RemoteAndLocal
+                    s.datasourceRemote -> DatasourceStrategy.RemoteOnly
+                    s.datasourceLocal -> DatasourceStrategy.LocalOnly
+                    else -> DatasourceStrategy.None
+                }
+
                 val params = RepositoryParams(
                     dataDir = Paths.get(s.domainPackage),
                     className = s.name,
-                    includeDatasource = s.includeDatasource,
-                    datasourceCombined = s.datasourceCombined,
-                    datasourceRemote = s.datasourceRemote,
-                    datasourceLocal = s.datasourceLocal,
+                    datasourceStrategy = datasourceStrategy,
                     diStrategy = diStrategy,
                     selectedDataSources = s.selectedDataSources.toList().sorted(),
                 )

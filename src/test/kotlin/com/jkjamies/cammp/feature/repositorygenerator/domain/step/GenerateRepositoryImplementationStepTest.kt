@@ -1,5 +1,6 @@
 package com.jkjamies.cammp.feature.repositorygenerator.domain.step
 
+import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
@@ -20,10 +21,7 @@ class GenerateRepositoryImplementationStepTest : BehaviorSpec({
     fun params(dataDir: java.nio.file.Path) = RepositoryParams(
         dataDir = dataDir,
         className = "UserRepository",
-        includeDatasource = false,
-        datasourceCombined = false,
-        datasourceRemote = false,
-        datasourceLocal = false,
+        datasourceStrategy = DatasourceStrategy.None,
         diStrategy = DiStrategy.Hilt,
     )
 

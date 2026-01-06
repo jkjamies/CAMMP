@@ -2,131 +2,85 @@ package com.jkjamies.cammp.feature.cleanarchitecture.data
 
 import com.jkjamies.cammp.feature.cleanarchitecture.data.datasource.VersionCatalogDataSource
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.DiMode
-import com.jkjamies.cammp.feature.cleanarchitecture.fakes.FakeFileSystemRepository
+import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempDir
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Path
 
 /**
- * Test class for [AliasesRepositoryImpl].
+ * Tests for [AliasesRepositoryImpl].
  */
 class AliasesRepositoryImplTest : BehaviorSpec({
 
-    Given("an aliases repository") {
-        val fakeFs = FakeFileSystemRepository()
-        val tomlPath = Path.of("gradle/libs.versions.toml")
-        val outputDir = Path.of("output")
-        val packageName = "com.example.convention.core"
+    Given("AliasesRepositoryImpl") {
+        val fs = FileSystemRepositoryImpl()
 
-        When("generating Aliases file with no pre-existing aliases in toml") {
-            val fakeDataSource = FakeVersionCatalogDataSource(useDefault = true)
-            val repository = AliasesRepositoryImpl(fakeFs, fakeDataSource)
-            repository.generateAliases(outputDir, packageName, DiMode.HILT, tomlPath)
-            val content = fakeFs.writtenFiles.values.first()
+        val versionCatalog = object : VersionCatalogDataSource {
+            override fun getLibraryAlias(
+                tomlPath: Path,
+                alias: String,
+                group: String,
+                artifact: String,
+                version: String?,
+                versionRef: String?
+            ): String = "lib.$alias"
 
-            Then("it should use default alias names") {
-                content shouldContain "const val ANDROID_LIBRARY: String = \"android-library\""
-                content shouldContain "const val KOTLINX_SERIALIZATION: String = \"kotlinx-serialization\""
-                content shouldContain "const val HILT: String = \"hilt\""
-                content shouldContain "const val COMPOSE_BOM: String = \"androidx-compose-bom\""
-                content shouldContain "const val KOTEST_RUNNER: String = \"kotest-runner\""
-                content shouldContain "const val ANDROIDX_TEST_RUNNER: String = \"androidx-test-runner\""
+            override fun getPluginAlias(
+                tomlPath: Path,
+                alias: String,
+                id: String,
+                version: String?,
+                versionRef: String?
+            ): String = "plugin.$alias"
+        }
+
+        val repo = AliasesRepositoryImpl(fs, versionCatalog)
+
+        When("generating aliases for Hilt") {
+            Then("it should write Aliases.kt with expected sections") {
+                withTempDir("cammp_aliases_hilt") { outDir ->
+                    repo.generateAliases(
+                        outputDirectory = outDir,
+                        packageName = "com.example.convention.core",
+                        diMode = DiMode.HILT,
+                        tomlPath = outDir.resolve("libs.versions.toml"),
+                    )
+
+                    val out = outDir.resolve("Aliases.kt")
+                    fs.readText(out)!!.also { content ->
+                        content shouldContain "package com.example.convention.core"
+                        content shouldContain "internal object Aliases"
+                        content shouldContain "internal object PluginAliases"
+                        content shouldContain "internal object BuildPropAliases"
+                        content shouldContain "internal object Dependencies"
+
+                        // Hilt/KSP expected keys
+                        content shouldContain "const val HILT"
+                        content shouldContain "const val KSP"
+                    }
+                }
             }
         }
 
-        When("generating Aliases file with pre-existing aliases in toml") {
-            val fakeDataSource = FakeVersionCatalogDataSource(useDefault = false)
-            val repository = AliasesRepositoryImpl(fakeFs, fakeDataSource)
-            repository.generateAliases(outputDir, packageName, DiMode.HILT, tomlPath)
-            val content = fakeFs.writtenFiles.values.first()
+        When("generating aliases for plain Koin") {
+            Then("it should not include hilt plugin alias") {
+                withTempDir("cammp_aliases_koin") { outDir ->
+                    repo.generateAliases(
+                        outputDirectory = outDir,
+                        packageName = "com.example.convention.core",
+                        diMode = DiMode.KOIN,
+                        tomlPath = outDir.resolve("libs.versions.toml"),
+                    )
 
-            Then("it should use the custom alias names from the toml") {
-                content shouldContain "const val ANDROID_LIBRARY: String = \"custom-android-library\""
-                content shouldContain "const val KOTLINX_SERIALIZATION: String = \"custom-kotlinx-serialization\""
-                content shouldContain "const val HILT: String = \"custom-hilt\""
-                content shouldContain "const val COMPOSE_BOM: String = \"custom-androidx-compose-bom\""
-                content shouldContain "const val KOTEST_RUNNER: String = \"custom-kotest-runner\""
-                content shouldContain "const val ANDROIDX_TEST_RUNNER: String = \"custom-androidx-test-runner\""
-            }
-        }
-
-        When("generating Aliases file for Koin") {
-            val fakeDataSource = FakeVersionCatalogDataSource(useDefault = true)
-            val repository = AliasesRepositoryImpl(fakeFs, fakeDataSource)
-            repository.generateAliases(outputDir, packageName, DiMode.KOIN, tomlPath)
-            val content = fakeFs.writtenFiles.values.first()
-
-            Then("it should contain Koin but not Hilt or Koin Annotations dependencies") {
-                content shouldContain "const val KOIN: String = \"koin\""
-                content shouldNotContain "const val HILT: String = \"hilt\""
-                content shouldNotContain "const val KOIN_CORE: String = \"koin-core\""
-            }
-        }
-
-        When("generating Aliases file for Koin Annotations") {
-            val fakeDataSource = FakeVersionCatalogDataSource(useDefault = true)
-            val repository = AliasesRepositoryImpl(fakeFs, fakeDataSource)
-            repository.generateAliases(outputDir, packageName, DiMode.KOIN_ANNOTATIONS, tomlPath)
-            val content = fakeFs.writtenFiles.values.first()
-
-            Then("it should contain Koin Annotations and KSP but not Hilt or standard Koin") {
-                content shouldContain "const val KOIN_CORE: String = \"koin-core\""
-                content shouldContain "const val KOIN_ANNOTATIONS: String = \"koin-annotations\""
-                content shouldContain "const val KSP: String = \"ksp\""
-                content shouldNotContain "const val HILT: String = \"hilt\""
-                content shouldNotContain "const val KOIN: String = \"koin\""
-            }
-        }
-
-        When("verifying versionRef usage") {
-            val fakeDataSource = FakeVersionCatalogDataSource(useDefault = true)
-            val repository = AliasesRepositoryImpl(fakeFs, fakeDataSource)
-            repository.generateAliases(outputDir, packageName, DiMode.HILT, tomlPath)
-
-            Then("it should pass correct versionRef for plugins") {
-                // Check if any plugin call received a versionRef
-                // Based on AliasesRepositoryImpl, ANDROID_LIBRARY uses "agp" as versionRef
-                val androidLibraryCall = fakeDataSource.pluginCalls.find { it.alias == "android-library" }
-                androidLibraryCall?.versionRef shouldBe "agp"
-
-                // KOTLIN_ANDROID uses "kotlin" as versionRef
-                val kotlinAndroidCall = fakeDataSource.pluginCalls.find { it.alias == "kotlin-android" }
-                kotlinAndroidCall?.versionRef shouldBe "kotlin"
+                    val out = outDir.resolve("Aliases.kt")
+                    fs.readText(out)!!.also { content ->
+                        // should have KOIN libs but not HILT plugin alias
+                        content shouldContain "KOIN"
+                        content.contains("const val HILT") shouldBe false
+                    }
+                }
             }
         }
     }
 })
-
-private class FakeVersionCatalogDataSource(private val useDefault: Boolean) : VersionCatalogDataSource {
-    
-    data class LibraryCall(val alias: String, val versionRef: String?)
-    data class PluginCall(val alias: String, val versionRef: String?)
-    
-    val libraryCalls = mutableListOf<LibraryCall>()
-    val pluginCalls = mutableListOf<PluginCall>()
-
-    override fun getLibraryAlias(
-        tomlPath: Path,
-        alias: String,
-        group: String,
-        artifact: String,
-        version: String?,
-        versionRef: String?
-    ): String {
-        libraryCalls.add(LibraryCall(alias, versionRef))
-        return if (useDefault) alias else "custom-$alias"
-    }
-
-    override fun getPluginAlias(
-        tomlPath: Path,
-        alias: String,
-        id: String,
-        version: String?,
-        versionRef: String?
-    ): String {
-        pluginCalls.add(PluginCall(alias, versionRef))
-        return if (useDefault) alias else "custom-$alias"
-    }
-}

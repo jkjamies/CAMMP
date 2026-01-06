@@ -1,15 +1,15 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempDir
 import com.jkjamies.cammp.feature.repositorygenerator.data.datasource.PackageMetadataDataSource
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.maps.shouldContainKey
 import io.kotest.matchers.maps.shouldNotContainKey
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.collections.shouldContainExactly
 import io.mockk.every
 import io.mockk.mockk
-import java.nio.file.Files
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
@@ -22,8 +22,7 @@ class DataSourceDiscoveryRepositoryImplTest : BehaviorSpec({
 
         When("src/main/kotlin does not exist") {
             Then("it returns an empty map") {
-                val tempDir = Files.createTempDirectory("ds_discovery_no_kotlin")
-                try {
+                withTempDir("ds_discovery_no_kotlin") { tempDir ->
                     val packageMetadataDataSource = mockk<PackageMetadataDataSource>()
                     val repository = DataSourceDiscoveryRepositoryImpl(packageMetadataDataSource)
 
@@ -31,16 +30,13 @@ class DataSourceDiscoveryRepositoryImplTest : BehaviorSpec({
 
                     val result = repository.loadDataSourcesByType(tempDir.toString())
                     result.shouldBeEmpty()
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }
 
         When("package folders are missing") {
             Then("it returns an empty map (filters empty groups)") {
-                val tempDir = Files.createTempDirectory("ds_discovery_missing_pkgs")
-                try {
+                withTempDir("ds_discovery_missing_pkgs") { tempDir ->
                     // create kotlin root but no datasource packages
                     tempDir.resolve("src/main/kotlin").createDirectories()
 
@@ -50,16 +46,13 @@ class DataSourceDiscoveryRepositoryImplTest : BehaviorSpec({
 
                     val result = repository.loadDataSourcesByType(tempDir.toString())
                     result.shouldBeEmpty()
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }
 
         When("datasource files exist in multiple groups") {
             Then("it returns a filtered map with sorted, distinct FQNs ending with DataSource") {
-                val tempDir = Files.createTempDirectory("ds_discovery_groups")
-                try {
+                withTempDir("ds_discovery_groups") { tempDir ->
                     val base = tempDir.resolve("src/main/kotlin/com/example")
                     base.createDirectories()
 
@@ -99,16 +92,13 @@ class DataSourceDiscoveryRepositoryImplTest : BehaviorSpec({
 
                     // ensure non-existent groups are filtered (none here)
                     result.shouldNotContainKey("Missing")
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }
 
         When("PackageMetadataDataSource throws") {
             Then("it returns an empty map") {
-                val tempDir = Files.createTempDirectory("ds_discovery_throw")
-                try {
+                withTempDir("ds_discovery_throw") { tempDir ->
                     tempDir.resolve("src/main/kotlin").createDirectories()
 
                     val packageMetadataDataSource = mockk<PackageMetadataDataSource>()
@@ -118,8 +108,6 @@ class DataSourceDiscoveryRepositoryImplTest : BehaviorSpec({
 
                     val result = repository.loadDataSourcesByType(tempDir.toString())
                     result.shouldBeEmpty()
-                } finally {
-                    tempDir.toFile().deleteRecursively()
                 }
             }
         }

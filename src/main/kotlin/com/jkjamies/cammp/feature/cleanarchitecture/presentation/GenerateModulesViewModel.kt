@@ -1,6 +1,8 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.presentation
 
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.usecase.CleanArchitectureGenerator
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -29,7 +31,6 @@ class GenerateModulesViewModel(
     val state: StateFlow<GenerateModulesUiState> = _state.asStateFlow()
 
     fun handleIntent(intent: GenerateModulesIntent) {
-        val s = _state.value
         when (intent) {
             is GenerateModulesIntent.SetRoot -> _state.update { it.copy(root = intent.value) }
             is GenerateModulesIntent.SetFeature -> _state.update { it.copy(feature = intent.value) }
@@ -130,6 +131,15 @@ class GenerateModulesViewModel(
             val rootNormalized = normalizeRoot(base, s.root)
             val featureNormalized = normalizeFeature(s.feature)
 
+            val datasourceStrategy = when {
+                !s.includeDatasource -> DatasourceStrategy.None
+                s.datasourceCombined -> DatasourceStrategy.Combined
+                s.datasourceRemote && s.datasourceLocal -> DatasourceStrategy.RemoteAndLocal
+                s.datasourceRemote -> DatasourceStrategy.RemoteOnly
+                s.datasourceLocal -> DatasourceStrategy.LocalOnly
+                else -> DatasourceStrategy.None
+            }
+
             val result = generator(
                 CleanArchitectureParams(
                     projectBasePath = Paths.get(base),
@@ -137,13 +147,8 @@ class GenerateModulesViewModel(
                     feature = featureNormalized,
                     orgCenter = s.orgCenter.ifBlank { "cammp" },
                     includePresentation = s.includePresentation,
-                    includeDatasource = s.includeDatasource,
-                    datasourceCombined = s.datasourceCombined,
-                    datasourceRemote = s.datasourceRemote,
-                    datasourceLocal = s.datasourceLocal,
-                    diHilt = s.diHilt,
-                    diKoin = s.diKoin,
-                    diKoinAnnotations = s.diKoinAnnotations,
+                    datasourceStrategy = datasourceStrategy,
+                    diStrategy = if (s.diKoin) DiStrategy.Koin(useAnnotations = s.diKoinAnnotations) else DiStrategy.Hilt,
                 )
             )
             result.fold(
