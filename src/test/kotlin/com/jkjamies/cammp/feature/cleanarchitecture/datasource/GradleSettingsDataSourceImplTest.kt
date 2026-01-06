@@ -5,6 +5,7 @@ import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempD
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import kotlin.io.path.createDirectories
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
@@ -185,6 +186,54 @@ class GradleSettingsDataSourceImplTest : BehaviorSpec({
                 }
 
                 changed shouldBe false
+            }
+        }
+
+        When("ensureIncludeBuild is run") {
+            Then("it should return false if settings.gradle.kts is missing") {
+                val changed = withTempDir("cammp_settings_include_build_missing") { projectBase ->
+                    // no settings file
+                    ds.ensureIncludeBuild(projectBase = projectBase, buildLogicName = "build-logic")
+                }
+
+                changed shouldBe false
+            }
+
+            Then("it should append includeBuild when missing") {
+                val (changed, text) = withTempDir("cammp_settings_include_build_append") { projectBase ->
+                    projectBase.resolve("settings.gradle.kts").writeText("// settings\n")
+
+                    val changed = ds.ensureIncludeBuild(projectBase = projectBase, buildLogicName = "build-logic")
+                    val text = projectBase.resolve("settings.gradle.kts").readText()
+
+                    changed to text
+                }
+
+                changed shouldBe true
+                text shouldContain "includeBuild(\"build-logic\")"
+            }
+
+            Then("it should be idempotent when includeBuild already exists") {
+                val (changed1, changed2, text) = withTempDir("cammp_settings_include_build_idempotent") { projectBase ->
+                    projectBase.resolve("settings.gradle.kts").writeText(
+                        """
+                        // settings
+                        includeBuild("build-logic")
+                        """.trimIndent()
+                    )
+
+                    val changed1 = ds.ensureIncludeBuild(projectBase = projectBase, buildLogicName = "build-logic")
+                    val changed2 = ds.ensureIncludeBuild(projectBase = projectBase, buildLogicName = "build-logic")
+                    val text = projectBase.resolve("settings.gradle.kts").readText()
+
+                    Triple(changed1, changed2, text)
+                }
+
+                changed1 shouldBe false
+                changed2 shouldBe false
+                text shouldContain "includeBuild(\"build-logic\")"
+                // ensure we didn't accidentally duplicate the token.
+                text.replace("includeBuild(\"build-logic\")", "").shouldNotContain("includeBuild(\"build-logic\")")
             }
         }
     }
