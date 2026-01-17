@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.0.6-alpha] - 2026-01-17
+
 ### Added
 
 - Circuit Presentation Option (coming soon)
@@ -113,7 +115,8 @@
 
 Initial Alpha Release
 
-[Unreleased]: https://github.com/jkjamies/CAMMP/compare/v0.0.5-alpha...HEAD
+[Unreleased]: https://github.com/jkjamies/CAMMP/compare/v0.0.6-alpha...HEAD
+[0.0.6-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.5-alpha...v0.0.6-alpha
 [0.0.5-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.4-alpha...v0.0.5-alpha
 [0.0.4-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.3-alpha...v0.0.4-alpha
 [0.0.3-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.2-alpha...v0.0.3-alpha
