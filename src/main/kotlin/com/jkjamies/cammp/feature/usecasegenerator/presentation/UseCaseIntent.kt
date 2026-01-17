@@ -6,6 +6,7 @@ sealed interface UseCaseIntent {
     data class SetAsync(val selected: Boolean) : UseCaseIntent
     data class SetSync(val selected: Boolean) : UseCaseIntent
     data class ToggleRepository(val repositoryName: String, val selected: Boolean) : UseCaseIntent
+    data class SetDiMetro(val selected: Boolean) : UseCaseIntent
     data class SetDiHilt(val selected: Boolean) : UseCaseIntent
     data class SetDiKoin(val selected: Boolean) : UseCaseIntent
     data class ToggleKoinAnnotations(val selected: Boolean) : UseCaseIntent

@@ -35,7 +35,7 @@ class ScreenRepositoryImpl(
             return FileGenerationResult(target, GenerationStatus.SKIPPED, fileName)
         }
 
-        val diHilt = params.diStrategy is DiStrategy.Hilt
+        val diHilt = params.diStrategy is DiStrategy.Hilt || params.diStrategy is DiStrategy.Metro
         val diKoin = params.diStrategy is DiStrategy.Koin
 
         val fileSpec = specFactory.create(packageName, screenName, diHilt, diKoin)

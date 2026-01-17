@@ -43,7 +43,7 @@ class RepositorySpecFactoryImpl : RepositorySpecFactory {
         }
 
         val constructorBuilder = FunSpec.constructorBuilder()
-        if (params.diStrategy is DiStrategy.Hilt) {
+        if (params.diStrategy is DiStrategy.Hilt || params.diStrategy is DiStrategy.Metro) {
             constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
         }
 

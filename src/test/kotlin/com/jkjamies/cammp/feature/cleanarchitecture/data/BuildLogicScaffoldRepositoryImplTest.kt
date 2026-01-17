@@ -23,6 +23,7 @@ class BuildLogicScaffoldRepositoryImplTest : BehaviorSpec({
         feature = "profile",
         orgCenter = "com.example",
         includePresentation = true,
+        includeDiModule = true,
         datasourceStrategy = DatasourceStrategy.RemoteAndLocal,
         diStrategy = DiStrategy.Hilt,
     )

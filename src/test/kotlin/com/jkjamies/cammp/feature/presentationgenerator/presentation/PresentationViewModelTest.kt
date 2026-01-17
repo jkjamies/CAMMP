@@ -83,6 +83,8 @@ class PresentationViewModelTest : BehaviorSpec({
                     val initial = awaitItem()
                     initial.patternMVI shouldBe true
                     initial.patternMVVM shouldBe false
+                    initial.patternCircuit shouldBe false
+                    initial.diMetro shouldBe false
                     initial.diHilt shouldBe true
                     initial.diKoin shouldBe false
 
@@ -90,25 +92,42 @@ class PresentationViewModelTest : BehaviorSpec({
                     val mvvm = awaitItem()
                     mvvm.patternMVVM shouldBe true
                     mvvm.patternMVI shouldBe false
+                    mvvm.patternCircuit shouldBe false
+
+                    vm.handleIntent(PresentationIntent.SetPatternCircuit(true))
+                    val circuit = awaitItem()
+                    circuit.patternCircuit shouldBe true
+                    circuit.patternMVI shouldBe false
+                    circuit.patternMVVM shouldBe false
 
                     vm.handleIntent(PresentationIntent.SetPatternMVI(true))
                     val mvi = awaitItem()
                     mvi.patternMVI shouldBe true
                     mvi.patternMVVM shouldBe false
+                    mvi.patternCircuit shouldBe false
 
                     vm.handleIntent(PresentationIntent.SetDiKoin(true))
                     val koin = awaitItem()
                     koin.diKoin shouldBe true
+                    koin.diMetro shouldBe false
                     koin.diHilt shouldBe false
 
                     vm.handleIntent(PresentationIntent.ToggleKoinAnnotations(true))
                     awaitItem().diKoinAnnotations shouldBe true
 
+                    vm.handleIntent(PresentationIntent.SetDiMetro(true))
+                    val metro = awaitItem()
+                    metro.diMetro shouldBe true
+                    metro.diKoin shouldBe false
+                    metro.diHilt shouldBe false
+                    metro.diKoinAnnotations shouldBe false
+
                     vm.handleIntent(PresentationIntent.SetDiHilt(true))
                     val hilt = awaitItem()
                     hilt.diHilt shouldBe true
+                    hilt.diMetro shouldBe false
                     hilt.diKoin shouldBe false
-                    hilt.diKoinAnnotations shouldBe true // currently not auto-reset
+                    hilt.diKoinAnnotations shouldBe false
 
                     cancelAndIgnoreRemainingEvents()
                 }

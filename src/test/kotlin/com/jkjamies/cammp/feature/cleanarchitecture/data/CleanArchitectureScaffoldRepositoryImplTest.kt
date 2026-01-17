@@ -20,12 +20,19 @@ import java.nio.file.Path
  */
 class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
 
-    fun params(base: Path, di: DiStrategy, datasourceStrategy: DatasourceStrategy, includePresentation: Boolean) = CleanArchitectureParams(
+    fun params(
+        base: Path,
+        di: DiStrategy,
+        datasourceStrategy: DatasourceStrategy,
+        includePresentation: Boolean,
+        includeDiModule: Boolean = true
+    ) = CleanArchitectureParams(
         projectBasePath = base,
         root = "feature",
         feature = "my-feature",
         orgCenter = "com.example",
         includePresentation = includePresentation,
+        includeDiModule = includeDiModule,
         datasourceStrategy = datasourceStrategy,
         diStrategy = di,
     )
@@ -106,6 +113,35 @@ class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
 
                     // Koin annotations should trigger annotation module generation under di
                     annotationRepo.calls.size shouldBe 1
+                }
+            }
+        }
+
+        When("generating modules for Koin with annotations but includeDiModule is false") {
+            Then("it should NOT create di directory and NOT call annotation repo") {
+                withTempDir("cammp_scaffold_no_di") { tmp ->
+                    val annotationRepo = AnnotationModuleRepositoryFake()
+                    val repo = CleanArchitectureScaffoldRepositoryImpl(
+                        fs = fs,
+                        templateRepo = templateRepo,
+                        annotationModuleRepo = annotationRepo,
+                        buildGradleSpecFactory = buildSpecFactory,
+                        sourceSpecFactory = sourceFactory,
+                    )
+
+                    val p = params(
+                        base = tmp,
+                        di = DiStrategy.Koin(useAnnotations = true),
+                        datasourceStrategy = DatasourceStrategy.None,
+                        includePresentation = false,
+                        includeDiModule = false,
+                    )
+
+                    val result = repo.generateModules(p)
+
+                    result.created shouldBe listOf("domain", "data")
+                    fs.exists(tmp.resolve("feature/my-feature/di")) shouldBe false
+                    annotationRepo.calls.size shouldBe 0
                 }
             }
         }

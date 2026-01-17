@@ -44,6 +44,7 @@ class ViewModelSpecFactoryImpl : ViewModelSpecFactory {
         val constructorBuilder = FunSpec.constructorBuilder()
 
         when (val di = params.diStrategy) {
+            is DiStrategy.Metro,
             is DiStrategy.Hilt -> {
                 classBuilder.addAnnotation(ClassName("dagger.hilt.android.lifecycle", "HiltViewModel"))
                 constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))

@@ -3,6 +3,7 @@ package com.jkjamies.cammp.feature.usecasegenerator.domain.model
 import java.nio.file.Path
 
 sealed interface DiStrategy {
+    data object Metro : DiStrategy
     data object Hilt : DiStrategy
     data class Koin(val useAnnotations: Boolean) : DiStrategy
 }

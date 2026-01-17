@@ -24,6 +24,7 @@ class CleanArchitectureGeneratorTest : BehaviorSpec({
             feature = "profile",
             orgCenter = "com.example",
             includePresentation = true,
+            includeDiModule = true,
             datasourceStrategy = DatasourceStrategy.Combined,
         )
 

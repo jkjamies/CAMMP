@@ -11,6 +11,7 @@ data class RepositoryUiState(
     val datasourceCombined: Boolean = false,
     val datasourceRemote: Boolean = true,
     val datasourceLocal: Boolean = true,
+    val diMetro: Boolean = false,
     val diHilt: Boolean = true,
     val diKoin: Boolean = false,
     val diKoinAnnotations: Boolean = false,

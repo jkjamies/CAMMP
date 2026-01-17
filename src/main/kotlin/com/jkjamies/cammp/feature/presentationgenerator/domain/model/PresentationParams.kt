@@ -3,6 +3,7 @@ package com.jkjamies.cammp.feature.presentationgenerator.domain.model
 import java.nio.file.Path
 
 sealed interface DiStrategy {
+    data object Metro : DiStrategy
     data object Hilt : DiStrategy
     data class Koin(val useAnnotations: Boolean) : DiStrategy
 }
@@ -10,6 +11,7 @@ sealed interface DiStrategy {
 sealed interface PresentationPatternStrategy {
     data object MVI : PresentationPatternStrategy
     data object MVVM : PresentationPatternStrategy
+    data object Circuit : PresentationPatternStrategy
 }
 
 data class PresentationParams(

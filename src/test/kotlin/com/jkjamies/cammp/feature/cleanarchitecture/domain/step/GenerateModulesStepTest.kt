@@ -22,6 +22,7 @@ class GenerateModulesStepTest : BehaviorSpec({
             feature = "profile",
             orgCenter = "com.example",
             includePresentation = true,
+            includeDiModule = true,
             datasourceStrategy = DatasourceStrategy.None,
             diStrategy = DiStrategy.Hilt,
         )

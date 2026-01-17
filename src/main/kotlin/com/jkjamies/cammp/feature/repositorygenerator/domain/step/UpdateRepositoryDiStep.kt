@@ -17,7 +17,7 @@ class UpdateRepositoryDiStep(
 
     override suspend fun execute(params: RepositoryParams): StepResult {
         // Skip logic: If no DI strategy is chosen, this does nothing.
-        if (params.diStrategy !is DiStrategy.Hilt && params.diStrategy !is DiStrategy.Koin) {
+        if (params.diStrategy !is DiStrategy.Hilt && params.diStrategy !is DiStrategy.Metro && params.diStrategy !is DiStrategy.Koin) {
             return StepResult.Success(null)
         }
 

@@ -130,6 +130,7 @@ fun RepositoryGeneratorScreen(
         }
         Text("Dependency Injection:")
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            RadioWithLabel(label = "Metro (coming soon)", selected = state.diMetro, enabled = false, onClick = {})
             RadioWithLabel(label = "Hilt", selected = state.diHilt, enabled = true) {
                 if (!state.diHilt) onIntent(RepositoryIntent.SetDiHilt(true))
             }

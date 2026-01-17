@@ -68,7 +68,7 @@ internal class WelcomeScreenTest : ComposeBasedTestCase() {
 
         robot.clickOnTag("CleanArch:DI")
         composableRule.waitForIdle()
-        robot.verifyTextContains("Supports Hilt and Koin. For Koin, you can choose between standard DSL and Koin Annotations.")
+        robot.verifyTextContains("Supports Hilt, Koin, and Metro (coming soon). For Koin, you can choose between standard DSL and Koin Annotations.")
         robot.verifyTextContains("Hilt Setup: ")
 
         // Repository Generator
@@ -113,6 +113,6 @@ internal class WelcomeScreenTest : ComposeBasedTestCase() {
         
         robot.clickOnTag("Presentation:UIPatterns")
         composableRule.waitForIdle()
-        robot.verifyTextIsDisplayed("Choose between MVI (Model-View-Intent) or MVVM (Model-View-ViewModel) architectures.")
+        robot.verifyTextIsDisplayed("Choose between MVI (Model-View-Intent), MVVM (Model-View-ViewModel), or Circuit (coming soon) architectures.")
     }
 }

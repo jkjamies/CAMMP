@@ -25,7 +25,10 @@ class GenerateModulesViewModel(
         GenerateModulesUiState(
             projectBasePath = projectBasePath,
             root = projectBasePath,
-            orgCenter = projectBasePath.substringAfterLast('/').ifBlank { "cammp" }
+            orgCenter = projectBasePath.substringAfterLast('/').ifBlank { "cammp" },
+            diMetro = false,
+            diHilt = true,
+            includeDiModule = true,
         )
     )
     val state: StateFlow<GenerateModulesUiState> = _state.asStateFlow()
@@ -57,22 +60,43 @@ class GenerateModulesViewModel(
             is GenerateModulesIntent.SetDatasourceRemote -> _state.update { it.copy(datasourceRemote = intent.selected) }
             is GenerateModulesIntent.SetDatasourceLocal -> _state.update { it.copy(datasourceLocal = intent.selected) }
 
+            is GenerateModulesIntent.SelectDiMetro -> _state.update {
+                it.copy(
+                    diMetro = intent.selected,
+                    diHilt = !intent.selected,
+                    diKoin = false,
+                    diKoinAnnotations = false,
+                    includeDiModule = false
+                )
+            }
+
             is GenerateModulesIntent.SelectDiHilt -> _state.update {
                 it.copy(
                     diHilt = intent.selected,
-                    diKoin = !intent.selected,
-                    diKoinAnnotations = false
+                    diMetro = !intent.selected,
+                    diKoin = false,
+                    diKoinAnnotations = false,
+                    includeDiModule = true
                 )
             }
 
             is GenerateModulesIntent.SelectDiKoin -> _state.update {
                 it.copy(
                     diKoin = intent.selected,
-                    diHilt = !intent.selected
+                    diMetro = false,
+                    diHilt = !intent.selected,
+                    includeDiModule = true
                 )
             }
 
-            is GenerateModulesIntent.SetKoinAnnotations -> _state.update { it.copy(diKoinAnnotations = intent.selected) }
+            is GenerateModulesIntent.SetKoinAnnotations -> _state.update {
+                it.copy(
+                    diKoinAnnotations = intent.selected,
+                    includeDiModule = !intent.selected
+                )
+            }
+
+            is GenerateModulesIntent.SetIncludeDiModule -> _state.update { it.copy(includeDiModule = intent.selected) }
 
             GenerateModulesIntent.Generate -> generate()
         }
@@ -147,8 +171,13 @@ class GenerateModulesViewModel(
                     feature = featureNormalized,
                     orgCenter = s.orgCenter.ifBlank { "cammp" },
                     includePresentation = s.includePresentation,
+                    includeDiModule = s.includeDiModule,
                     datasourceStrategy = datasourceStrategy,
-                    diStrategy = if (s.diKoin) DiStrategy.Koin(useAnnotations = s.diKoinAnnotations) else DiStrategy.Hilt,
+                    diStrategy = when {
+                        s.diKoin -> DiStrategy.Koin(useAnnotations = s.diKoinAnnotations)
+                        s.diMetro -> DiStrategy.Metro
+                        else -> DiStrategy.Hilt
+                    },
                 )
             )
             result.fold(
