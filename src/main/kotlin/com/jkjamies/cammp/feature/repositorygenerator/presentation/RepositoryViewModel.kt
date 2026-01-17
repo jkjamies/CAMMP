@@ -36,10 +36,10 @@ class RepositoryViewModel(
                     return
                 }
 
-                val diStrategy = if (s.diKoin) {
-                    DiStrategy.Koin(useAnnotations = s.diKoinAnnotations)
-                } else {
-                    DiStrategy.Hilt
+                val diStrategy = when {
+                    s.diKoin -> DiStrategy.Koin(useAnnotations = s.diKoinAnnotations)
+                    s.diMetro -> DiStrategy.Metro
+                    else -> DiStrategy.Hilt
                 }
 
                 val datasourceStrategy = when {
@@ -136,17 +136,29 @@ class RepositoryViewModel(
                 s.copy(selectedDataSources = mutable)
             }
 
+            is RepositoryIntent.SetDiMetro -> _state.update {
+                it.copy(
+                    diMetro = intent.selected,
+                    diHilt = !intent.selected,
+                    diKoin = false,
+                    diKoinAnnotations = false,
+                ).updateDiStates()
+            }
+
             is RepositoryIntent.SetDiHilt -> _state.update {
                 it.copy(
                     diHilt = intent.selected,
-                    diKoin = !intent.selected
+                    diMetro = !intent.selected,
+                    diKoin = false,
+                    diKoinAnnotations = false,
                 ).updateDiStates()
             }
 
             is RepositoryIntent.SetDiKoin -> _state.update {
                 it.copy(
                     diKoin = intent.selected,
-                    diHilt = !intent.selected
+                    diMetro = false,
+                    diHilt = !intent.selected,
                 ).updateDiStates()
             }
 
@@ -170,10 +182,10 @@ class RepositoryViewModel(
     }
 
     private fun RepositoryUiState.updateDiStates(): RepositoryUiState =
-        if (diKoin) {
-            copy(diHilt = false, diKoin = true, diKoinAnnotations = diKoinAnnotations)
-        } else {
-            copy(diHilt = true, diKoin = false, diKoinAnnotations = false)
+        when {
+            diKoin -> copy(diMetro = false, diHilt = false, diKoin = true, diKoinAnnotations = diKoinAnnotations)
+            diMetro -> copy(diMetro = true, diHilt = false, diKoin = false, diKoinAnnotations = false)
+            else -> copy(diMetro = false, diHilt = true, diKoin = false, diKoinAnnotations = false)
         }
 
     @AssistedFactory

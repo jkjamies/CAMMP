@@ -6,8 +6,11 @@
 
 ### Added
 
-- Metro Dependency Injection
+- Circuit Presentation Option (coming soon)
+- Metro Dependency Injection Option (coming soon)
 - Architecture updates for future scalability
+- Optional DI Module for Koin w/Annotations & Metro (coming soon)
+- Updated Welcome screen with the latest feature information
 
 ### Changed
 

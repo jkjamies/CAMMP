@@ -37,10 +37,10 @@ class UseCaseViewModel(
                 val normalizedName = normalizeName(s.name)
                 val domainDir = Paths.get(s.domainPackage)
                 
-                val diStrategy = if (s.diKoin) {
-                    DiStrategy.Koin(useAnnotations = s.diKoinAnnotations)
-                } else {
-                    DiStrategy.Hilt
+                val diStrategy = when {
+                    s.diKoin -> DiStrategy.Koin(useAnnotations = s.diKoinAnnotations)
+                    s.diMetro -> DiStrategy.Metro
+                    else -> DiStrategy.Hilt
                 }
 
                 val params = UseCaseParams(
@@ -92,12 +92,18 @@ class UseCaseViewModel(
 
             is UseCaseIntent.SetAsync -> _state.update { it.copy(async = true, sync = false) }
             is UseCaseIntent.SetSync -> _state.update { it.copy(sync = true, async = false) }
+            is UseCaseIntent.SetDiMetro -> _state.update {
+                it.copy(diMetro = intent.selected, diHilt = !intent.selected, diKoin = false, diKoinAnnotations = false)
+                    .updateDiStates()
+            }
+
             is UseCaseIntent.SetDiHilt -> _state.update {
-                it.copy(diHilt = intent.selected, diKoin = !intent.selected).updateDiStates()
+                it.copy(diHilt = intent.selected, diMetro = !intent.selected, diKoin = false, diKoinAnnotations = false)
+                    .updateDiStates()
             }
 
             is UseCaseIntent.SetDiKoin -> _state.update {
-                it.copy(diKoin = intent.selected, diHilt = !intent.selected).updateDiStates()
+                it.copy(diKoin = intent.selected, diHilt = !intent.selected, diMetro = false).updateDiStates()
             }
 
             is UseCaseIntent.ToggleKoinAnnotations -> _state.update {
@@ -127,10 +133,10 @@ class UseCaseViewModel(
     }
 
     private fun UseCaseUiState.updateDiStates(): UseCaseUiState =
-        if (diKoin) {
-            copy(diHilt = false, diKoin = true, diKoinAnnotations = diKoinAnnotations)
-        } else {
-            copy(diHilt = true, diKoin = false, diKoinAnnotations = false)
+        when {
+            diKoin -> copy(diMetro = false, diHilt = false, diKoin = true, diKoinAnnotations = diKoinAnnotations)
+            diMetro -> copy(diMetro = true, diHilt = false, diKoin = false, diKoinAnnotations = false)
+            else -> copy(diMetro = false, diHilt = true, diKoin = false, diKoinAnnotations = false)
         }
 
     @AssistedFactory

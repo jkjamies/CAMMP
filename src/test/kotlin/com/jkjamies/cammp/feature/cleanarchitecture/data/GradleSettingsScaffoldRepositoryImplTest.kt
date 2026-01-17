@@ -17,6 +17,7 @@ class GradleSettingsScaffoldRepositoryImplTest : BehaviorSpec({
         feature = "my-feature",
         orgCenter = "com.example",
         includePresentation = true,
+        includeDiModule = true,
         datasourceStrategy = DatasourceStrategy.None,
         diStrategy = DiStrategy.Hilt,
     )

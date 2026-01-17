@@ -22,6 +22,7 @@ class EnsureBuildLogicStepTest : BehaviorSpec({
             feature = "my-feature",
             orgCenter = "com.example",
             includePresentation = false,
+            includeDiModule = true,
             datasourceStrategy = DatasourceStrategy.RemoteAndLocal,
             diStrategy = DiStrategy.Hilt,
         )
@@ -48,6 +49,22 @@ class EnsureBuildLogicStepTest : BehaviorSpec({
 
             Then("it should compute di mode") {
                 repo.calls.single().diMode shouldBe DiMode.HILT
+            }
+        }
+
+        When("executed with includeDiModule = false") {
+            val repo = BuildLogicScaffoldRepositoryFake(updated = false)
+            val step = EnsureBuildLogicStep(repo)
+
+            step.execute(params.copy(includeDiModule = false))
+
+            Then("it should compute enabled module list without di") {
+                repo.calls.single().enabledModules.shouldContainExactly(
+                    "domain",
+                    "data",
+                    "remoteDataSource",
+                    "localDataSource",
+                )
             }
         }
     }

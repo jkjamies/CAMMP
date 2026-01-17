@@ -65,7 +65,11 @@ class GenerateModulesViewModelTest : BehaviorSpec({
 
             vm.state.test {
                 // initial
-                awaitItem().projectBasePath shouldBe "/project"
+                awaitItem().let {
+                    it.projectBasePath shouldBe "/project"
+                    it.diHilt shouldBe true
+                    it.diMetro shouldBe false
+                }
 
                 vm.handleIntent(GenerateModulesIntent.SetRoot("/project/app"))
                 vm.handleIntent(GenerateModulesIntent.SetFeature("/project/my-feature"))
@@ -135,6 +139,20 @@ class GenerateModulesViewModelTest : BehaviorSpec({
                 s.diKoin shouldBe true
                 s.diHilt shouldBe false
                 s.diKoinAnnotations shouldBe true
+                s.includeDiModule shouldBe false
+
+                vm.handleIntent(GenerateModulesIntent.SetIncludeDiModule(true))
+                vm.state.value.includeDiModule shouldBe true
+
+                vm.handleIntent(GenerateModulesIntent.SelectDiMetro(true))
+                // Note: Even if we try to set Metro via intent, the UI would prevent it if it was bound to a disabled radio,
+                // but the VM still handles the intent. However, the requirement is that it SHOULD default to Hilt.
+                vm.state.value.diMetro shouldBe true
+                vm.state.value.includeDiModule shouldBe false
+
+                vm.handleIntent(GenerateModulesIntent.SelectDiHilt(true))
+                vm.state.value.diHilt shouldBe true
+                vm.state.value.includeDiModule shouldBe true
 
                 s.errorMessage shouldBe null
             }

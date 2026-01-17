@@ -132,7 +132,8 @@ internal fun WelcomeScreen() {
                         "parcelize",
                         "kotlin-serialization",
                         "compose-compiler",
-                        "hilt (if Hilt selected)"
+                        "hilt (if Hilt selected)",
+                        "metro (if Metro selected - coming soon)"
                     )
                 }
 
@@ -154,7 +155,8 @@ internal fun WelcomeScreen() {
                         "koin (if Koin selected)",
                         "koin-core (if Koin Annotations selected)",
                         "koin-annotations (if Koin Annotations selected)",
-                        "koin-ksp-compiler (if Koin Annotations selected)"
+                        "koin-ksp-compiler (if Koin Annotations selected)",
+                        "metro (if Metro selected - coming soon)"
                     )
                 }
 
@@ -194,14 +196,29 @@ internal fun WelcomeScreen() {
             }
 
             CollapsibleSubSection("Dependency Injection", "CleanArch:DI") {
-                Text("Supports Hilt and Koin. For Koin, you can choose between standard DSL and Koin Annotations.")
+                Text("Supports Hilt, Koin, and Metro (coming soon). For Koin, you can choose between standard DSL and Koin Annotations.")
                 Spacer(Modifier.height(4.dp))
                 Text(
                     boldItem(
                         "Note: ",
-                        "The generator adds the feature's DI module as a dependency to the app module.",
+                        "DI Module: ",
                         StringBuilder().apply {
-                            append(" This transitively adds all feature dependencies (domain, data, presentation) to the app module's classpath. ")
+                            append("A dedicated DI module is optional for Metro and Koin with Annotations. ")
+                            append("If excluded for Koin w/Annotations, a manual module scan setup is required. ")
+                            append("Metro currently assumes AppScope. ")
+                            append("Standard Hilt and Koin DSL always include a DI module.")
+                        }.toString()
+                    ),
+                    fontSize = 12.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    boldItem(
+                        "Note: ",
+                        "Transitive Dependencies: ",
+                        StringBuilder().apply {
+                            append("The generator adds the feature's DI module as a dependency to the app module. ")
+                            append("This transitively adds all feature dependencies (domain, data, presentation) to the app module's classpath. ")
                             append("This is standard for Hilt (to generate components) and Koin (to load modules), ")
                             append("but be aware that the app module will have visibility of the entire feature. ")
                             append("You can remove this if using Koin or modify it yourself if you need to fit for different architecture.")
@@ -310,7 +327,7 @@ internal fun WelcomeScreen() {
             }
 
             CollapsibleSubSection("UI Patterns", "Presentation:UIPatterns") {
-                Text("Choose between MVI (Model-View-Intent) or MVVM (Model-View-ViewModel) architectures.")
+                Text("Choose between MVI (Model-View-Intent), MVVM (Model-View-ViewModel), or Circuit (coming soon) architectures.")
             }
         }
     }

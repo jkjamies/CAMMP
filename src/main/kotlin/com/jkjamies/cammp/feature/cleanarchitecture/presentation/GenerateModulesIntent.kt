@@ -11,8 +11,10 @@ sealed interface GenerateModulesIntent {
     data class SetDatasourceCombined(val selected: Boolean) : GenerateModulesIntent
     data class SetDatasourceRemote(val selected: Boolean) : GenerateModulesIntent
     data class SetDatasourceLocal(val selected: Boolean) : GenerateModulesIntent
+    data class SelectDiMetro(val selected: Boolean) : GenerateModulesIntent
     data class SelectDiHilt(val selected: Boolean) : GenerateModulesIntent
     data class SelectDiKoin(val selected: Boolean) : GenerateModulesIntent
     data class SetKoinAnnotations(val selected: Boolean) : GenerateModulesIntent
+    data class SetIncludeDiModule(val selected: Boolean) : GenerateModulesIntent
     object Generate : GenerateModulesIntent
 }

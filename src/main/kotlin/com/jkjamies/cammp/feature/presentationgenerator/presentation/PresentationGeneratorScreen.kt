@@ -101,6 +101,12 @@ fun PresentationGeneratorScreen(
                 enabled = true,
                 onClick = { if (!state.patternMVVM) onIntent(PresentationIntent.SetPatternMVVM(true)) }
             )
+            RadioWithLabel(
+                label = "Circuit (coming soon)",
+                selected = state.patternCircuit,
+                enabled = false,
+                onClick = {}
+            )
         }
         Spacer(Modifier.height(8.dp))
         Text("Domain UseCases (across project):")
@@ -128,6 +134,12 @@ fun PresentationGeneratorScreen(
         Spacer(Modifier.height(8.dp))
         Text("Dependency Injection:")
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            RadioWithLabel(
+                label = "Metro (coming soon)",
+                selected = state.diMetro,
+                enabled = false,
+                onClick = {}
+            )
             RadioWithLabel(
                 label = "Hilt",
                 selected = state.diHilt,

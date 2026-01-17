@@ -13,11 +13,13 @@ data class GenerateModulesUiState(
     val platformKmp: Boolean = false,
 
     val includePresentation: Boolean = true,
+    val includeDiModule: Boolean = true,
 
     val includeDatasource: Boolean = false,
     val datasourceCombined: Boolean = false,
     val datasourceRemote: Boolean = true,
     val datasourceLocal: Boolean = true,
+    val diMetro: Boolean = false,
     val diHilt: Boolean = true,
     val diKoin: Boolean = false,
     val diKoinAnnotations: Boolean = false,

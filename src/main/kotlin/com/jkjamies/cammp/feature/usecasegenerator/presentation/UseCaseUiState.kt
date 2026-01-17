@@ -10,6 +10,7 @@ data class UseCaseUiState(
     val sync: Boolean = false,
     val availableRepositories: List<String> = emptyList(),
     val selectedRepositories: Set<String> = emptySet(),
+    val diMetro: Boolean = false,
     val diHilt: Boolean = true,
     val diKoin: Boolean = false,
     val diKoinAnnotations: Boolean = false,

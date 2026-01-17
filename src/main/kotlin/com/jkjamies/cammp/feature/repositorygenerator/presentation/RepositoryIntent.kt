@@ -10,6 +10,7 @@ sealed interface RepositoryIntent {
     data class SetDatasourceLocal(val selected: Boolean) : RepositoryIntent
     data class SetDataSourcesByType(val value: Map<String, List<String>>) : RepositoryIntent
     data class ToggleDataSourceSelection(val fqn: String, val selected: Boolean) : RepositoryIntent
+    data class SetDiMetro(val selected: Boolean) : RepositoryIntent
     data class SetDiHilt(val selected: Boolean) : RepositoryIntent
     data class SetDiKoin(val selected: Boolean) : RepositoryIntent
     data class ToggleKoinAnnotations(val selected: Boolean) : RepositoryIntent

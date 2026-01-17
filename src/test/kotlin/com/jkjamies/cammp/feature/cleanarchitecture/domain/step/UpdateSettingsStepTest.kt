@@ -22,6 +22,7 @@ class UpdateSettingsStepTest : BehaviorSpec({
             feature = "my-feature",
             orgCenter = "com.example",
             includePresentation = true,
+            includeDiModule = true,
             datasourceStrategy = DatasourceStrategy.RemoteOnly,
             diStrategy = DiStrategy.Koin(useAnnotations = true),
         )
@@ -68,6 +69,22 @@ class UpdateSettingsStepTest : BehaviorSpec({
                     "data",
                     "di",
                     "localDataSource",
+                )
+            }
+        }
+
+        When("executed with includeDiModule = false") {
+            val repo = GradleSettingsScaffoldRepositoryFake(updated = false)
+            val step = UpdateSettingsStep(repo)
+
+            step.execute(params.copy(includeDiModule = false))
+
+            Then("it should compute enabled module list without di") {
+                repo.calls.single().enabledModules.shouldContainExactly(
+                    "domain",
+                    "data",
+                    "presentation",
+                    "remoteDataSource",
                 )
             }
         }

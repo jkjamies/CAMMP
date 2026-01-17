@@ -25,7 +25,7 @@ class UpdateSettingsStep(
     private fun resolveEnabledModules(p: CleanArchitectureParams): List<String> = buildList {
         add("domain")
         add("data")
-        add("di")
+        if (p.includeDiModule) add("di")
         if (p.includePresentation) add("presentation")
 
         when (p.datasourceStrategy) {
@@ -42,6 +42,7 @@ class UpdateSettingsStep(
 
     private fun resolveDiMode(p: CleanArchitectureParams): DiMode = when (val s = p.diStrategy) {
         DiStrategy.Hilt -> DiMode.HILT
+        DiStrategy.Metro -> DiMode.HILT // TODO: Metro support (for now generate same as Hilt)
         is DiStrategy.Koin -> if (s.useAnnotations) DiMode.KOIN_ANNOTATIONS else DiMode.KOIN
     }
 }

@@ -101,17 +101,11 @@ fun GenerateModulesScreen(
                 }
             )
             RadioWithLabel(
-                label = "Kotlin Multiplatform (KMP)",
+                label = "Kotlin Multiplatform (KMP) (coming soon)",
                 selected = state.platformKmp,
                 enabled = false,
-                onClick = {
-                    // no-op
-//                    if (!state.platformKmp) {
-//                        onIntent(GenerateModulesIntent.SetPlatformKmp(true))
-//                    }
-                }
+                onClick = {}
             )
-            Text("(Coming Soon)")
         }
 
         Text("Data:")
@@ -147,6 +141,12 @@ fun GenerateModulesScreen(
 
         Text("Dependency Injection:")
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            RadioWithLabel(
+                label = "Metro (coming soon)",
+                selected = state.diMetro,
+                enabled = false,
+                onClick = {}
+            )
             RadioWithLabel(label = "Hilt", selected = state.diHilt, enabled = !state.platformKmp) {
                 onIntent(GenerateModulesIntent.SelectDiHilt(true))
             }
@@ -158,6 +158,22 @@ fun GenerateModulesScreen(
                     onIntent(GenerateModulesIntent.SetKoinAnnotations(it))
                 }
             }
+        }
+        if (state.diMetro || (state.diKoin && state.diKoinAnnotations)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(
+                    checked = state.includeDiModule,
+                    enabled = !state.diMetro,
+                    onCheckedChange = { onIntent(GenerateModulesIntent.SetIncludeDiModule(it)) })
+                Text("Include DI module")
+            }
+        }
+
+        if (state.diKoin && state.diKoinAnnotations && !state.includeDiModule) {
+            Text("Module scan will need to be manually set up.")
+        }
+        if (state.diMetro) {
+            Text("Metro assumes AppScope and can be manually changed after generation.")
         }
 
         Text("Presentation:")

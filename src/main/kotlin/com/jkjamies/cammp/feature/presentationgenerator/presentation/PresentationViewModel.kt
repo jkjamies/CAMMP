@@ -34,11 +34,13 @@ class PresentationViewModel(
             is PresentationIntent.ToggleScreenStateHolder -> _state.update { it.copy(useScreenStateHolder = intent.selected) }
             is PresentationIntent.ToggleIncludeNavigation -> _state.update { it.copy(includeNavigation = intent.selected) }
 
-            is PresentationIntent.SetPatternMVI -> _state.update { it.copy(patternMVI = true, patternMVVM = false) }
-            is PresentationIntent.SetPatternMVVM -> _state.update { it.copy(patternMVVM = true, patternMVI = false) }
+            is PresentationIntent.SetPatternMVI -> _state.update { it.copy(patternMVI = true, patternMVVM = false, patternCircuit = false) }
+            is PresentationIntent.SetPatternMVVM -> _state.update { it.copy(patternMVVM = true, patternMVI = false, patternCircuit = false) }
+            is PresentationIntent.SetPatternCircuit -> _state.update { it.copy(patternCircuit = true, patternMVI = false, patternMVVM = false) }
 
-            is PresentationIntent.SetDiHilt -> _state.update { it.copy(diHilt = true, diKoin = false) }
-            is PresentationIntent.SetDiKoin -> _state.update { it.copy(diKoin = true, diHilt = false) }
+            is PresentationIntent.SetDiMetro -> _state.update { it.copy(diMetro = true, diHilt = false, diKoin = false, diKoinAnnotations = false) }
+            is PresentationIntent.SetDiHilt -> _state.update { it.copy(diHilt = true, diMetro = false, diKoin = false, diKoinAnnotations = false) }
+            is PresentationIntent.SetDiKoin -> _state.update { it.copy(diKoin = true, diHilt = false, diMetro = false) }
             is PresentationIntent.ToggleKoinAnnotations -> _state.update { it.copy(diKoinAnnotations = intent.selected) }
 
             is PresentationIntent.SetUseCasesByModule -> _state.update { it.copy(useCasesByModule = intent.value) }
@@ -72,9 +74,16 @@ class PresentationViewModel(
 
         scope.launch {
             val result = run {
-                val patternStrategy =
-                    if (s.patternMVI) PresentationPatternStrategy.MVI else PresentationPatternStrategy.MVVM
-                val diStrategy = if (s.diKoin) DiStrategy.Koin(s.diKoinAnnotations) else DiStrategy.Hilt
+                val patternStrategy = when {
+                    s.patternMVI -> PresentationPatternStrategy.MVI
+                    s.patternCircuit -> PresentationPatternStrategy.Circuit
+                    else -> PresentationPatternStrategy.MVVM
+                }
+                val diStrategy = when {
+                    s.diKoin -> DiStrategy.Koin(s.diKoinAnnotations)
+                    s.diMetro -> DiStrategy.Metro
+                    else -> DiStrategy.Hilt
+                }
 
                 val params = PresentationParams(
                     moduleDir = Paths.get(s.directory),

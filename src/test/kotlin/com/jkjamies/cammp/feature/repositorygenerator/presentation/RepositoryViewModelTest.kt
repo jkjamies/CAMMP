@@ -176,22 +176,31 @@ class RepositoryViewModelTest : BehaviorSpec({
             }
         }
 
-        When("switching DI between Hilt and Koin") {
+        When("switching DI between Metro, Hilt and Koin") {
             Then("it should keep the flags consistent") {
                 val (_, _, _, vm) = newHarness()
 
+                vm.state.value.diMetro shouldBe false
                 vm.state.value.diHilt shouldBe true
                 vm.state.value.diKoin shouldBe false
 
                 vm.handleIntent(RepositoryIntent.SetDiKoin(true))
                 vm.state.value.diKoin shouldBe true
+                vm.state.value.diMetro shouldBe false
                 vm.state.value.diHilt shouldBe false
 
                 vm.handleIntent(RepositoryIntent.ToggleKoinAnnotations(true))
                 vm.state.value.diKoinAnnotations shouldBe true
 
+                vm.handleIntent(RepositoryIntent.SetDiMetro(true))
+                vm.state.value.diMetro shouldBe true
+                vm.state.value.diHilt shouldBe false
+                vm.state.value.diKoin shouldBe false
+                vm.state.value.diKoinAnnotations shouldBe false
+
                 vm.handleIntent(RepositoryIntent.SetDiHilt(true))
                 vm.state.value.diHilt shouldBe true
+                vm.state.value.diMetro shouldBe false
                 vm.state.value.diKoin shouldBe false
                 // Hilt forces annotations off
                 vm.state.value.diKoinAnnotations shouldBe false

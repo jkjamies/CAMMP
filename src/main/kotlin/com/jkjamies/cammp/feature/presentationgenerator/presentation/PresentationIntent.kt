@@ -11,7 +11,9 @@ sealed interface PresentationIntent {
 
     data class SetPatternMVI(val selected: Boolean) : PresentationIntent
     data class SetPatternMVVM(val selected: Boolean) : PresentationIntent
+    data class SetPatternCircuit(val selected: Boolean) : PresentationIntent
 
+    data class SetDiMetro(val selected: Boolean) : PresentationIntent
     data class SetDiHilt(val selected: Boolean) : PresentationIntent
     data class SetDiKoin(val selected: Boolean) : PresentationIntent
     data class ToggleKoinAnnotations(val selected: Boolean) : PresentationIntent

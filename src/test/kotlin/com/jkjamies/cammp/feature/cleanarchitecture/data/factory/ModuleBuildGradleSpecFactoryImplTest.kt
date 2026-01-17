@@ -21,6 +21,7 @@ class ModuleBuildGradleSpecFactoryImplTest : BehaviorSpec({
             feature = "profile",
             orgCenter = "com.Example-Org", // exercise sanitization
             includePresentation = true,
+            includeDiModule = true,
             datasourceStrategy = DatasourceStrategy.None,
             diStrategy = DiStrategy.Hilt,
         )

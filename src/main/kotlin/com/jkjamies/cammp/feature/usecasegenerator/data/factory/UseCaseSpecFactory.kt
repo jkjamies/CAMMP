@@ -26,6 +26,7 @@ class UseCaseSpecFactoryImpl : UseCaseSpecFactory {
         val constructorBuilder = FunSpec.constructorBuilder()
 
         when (val di = params.diStrategy) {
+            is DiStrategy.Metro,
             is DiStrategy.Hilt -> {
                 constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
             }
@@ -48,7 +49,7 @@ class UseCaseSpecFactoryImpl : UseCaseSpecFactory {
             )
         }
 
-        if (params.repositories.isNotEmpty() || params.diStrategy == DiStrategy.Hilt) {
+        if (params.repositories.isNotEmpty() || params.diStrategy == DiStrategy.Hilt || params.diStrategy == DiStrategy.Metro) {
             classBuilder.primaryConstructor(constructorBuilder.build())
         }
 

@@ -51,7 +51,7 @@ class CleanArchitectureScaffoldRepositoryImpl(
         val modules = buildList {
             add("domain")
             add("data")
-            add("di")
+            if (p.includeDiModule) add("di")
             if (p.includePresentation) add("presentation")
             when (p.datasourceStrategy) {
                 DatasourceStrategy.None -> Unit
@@ -180,7 +180,7 @@ class CleanArchitectureScaffoldRepositoryImpl(
             "di" -> {
                 val useKoinAnnotations = (p.diStrategy as? DiStrategy.Koin)
                     ?.useAnnotations == true
-                if (useKoinAnnotations) {
+                if (useKoinAnnotations && p.includeDiModule) {
                     val scanBase = sourceSpecFactory.packageName(p, moduleName = "di", featureName = featureName)
                         .removeSuffix(".di")
                     annotationModuleRepo.generate(

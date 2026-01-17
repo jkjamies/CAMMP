@@ -21,6 +21,7 @@ class ModuleSourceSpecFactoryImplTest : BehaviorSpec({
             feature = "profile",
             orgCenter = "com.example",
             includePresentation = true,
+            includeDiModule = true,
             datasourceStrategy = DatasourceStrategy.None,
         )
 

@@ -151,13 +151,14 @@ class UseCaseViewModelTest : BehaviorSpec({
         }
 
         When("toggling DI framework") {
-            Then("Hilt and Koin should be mutually exclusive and annotations reset when leaving koin") {
+            Then("Metro, Hilt and Koin should be mutually exclusive and annotations reset when leaving koin") {
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val vm = newVm(scope, mockk(), mockk())
 
                 vm.state.test {
                     val initial = awaitItem()
+                    initial.diMetro shouldBe false
                     initial.diHilt shouldBe true
                     initial.diKoin shouldBe false
                     initial.diKoinAnnotations shouldBe false
@@ -165,14 +166,23 @@ class UseCaseViewModelTest : BehaviorSpec({
                     vm.handleIntent(UseCaseIntent.SetDiKoin(true))
                     val koin = awaitItem()
                     koin.diKoin shouldBe true
+                    koin.diMetro shouldBe false
                     koin.diHilt shouldBe false
 
                     vm.handleIntent(UseCaseIntent.ToggleKoinAnnotations(true))
                     awaitItem().diKoinAnnotations shouldBe true
 
+                    vm.handleIntent(UseCaseIntent.SetDiMetro(true))
+                    val metro = awaitItem()
+                    metro.diMetro shouldBe true
+                    metro.diHilt shouldBe false
+                    metro.diKoin shouldBe false
+                    metro.diKoinAnnotations shouldBe false
+
                     vm.handleIntent(UseCaseIntent.SetDiHilt(true))
                     val hilt = awaitItem()
                     hilt.diHilt shouldBe true
+                    hilt.diMetro shouldBe false
                     hilt.diKoin shouldBe false
                     hilt.diKoinAnnotations shouldBe false
 
