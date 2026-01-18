@@ -1,10 +1,14 @@
 package com.jkjamies.cammp.feature.usecasegenerator.datasource
 
 import com.jkjamies.cammp.feature.usecasegenerator.data.datasource.DiModuleDataSource
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeSpec
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -17,27 +21,43 @@ class DiModuleDataSourceImpl : DiModuleDataSource {
         diPackage: String,
         useCaseSimpleName: String,
         useCaseFqn: String,
-        repositoryFqns: List<String>
+        repositoryFqns: List<String>,
+        useCaseInterfaceFqn: String?
     ): String {
         val useCaseClassName = ClassName(useCaseFqn.substringBeforeLast('.'), useCaseSimpleName)
         val repositoryClassNames = repositoryFqns.map { fqn ->
             ClassName(fqn.substringBeforeLast('.'), fqn.substringAfterLast('.'))
         }
 
-        val newBinding = CodeBlock.Companion.builder()
-            .add("single { %T(", useCaseClassName)
-            .apply {
-                if (repositoryClassNames.isNotEmpty()) {
-                    add(repositoryClassNames.joinToString(", ") { "get()" })
+        val newBinding = if (useCaseInterfaceFqn != null) {
+            val interfacePkg = useCaseInterfaceFqn.substringBeforeLast('.')
+            val interfaceName = useCaseInterfaceFqn.substringAfterLast('.')
+            val interfaceClassName = ClassName(interfacePkg, interfaceName)
+            CodeBlock.builder()
+                .add("single<%T> { %T(", interfaceClassName, useCaseClassName)
+                .apply {
+                    if (repositoryClassNames.isNotEmpty()) {
+                        add(repositoryClassNames.joinToString(", ") { "get()" })
+                    }
                 }
-            }
-            .add(") }")
-            .build()
+                .add(") }")
+                .build()
+        } else {
+            CodeBlock.builder()
+                .add("single { %T(", useCaseClassName)
+                .apply {
+                    if (repositoryClassNames.isNotEmpty()) {
+                        add(repositoryClassNames.joinToString(", ") { "get()" })
+                    }
+                }
+                .add(") }")
+                .build()
+        }
 
-        val fileSpecBuilder = FileSpec.Companion.builder(diPackage, "UseCaseModule")
+        val fileSpecBuilder = FileSpec.builder(diPackage, "UseCaseModule")
             .addImport("org.koin.dsl", "module")
 
-        val moduleBlockBuilder = CodeBlock.Companion.builder().beginControlFlow("module")
+        val moduleBlockBuilder = CodeBlock.builder().beginControlFlow("module")
 
         if (existingContent != null) {
             // Parse existing imports
@@ -57,7 +77,7 @@ class DiModuleDataSourceImpl : DiModuleDataSource {
             // Extract an existing body
             val body = existingContent.substringAfter("module {", "").substringBeforeLast("}", "")
             if (body.isNotBlank()) {
-                moduleBlockBuilder.add(CodeBlock.Companion.of("%L\n", body.trimIndent()))
+                moduleBlockBuilder.add(CodeBlock.of("%L\n", body.trimIndent()))
             }
         }
 
@@ -66,12 +86,73 @@ class DiModuleDataSourceImpl : DiModuleDataSource {
 
         val fileSpec = fileSpecBuilder
             .addProperty(
-                PropertySpec.Companion.builder("useCaseModule", ClassName("org.koin.core.module", "Module"))
+                PropertySpec.builder("useCaseModule", ClassName("org.koin.core.module", "Module"))
                     .initializer(moduleBlockBuilder.build())
                     .build()
             )
             .build()
 
         return fileSpec.toString()
+    }
+
+    override fun generateHiltModuleContent(
+        existingContent: String?,
+        diPackage: String,
+        useCaseSimpleName: String,
+        useCaseFqn: String,
+        useCaseInterfaceFqn: String
+    ): String {
+        val useCaseClassName = ClassName(useCaseFqn.substringBeforeLast('.'), useCaseSimpleName)
+        val interfacePkg = useCaseInterfaceFqn.substringBeforeLast('.')
+        val interfaceName = useCaseInterfaceFqn.substringAfterLast('.')
+        val interfaceClassName = ClassName(interfacePkg, interfaceName)
+
+        val bindFunName = "binds$useCaseSimpleName"
+        val bindFun = FunSpec.builder(bindFunName)
+            .addAnnotation(ClassName("dagger", "Binds"))
+            .addModifiers(KModifier.ABSTRACT)
+            .addParameter("impl", useCaseClassName)
+            .returns(interfaceClassName)
+            .build()
+
+        val moduleBuilder = TypeSpec.classBuilder("UseCaseModule")
+            .addModifiers(KModifier.ABSTRACT)
+            .addAnnotation(ClassName("dagger", "Module"))
+            .addAnnotation(
+                AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
+                    .addMember("%T::class", ClassName("dagger.hilt.components", "SingletonComponent"))
+                    .build()
+            )
+            .addFunction(bindFun)
+
+        val fileSpecBuilder = FileSpec.builder(diPackage, "UseCaseModule")
+
+        if (existingContent != null) {
+            // Very basic merging for Hilt - just add the new function to the existing class if it's there
+            // For now, let's just recreate it if it doesn't have the function. 
+            // Proper merging would require parsing the existing TypeSpec.
+            if (existingContent.contains(bindFunName)) {
+                return existingContent
+            }
+            
+            // Fallback: overwrite for now or handle more gracefully. 
+            // Since this is a specialized UseCaseModule, overwriting with accumulated binds is better but hard without a real parser.
+            // Let's at least keep the existing imports.
+            existingContent.lineSequence()
+                .filter { it.trim().startsWith("import ") }
+                .map { it.trim().removePrefix("import ").trim() }
+                .forEach { importLine ->
+                    val pkg = importLine.substringBeforeLast('.', "")
+                    val name = importLine.substringAfterLast('.')
+                    if (pkg.isNotEmpty()) {
+                        fileSpecBuilder.addImport(pkg, name)
+                    }
+                }
+        }
+
+        return fileSpecBuilder
+            .addType(moduleBuilder.build())
+            .build()
+            .toString()
     }
 }

@@ -54,6 +54,7 @@ class GenerateModulesViewModel(
             }
 
             is GenerateModulesIntent.SetIncludePresentation -> _state.update { it.copy(includePresentation = intent.selected) }
+            is GenerateModulesIntent.SetIncludeApiModule -> _state.update { it.copy(includeApiModule = intent.selected) }
 
             is GenerateModulesIntent.SetIncludeDatasource -> _state.update { it.copy(includeDatasource = intent.selected) }
             is GenerateModulesIntent.SetDatasourceCombined -> _state.update { it.copy(datasourceCombined = intent.selected) }
@@ -171,6 +172,7 @@ class GenerateModulesViewModel(
                     feature = featureNormalized,
                     orgCenter = s.orgCenter.ifBlank { "cammp" },
                     includePresentation = s.includePresentation,
+                    includeApiModule = s.includeApiModule,
                     includeDiModule = s.includeDiModule,
                     datasourceStrategy = datasourceStrategy,
                     diStrategy = when {

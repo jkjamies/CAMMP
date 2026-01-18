@@ -22,6 +22,7 @@ data class CleanArchitectureParams(
     val feature: String,
     val orgCenter: String,
     val includePresentation: Boolean,
+    val includeApiModule: Boolean = false,
     val includeDiModule: Boolean = true,
     val datasourceStrategy: DatasourceStrategy = DatasourceStrategy.None,
     val diStrategy: DiStrategy = DiStrategy.Hilt,

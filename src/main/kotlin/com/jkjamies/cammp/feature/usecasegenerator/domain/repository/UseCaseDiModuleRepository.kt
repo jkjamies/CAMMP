@@ -14,5 +14,6 @@ interface UseCaseDiModuleRepository {
         useCaseFqn: String,
         repositoryFqns: List<String>,
         diStrategy: DiStrategy,
+        useCaseInterfaceFqn: String? = null
     ): UseCaseMergeOutcome
 }

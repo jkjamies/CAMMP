@@ -52,6 +52,24 @@ class EnsureBuildLogicStepTest : BehaviorSpec({
             }
         }
 
+        When("executed with includeApiModule = true") {
+            val repo = BuildLogicScaffoldRepositoryFake(updated = false)
+            val step = EnsureBuildLogicStep(repo)
+
+            step.execute(params.copy(includeApiModule = true))
+
+            Then("it should compute enabled module list with api") {
+                repo.calls.single().enabledModules.shouldContainExactly(
+                    "domain",
+                    "data",
+                    "api",
+                    "di",
+                    "remoteDataSource",
+                    "localDataSource",
+                )
+            }
+        }
+
         When("executed with includeDiModule = false") {
             val repo = BuildLogicScaffoldRepositoryFake(updated = false)
             val step = EnsureBuildLogicStep(repo)

@@ -52,6 +52,24 @@ class UpdateSettingsStepTest : BehaviorSpec({
             }
         }
 
+        When("executed with includeApiModule = true") {
+            val repo = GradleSettingsScaffoldRepositoryFake(updated = false)
+            val step = UpdateSettingsStep(repo)
+
+            step.execute(params.copy(includeApiModule = true))
+
+            Then("it should compute enabled module list with api") {
+                repo.calls.single().enabledModules.shouldContainExactly(
+                    "domain",
+                    "data",
+                    "api",
+                    "di",
+                    "presentation",
+                    "remoteDataSource",
+                )
+            }
+        }
+
         When("datasourceStrategy is LocalOnly") {
             Then("it should include localDataSource in enabled modules") {
                 val localParams = params.copy(

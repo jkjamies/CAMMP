@@ -7,6 +7,7 @@ sealed interface GenerateModulesIntent {
     data class SetPlatformAndroid(val selected: Boolean) : GenerateModulesIntent
     data class SetPlatformKmp(val selected: Boolean) : GenerateModulesIntent
     data class SetIncludePresentation(val selected: Boolean) : GenerateModulesIntent
+    data class SetIncludeApiModule(val selected: Boolean) : GenerateModulesIntent
     data class SetIncludeDatasource(val selected: Boolean) : GenerateModulesIntent
     data class SetDatasourceCombined(val selected: Boolean) : GenerateModulesIntent
     data class SetDatasourceRemote(val selected: Boolean) : GenerateModulesIntent

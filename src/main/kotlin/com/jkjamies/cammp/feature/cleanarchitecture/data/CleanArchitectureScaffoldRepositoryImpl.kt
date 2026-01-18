@@ -51,6 +51,7 @@ class CleanArchitectureScaffoldRepositoryImpl(
         val modules = buildList {
             add("domain")
             add("data")
+            if (p.includeApiModule) add("api")
             if (p.includeDiModule) add("di")
             if (p.includePresentation) add("presentation")
             when (p.datasourceStrategy) {
@@ -103,6 +104,7 @@ class CleanArchitectureScaffoldRepositoryImpl(
         enabledModules: List<String>
     ) {
         val templatePath = when (moduleName) {
+            "api" -> "templates/cleanArchitecture/module/api.gradle.kts"
             "domain" -> "templates/cleanArchitecture/module/domain.gradle.kts"
             "data" -> "templates/cleanArchitecture/module/data.gradle.kts"
             "di" -> "templates/cleanArchitecture/module/di.gradle.kts"
@@ -143,6 +145,13 @@ class CleanArchitectureScaffoldRepositoryImpl(
 
         // Create standard subpackages
         when (moduleName) {
+            "api" -> {
+                listOf("model", "usecase").forEach { sub ->
+                    val d = pkgDir.resolve(sub)
+                    if (!fs.exists(d)) fs.createDirectories(d)
+                }
+            }
+
             "domain" -> {
                 listOf("repository", "model", "usecase").forEach { sub ->
                     val d = pkgDir.resolve(sub)

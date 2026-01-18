@@ -5,5 +5,10 @@ import java.nio.file.Path
 
 interface UseCaseGenerationRepository {
     /** Generate the UseCase using the given [params] for the provided [packageName]. */
-    fun generateUseCase(params: UseCaseParams, packageName: String, baseDomainPackage: String): Path
+    fun generateUseCase(
+        params: UseCaseParams,
+        packageName: String,
+        baseDomainPackage: String,
+        apiDir: Path? = null
+    ): Path
 }

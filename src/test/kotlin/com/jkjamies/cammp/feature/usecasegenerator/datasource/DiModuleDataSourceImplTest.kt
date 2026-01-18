@@ -22,5 +22,37 @@ class DiModuleDataSourceImplTest : BehaviorSpec({
                 result shouldContain "import com.example.usecase.MyUseCase"
             }
         }
+        When("generating Koin module content with interface") {
+            val result = dataSource.generateKoinModuleContent(
+                existingContent = null,
+                diPackage = "com.example.di",
+                useCaseSimpleName = "MyUseCase",
+                useCaseFqn = "com.example.domain.usecase.MyUseCase",
+                repositoryFqns = listOf("com.example.domain.repository.MyRepo"),
+                useCaseInterfaceFqn = "com.example.api.usecase.MyUseCase"
+            )
+
+            Then("it should contain interface binding") {
+                result shouldContain "MyUseCase"
+                result shouldContain "single"
+                result shouldContain "get()"
+            }
+        }
+
+        When("generating Hilt module content") {
+            val result = dataSource.generateHiltModuleContent(
+                existingContent = null,
+                diPackage = "com.example.di",
+                useCaseSimpleName = "MyUseCase",
+                useCaseFqn = "com.example.domain.usecase.MyUseCase",
+                useCaseInterfaceFqn = "com.example.api.usecase.MyUseCase"
+            )
+
+            Then("it should contain @Binds method") {
+                result shouldContain "@Binds"
+                result shouldContain "fun bindsMyUseCase"
+                result shouldContain "MyUseCase"
+            }
+        }
     }
 })

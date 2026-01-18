@@ -184,6 +184,14 @@ fun GenerateModulesScreen(
             Text("Include presentation module")
         }
 
+        Text("Domain:")
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = state.includeApiModule,
+                onCheckedChange = { onIntent(GenerateModulesIntent.SetIncludeApiModule(it)) })
+            Text("Include API module")
+        }
+
         val isValid =
             state.projectBasePath?.isNotBlank() == true && state.root.isNotBlank() && state.feature.isNotBlank()
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

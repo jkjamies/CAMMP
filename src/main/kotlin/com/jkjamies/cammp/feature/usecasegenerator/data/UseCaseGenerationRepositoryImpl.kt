@@ -16,8 +16,22 @@ class UseCaseGenerationRepositoryImpl(
     private val specFactory: UseCaseSpecFactory
 ) : UseCaseGenerationRepository {
 
-    override fun generateUseCase(params: UseCaseParams, packageName: String, baseDomainPackage: String): Path {
-        val fileSpec = specFactory.create(packageName, params, baseDomainPackage)
+    override fun generateUseCase(
+        params: UseCaseParams,
+        packageName: String,
+        baseDomainPackage: String,
+        apiDir: Path?
+    ): Path {
+        val interfaceFqn = if (apiDir?.toFile()?.exists() == true) {
+            val interfacePkg = packageName.replace(".domain.", ".api.")
+            val interfaceFileSpec = specFactory.createInterface(interfacePkg, params.className)
+            val apiTargetDir = apiDir.resolve("src/main/kotlin").resolve(interfacePkg.replace('.', '/'))
+            apiTargetDir.createDirectories()
+            apiTargetDir.resolve("${params.className}.kt").writeText(interfaceFileSpec.toString())
+            "$interfacePkg.${params.className}"
+        } else null
+
+        val fileSpec = specFactory.create(packageName, params, baseDomainPackage, interfaceFqn)
         val content = fileSpec.toString()
             .replace("import org.koin.core.`annotation`.Single", "import org.koin.core.annotation.Single")
         

@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- Optional 'api' module for Clean Architecture generator to separate use case interfaces
+
+### Changed
+
+- Refactored all DI contributions to resolve binary compatibility issues for plugin publishing
+
 ## [0.0.6-alpha] - 2026-01-17
 
 ### Added

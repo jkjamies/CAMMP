@@ -25,6 +25,7 @@ class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
         di: DiStrategy,
         datasourceStrategy: DatasourceStrategy,
         includePresentation: Boolean,
+        includeApiModule: Boolean = false,
         includeDiModule: Boolean = true
     ) = CleanArchitectureParams(
         projectBasePath = base,
@@ -32,6 +33,7 @@ class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
         feature = "my-feature",
         orgCenter = "com.example",
         includePresentation = includePresentation,
+        includeApiModule = includeApiModule,
         includeDiModule = includeDiModule,
         datasourceStrategy = datasourceStrategy,
         diStrategy = di,
@@ -83,6 +85,7 @@ class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
                         di = DiStrategy.Koin(useAnnotations = true),
                         datasourceStrategy = DatasourceStrategy.RemoteAndLocal,
                         includePresentation = true,
+                        includeApiModule = true,
                     )
 
                     val result = repo.generateModules(p)
@@ -90,6 +93,7 @@ class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
                     result.created shouldContainExactly listOf(
                         "domain",
                         "data",
+                        "api",
                         "di",
                         "presentation",
                         "remoteDataSource",
@@ -99,6 +103,7 @@ class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
                     val featureDir = tmp.resolve("feature").resolve("my-feature")
                     fs.exists(featureDir.resolve("domain/build.gradle.kts")) shouldBe true
                     fs.exists(featureDir.resolve("data/build.gradle.kts")) shouldBe true
+                    fs.exists(featureDir.resolve("api/build.gradle.kts")) shouldBe true
                     fs.exists(featureDir.resolve("di/build.gradle.kts")) shouldBe true
                     fs.exists(featureDir.resolve("presentation/build.gradle.kts")) shouldBe true
                     fs.exists(featureDir.resolve("remoteDataSource/build.gradle.kts")) shouldBe true
@@ -107,6 +112,13 @@ class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
                     // verify some source skeleton creation
                     val basePkg = "com/example/feature/myFeature"
                     fs.exists(featureDir.resolve("domain/src/main/kotlin/$basePkg/domain/Placeholder.kt")) shouldBe true
+                    fs.exists(featureDir.resolve("api/src/main/kotlin/$basePkg/api/Placeholder.kt")) shouldBe true
+                    fs.exists(featureDir.resolve("api/src/main/kotlin/$basePkg/api/usecase")) shouldBe true
+                    fs.exists(featureDir.resolve("api/src/main/kotlin/$basePkg/api/model")) shouldBe true
+                    fs.exists(featureDir.resolve("domain/src/main/kotlin/$basePkg/domain/usecase")) shouldBe true
+                    fs.exists(featureDir.resolve("domain/src/main/kotlin/$basePkg/domain/model")) shouldBe true
+                    fs.exists(featureDir.resolve("domain/src/main/kotlin/$basePkg/domain/repository")) shouldBe true
+
                     fs.exists(featureDir.resolve("data/src/main/kotlin/$basePkg/data/Placeholder.kt")) shouldBe true
                     fs.exists(featureDir.resolve("data/src/main/kotlin/$basePkg/data/remoteDataSource")) shouldBe true
                     fs.exists(featureDir.resolve("data/src/main/kotlin/$basePkg/data/localDataSource")) shouldBe true

@@ -13,6 +13,7 @@ data class GenerateModulesUiState(
     val platformKmp: Boolean = false,
 
     val includePresentation: Boolean = true,
+    val includeApiModule: Boolean = false,
     val includeDiModule: Boolean = true,
 
     val includeDatasource: Boolean = false,

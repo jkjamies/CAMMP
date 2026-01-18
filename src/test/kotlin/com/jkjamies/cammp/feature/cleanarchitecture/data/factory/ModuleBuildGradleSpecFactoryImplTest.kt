@@ -5,6 +5,7 @@ import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DatasourceStrat
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DiStrategy
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Path
 
 /**
@@ -41,6 +42,35 @@ class ModuleBuildGradleSpecFactoryImplTest : BehaviorSpec({
 
             Then("it should include a dependency on domain") {
                 out.shouldContain("implementation(project(\":feature:profile:domain\"))")
+            }
+        }
+
+        When("creating a presentation module spec with API module enabled") {
+            val out = factory.create(
+                params = params.copy(includeApiModule = true),
+                moduleName = "presentation",
+                featureName = "profile",
+                enabledModules = listOf("domain", "data", "api", "di", "presentation"),
+                rawTemplate = "${'$'}{DEPENDENCIES}",
+            )
+
+            Then("it should include a dependency on api instead of domain") {
+                out.shouldContain("implementation(project(\":feature:profile:api\"))")
+                out.shouldNotContain("implementation(project(\":feature:profile:domain\"))")
+            }
+        }
+
+        When("creating a domain module spec with API module enabled") {
+            val out = factory.create(
+                params = params.copy(includeApiModule = true),
+                moduleName = "domain",
+                featureName = "profile",
+                enabledModules = listOf("domain", "data", "api", "di", "presentation"),
+                rawTemplate = "${'$'}{DEPENDENCIES}",
+            )
+
+            Then("it should include a dependency on api") {
+                out.shouldContain("implementation(project(\":feature:profile:api\"))")
             }
         }
 

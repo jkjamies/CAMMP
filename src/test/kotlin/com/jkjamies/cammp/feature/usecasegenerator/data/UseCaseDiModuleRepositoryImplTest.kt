@@ -127,5 +127,53 @@ class UseCaseDiModuleRepositoryImplTest : BehaviorSpec({
                 root.toFile().deleteRecursively()
             }
         }
+        When("merging Hilt module with interface") {
+            Then("it should call data source to generate content") {
+                val ds = mockk<DiModuleDataSource>()
+                every { ds.generateHiltModuleContent(any(), any(), any(), any(), any()) } returns "hilt content"
+                val repo = newRepo(ds)
+                val root = tempDir()
+
+                val result = repo.mergeUseCaseModule(
+                    diDir = root,
+                    diPackage = "com.example.di",
+                    useCaseSimpleName = "UC",
+                    useCaseFqn = "com.example.domain.usecase.UC",
+                    repositoryFqns = emptyList(),
+                    diStrategy = DiStrategy.Hilt,
+                    useCaseInterfaceFqn = "com.example.api.usecase.UC"
+                )
+
+                result.status shouldBe "created"
+                result.outPath.exists() shouldBe true
+                result.outPath.readText() shouldBe "hilt content"
+
+                root.toFile().deleteRecursively()
+            }
+        }
+
+        When("merging Koin module with interface") {
+            Then("it should pass interface to data source") {
+                val ds = mockk<DiModuleDataSource>()
+                every { ds.generateKoinModuleContent(any(), any(), any(), any(), any(), "com.example.api.usecase.UC") } returns "koin interface content"
+                val repo = newRepo(ds)
+                val root = tempDir()
+
+                val result = repo.mergeUseCaseModule(
+                    diDir = root,
+                    diPackage = "com.example.di",
+                    useCaseSimpleName = "UC",
+                    useCaseFqn = "com.example.domain.usecase.UC",
+                    repositoryFqns = emptyList(),
+                    diStrategy = DiStrategy.Koin(useAnnotations = false),
+                    useCaseInterfaceFqn = "com.example.api.usecase.UC"
+                )
+
+                result.status shouldBe "created"
+                result.outPath.readText() shouldBe "koin interface content"
+
+                root.toFile().deleteRecursively()
+            }
+        }
     }
 })
