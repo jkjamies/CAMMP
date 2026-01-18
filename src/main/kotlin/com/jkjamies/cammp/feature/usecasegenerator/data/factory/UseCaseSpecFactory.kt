@@ -13,15 +13,33 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 
 interface UseCaseSpecFactory {
-    fun create(packageName: String, params: UseCaseParams, baseDomainPackage: String): FileSpec
+    fun create(
+        packageName: String,
+        params: UseCaseParams,
+        baseDomainPackage: String,
+        interfaceFqn: String? = null
+    ): FileSpec
+
+    fun createInterface(packageName: String, className: String): FileSpec
 }
 
 @ContributesBinding(AppScope::class)
 @Inject
 class UseCaseSpecFactoryImpl : UseCaseSpecFactory {
-    override fun create(packageName: String, params: UseCaseParams, baseDomainPackage: String): FileSpec {
+    override fun create(
+        packageName: String,
+        params: UseCaseParams,
+        baseDomainPackage: String,
+        interfaceFqn: String?
+    ): FileSpec {
         val className = params.className
         val classBuilder = TypeSpec.classBuilder(className)
+
+        if (interfaceFqn != null) {
+            val interfacePkg = interfaceFqn.substringBeforeLast(".")
+            val interfaceName = interfaceFqn.substringAfterLast(".")
+            classBuilder.addSuperinterface(ClassName(interfacePkg, interfaceName))
+        }
 
         val constructorBuilder = FunSpec.constructorBuilder()
 
@@ -31,7 +49,7 @@ class UseCaseSpecFactoryImpl : UseCaseSpecFactory {
                 constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
             }
             is DiStrategy.Koin -> {
-                if (di.useAnnotations) {
+                if (di.useAnnotations && interfaceFqn == null) {
                     classBuilder.addAnnotation(ClassName("org.koin.core.annotation", "Single"))
                 }
             }
@@ -56,8 +74,26 @@ class UseCaseSpecFactoryImpl : UseCaseSpecFactory {
         classBuilder.addFunction(
             FunSpec.builder("invoke")
                 .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
+                .apply {
+                    if (interfaceFqn != null) {
+                        addModifiers(KModifier.OVERRIDE)
+                    }
+                }
                 .build()
         )
+
+        return FileSpec.builder(packageName, className)
+            .addType(classBuilder.build())
+            .build()
+    }
+
+    override fun createInterface(packageName: String, className: String): FileSpec {
+        val classBuilder = TypeSpec.interfaceBuilder(className)
+            .addFunction(
+                FunSpec.builder("invoke")
+                    .addModifiers(KModifier.SUSPEND, KModifier.ABSTRACT, KModifier.OPERATOR)
+                    .build()
+            )
 
         return FileSpec.builder(packageName, className)
             .addType(classBuilder.build())

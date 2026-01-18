@@ -8,7 +8,8 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
 @ContributesIntoSet(AppScope::class)
-class GenerateUseCaseStep @Inject constructor(
+@Inject
+class GenerateUseCaseStep(
     private val repository: UseCaseGenerationRepository,
     private val modulePackageRepository: ModulePackageRepository
 ) : UseCaseStep {
@@ -29,7 +30,9 @@ class GenerateUseCaseStep @Inject constructor(
             val idx = basePackage.lastIndexOf(marker)
             val baseDomainPackage = if (idx >= 0) basePackage.substring(0, idx + marker.length) else basePackage
 
-            val path = repository.generateUseCase(params, targetPackage, baseDomainPackage)
+            val apiDir = params.domainDir.parent?.resolve("api")
+            val path = repository.generateUseCase(params, targetPackage, baseDomainPackage, apiDir)
+            
             StepResult.Success(path)
         } catch (e: Throwable) {
             StepResult.Failure(e)

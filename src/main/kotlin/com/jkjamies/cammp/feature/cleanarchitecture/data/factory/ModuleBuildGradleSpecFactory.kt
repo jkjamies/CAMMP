@@ -46,11 +46,22 @@ class ModuleBuildGradleSpecFactoryImpl : ModuleBuildGradleSpecFactory {
 
         val dependencies = buildString {
             when (moduleName) {
+                "domain" -> {
+                    if (params.includeApiModule) {
+                        appendLine("    implementation(project(\"$projectPrefix:api\"))")
+                    }
+                }
                 "data" -> appendLine("    implementation(project(\"$projectPrefix:domain\"))")
                 "di" -> enabledModules.filter { it != "di" }.forEach { dep ->
                     appendLine("    implementation(project(\"$projectPrefix:$dep\"))")
                 }
-                "presentation" -> appendLine("    implementation(project(\"$projectPrefix:domain\"))")
+                "presentation" -> {
+                    if (params.includeApiModule) {
+                        appendLine("    implementation(project(\"$projectPrefix:api\"))")
+                    } else {
+                        appendLine("    implementation(project(\"$projectPrefix:domain\"))")
+                    }
+                }
                 "dataSource", "remoteDataSource", "localDataSource" ->
                     appendLine("    implementation(project(\"$projectPrefix:data\"))")
             }

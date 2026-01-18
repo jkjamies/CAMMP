@@ -28,7 +28,7 @@ class GenerateUseCaseStepTest : BehaviorSpec({
         When("package is a standard domain module") {
             Then("it should generate in .usecase subpackage") {
                 val pkgRepo = ModulePackageRepositoryFake(mapping = mapOf(domainDir to "com.example.feature.domain"))
-                val genRepo = UseCaseGenerationRepositoryFake { _, useCasePkg, domainPkg ->
+                val genRepo = UseCaseGenerationRepositoryFake { _, useCasePkg, domainPkg, _ ->
                     useCasePkg shouldBe "com.example.feature.domain.usecase"
                     domainPkg shouldBe "com.example.feature.domain"
                     Paths.get("/out/MyUseCase.kt")
@@ -46,7 +46,7 @@ class GenerateUseCaseStepTest : BehaviorSpec({
         When("package is already a usecase module") {
             Then("it should not append .usecase again") {
                 val pkgRepo = ModulePackageRepositoryFake(mapping = mapOf(domainDir to "com.example.feature.domain.usecase"))
-                val genRepo = UseCaseGenerationRepositoryFake { _, useCasePkg, _ ->
+                val genRepo = UseCaseGenerationRepositoryFake { _, useCasePkg, _, _ ->
                     useCasePkg shouldBe "com.example.feature.domain.usecase"
                     Paths.get("/out/MyUseCase.kt")
                 }
@@ -62,7 +62,7 @@ class GenerateUseCaseStepTest : BehaviorSpec({
             Then("it should return Failure") {
                 val error = RuntimeException("Disk error")
                 val pkgRepo = ModulePackageRepositoryFake(mapping = mapOf(domainDir to "com.example.feature.domain"))
-                val genRepo = UseCaseGenerationRepositoryFake { _, _, _ -> throw error }
+                val genRepo = UseCaseGenerationRepositoryFake { _, _, _, _ -> throw error }
                 val step = GenerateUseCaseStep(genRepo, pkgRepo)
 
                 val result = step.execute(params(domainDir))

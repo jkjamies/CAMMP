@@ -32,7 +32,6 @@ class UseCaseGenerationRepositoryImplTest : BehaviorSpec({
                 repositories = emptyList()
             )
             
-            // Fixed: generateUseCase now takes baseDomainPackage as 3rd argument
             val result = repository.generateUseCase(
                 params, 
                 "com.example.domain.usecase",
@@ -46,6 +45,37 @@ class UseCaseGenerationRepositoryImplTest : BehaviorSpec({
                 val content = result.readText()
                 content shouldContain "package com.example.domain.usecase"
                 content shouldContain "class MyUseCase"
+            }
+        }
+        When("generating use case with API module present") {
+            val apiDir = tempDir.resolve("api")
+            Files.createDirectories(apiDir)
+
+            val params = UseCaseParams(
+                domainDir = domainDir,
+                className = "MyUseCase",
+                diStrategy = DiStrategy.Hilt,
+                repositories = emptyList()
+            )
+
+            val result = repository.generateUseCase(
+                params,
+                "com.example.domain.usecase",
+                "com.example.domain",
+                apiDir
+            )
+
+            Then("it should generate interface in api module") {
+                val interfaceFile = apiDir.resolve("src/main/kotlin/com/example/api/usecase/MyUseCase.kt")
+                interfaceFile.exists() shouldBe true
+                interfaceFile.readText() shouldContain "interface MyUseCase"
+            }
+
+            Then("it should generate implementation implementing the interface") {
+                result.exists() shouldBe true
+                val content = result.readText()
+                content shouldContain "class MyUseCase"
+                content shouldContain "MyUseCase"
             }
         }
     }

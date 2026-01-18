@@ -26,25 +26,38 @@ class UseCaseDiModuleRepositoryImpl(
         useCaseFqn: String,
         repositoryFqns: List<String>,
         diStrategy: DiStrategy,
+        useCaseInterfaceFqn: String?
     ): UseCaseMergeOutcome {
-        if (diStrategy !is DiStrategy.Koin) {
-            val diTargetDir = diDir.resolve("src/main/kotlin").resolve(diPackage.replace('.', '/'))
-            val out = diTargetDir.resolve("UseCaseModule.kt")
-            return UseCaseMergeOutcome(out, "skipped")
-        }
-
         val diTargetDir = diDir.resolve("src/main/kotlin").resolve(diPackage.replace('.', '/'))
         if (!diTargetDir.exists()) diTargetDir.createDirectories()
         val out = diTargetDir.resolve("UseCaseModule.kt")
         val existing = if (out.exists()) out.readText() else null
 
-        val content = dataSource.generateKoinModuleContent(
-            existing,
-            diPackage,
-            useCaseSimpleName,
-            useCaseFqn,
-            repositoryFqns
-        )
+        val content = when {
+            diStrategy is DiStrategy.Koin -> {
+                dataSource.generateKoinModuleContent(
+                    existing,
+                    diPackage,
+                    useCaseSimpleName,
+                    useCaseFqn,
+                    repositoryFqns,
+                    useCaseInterfaceFqn
+                )
+            }
+            diStrategy is DiStrategy.Hilt && useCaseInterfaceFqn != null -> {
+                dataSource.generateHiltModuleContent(
+                    existing,
+                    diPackage,
+                    useCaseSimpleName,
+                    useCaseFqn,
+                    useCaseInterfaceFqn
+                )
+            }
+            else -> {
+                // Return skipped for Hilt without interface or Metro for now
+                return UseCaseMergeOutcome(out, "skipped")
+            }
+        }
 
         val changed = existing == null || existing != content
         out.writeText(content)

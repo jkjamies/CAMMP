@@ -35,15 +35,15 @@ internal class ModulePackageRepositoryFake(
 }
 
 internal class UseCaseGenerationRepositoryFake(
-    private val onGenerate: ((UseCaseParams, String, String) -> Path)? = null,
+    private val onGenerate: ((UseCaseParams, String, String, Path?) -> Path)? = null,
 ) : UseCaseGenerationRepository {
-    data class Call(val params: UseCaseParams, val packageName: String, val baseDomainPackage: String)
+    data class Call(val params: UseCaseParams, val packageName: String, val baseDomainPackage: String, val apiDir: Path?)
 
     val calls = mutableListOf<Call>()
 
-    override fun generateUseCase(params: UseCaseParams, packageName: String, baseDomainPackage: String): Path {
-        calls.add(Call(params, packageName, baseDomainPackage))
-        return onGenerate?.invoke(params, packageName, baseDomainPackage)
+    override fun generateUseCase(params: UseCaseParams, packageName: String, baseDomainPackage: String, apiDir: Path?): Path {
+        calls.add(Call(params, packageName, baseDomainPackage, apiDir))
+        return onGenerate?.invoke(params, packageName, baseDomainPackage, apiDir)
             ?: params.domainDir.resolve("${params.className}.kt")
     }
 }
@@ -58,6 +58,7 @@ internal class UseCaseDiModuleRepositoryFake(
         val useCaseFqn: String,
         val repositoryFqns: List<String>,
         val diStrategy: DiStrategy,
+        val useCaseInterfaceFqn: String?,
     )
 
     val calls = mutableListOf<Call>()
@@ -69,8 +70,9 @@ internal class UseCaseDiModuleRepositoryFake(
         useCaseFqn: String,
         repositoryFqns: List<String>,
         diStrategy: DiStrategy,
+        useCaseInterfaceFqn: String?,
     ): UseCaseMergeOutcome {
-        calls.add(Call(diDir, diPackage, useCaseSimpleName, useCaseFqn, repositoryFqns, diStrategy))
+        calls.add(Call(diDir, diPackage, useCaseSimpleName, useCaseFqn, repositoryFqns, diStrategy, useCaseInterfaceFqn))
         return outcome.copy(outPath = diDir.resolve(outcome.outPath.fileName.toString()))
     }
 }

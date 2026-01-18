@@ -8,7 +8,8 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
 @ContributesIntoSet(AppScope::class)
-class UpdateDiStep @Inject constructor(
+@Inject
+class UpdateDiStep(
     private val diRepository: UseCaseDiModuleRepository,
     private val modulePackageRepository: ModulePackageRepository
 ) : UseCaseStep {
@@ -35,13 +36,20 @@ class UpdateDiStep @Inject constructor(
                 "$domainBase.repository.$simpleName"
             }
 
+            val apiDir = params.domainDir.parent?.resolve("api")
+            val useCaseInterfaceFqn = if (apiDir?.toFile()?.exists() == true) {
+                val apiBase = diPackage.removeSuffix(".di")
+                "$apiBase.usecase.${params.className}"
+            } else null
+
             val outcome = diRepository.mergeUseCaseModule(
                 diDir = diDir,
                 diPackage = diPackage,
                 useCaseSimpleName = params.className,
                 useCaseFqn = useCaseFqn,
                 repositoryFqns = repoFqns,
-                diStrategy = params.diStrategy
+                diStrategy = params.diStrategy,
+                useCaseInterfaceFqn = useCaseInterfaceFqn
             )
 
             StepResult.Success(outcome.outPath)

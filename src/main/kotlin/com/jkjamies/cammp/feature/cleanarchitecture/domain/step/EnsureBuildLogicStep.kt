@@ -25,6 +25,7 @@ class EnsureBuildLogicStep(
     private fun resolveEnabledModules(p: CleanArchitectureParams): List<String> = buildList {
         add("domain")
         add("data")
+        if (p.includeApiModule) add("api")
         if (p.includeDiModule) add("di")
         if (p.includePresentation) add("presentation")
 

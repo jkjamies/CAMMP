@@ -116,6 +116,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
 
             vm.handleIntent(GenerateModulesIntent.SetOrgCenter("com.example"))
             vm.handleIntent(GenerateModulesIntent.SetIncludePresentation(true))
+            vm.handleIntent(GenerateModulesIntent.SetIncludeApiModule(true))
             vm.handleIntent(GenerateModulesIntent.SetIncludeDatasource(true))
             vm.handleIntent(GenerateModulesIntent.SetDatasourceCombined(true))
             vm.handleIntent(GenerateModulesIntent.SetDatasourceRemote(true))
@@ -130,6 +131,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
                 val s = vm.state.value
                 s.orgCenter shouldBe "com.example"
                 s.includePresentation shouldBe true
+                s.includeApiModule shouldBe true
                 s.includeDatasource shouldBe true
                 s.datasourceCombined shouldBe true
                 s.datasourceRemote shouldBe true
