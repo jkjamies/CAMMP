@@ -6,6 +6,7 @@ import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePacka
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.RepositoryDiscoveryRepository
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseDiModuleRepository
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationRepository
+import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationResult
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseMergeOutcome
 import com.jkjamies.cammp.feature.usecasegenerator.domain.step.StepResult
 import com.jkjamies.cammp.feature.usecasegenerator.domain.step.UseCaseStep
@@ -35,16 +36,16 @@ internal class ModulePackageRepositoryFake(
 }
 
 internal class UseCaseGenerationRepositoryFake(
-    private val onGenerate: ((UseCaseParams, String, String, Path?) -> Path)? = null,
+    private val onGenerate: ((UseCaseParams, String, String, Path?) -> UseCaseGenerationResult)? = null,
 ) : UseCaseGenerationRepository {
     data class Call(val params: UseCaseParams, val packageName: String, val baseDomainPackage: String, val apiDir: Path?)
 
     val calls = mutableListOf<Call>()
 
-    override fun generateUseCase(params: UseCaseParams, packageName: String, baseDomainPackage: String, apiDir: Path?): Path {
+    override fun generateUseCase(params: UseCaseParams, packageName: String, baseDomainPackage: String, apiDir: Path?): UseCaseGenerationResult {
         calls.add(Call(params, packageName, baseDomainPackage, apiDir))
         return onGenerate?.invoke(params, packageName, baseDomainPackage, apiDir)
-            ?: params.domainDir.resolve("${params.className}.kt")
+            ?: UseCaseGenerationResult(params.domainDir.resolve("${params.className}.kt"))
     }
 }
 

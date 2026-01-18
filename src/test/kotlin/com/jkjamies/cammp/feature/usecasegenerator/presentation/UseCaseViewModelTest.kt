@@ -224,7 +224,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                     repositories = listOf("ARepo", "BRepo"),
                 )
 
-                coEvery { generator(expectedParams) } returns Result.success(Paths.get("out/UseCase.kt"))
+                coEvery { generator(expectedParams) } returns Result.success("out/UseCase.kt")
 
                 val vm = newVm(scope, generator, loadRepos)
 
@@ -308,7 +308,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                     repositories = emptyList(),
                 )
 
-                coEvery { generator(expectedParams) } returns Result.success(Paths.get("out/FooUseCase.kt"))
+                coEvery { generator(expectedParams) } returns Result.success("out/FooUseCase.kt")
 
                 val vm = newVm(scope, generator, loadRepos)
 
@@ -344,7 +344,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                     repositories = emptyList(),
                 )
 
-                coEvery { generator(expectedParams) } returns Result.success(Paths.get("out/UseCase.kt"))
+                coEvery { generator(expectedParams) } returns Result.success("out/UseCase.kt")
 
                 val vm = newVm(scope, generator, loadRepos)
 

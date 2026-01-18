@@ -199,6 +199,12 @@ class CleanArchitectureScaffoldRepositoryImpl(
                         featureName = featureName
                     )
                 }
+                
+                // Ensure subpackages for DI even if empty initially, helps subsequent generators
+                listOf("usecase", "repository").forEach { sub ->
+                    val d = pkgDir.resolve(sub)
+                    if (!fs.exists(d)) fs.createDirectories(d)
+                }
             }
         }
     }

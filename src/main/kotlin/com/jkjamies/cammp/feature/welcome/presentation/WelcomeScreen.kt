@@ -88,6 +88,7 @@ internal fun WelcomeScreen() {
             CollapsibleSubSection("What is Generated", "CleanArch:WhatIsGenerated") {
                 BulletedList(
                     "Feature module structure (data, domain, presentation)",
+                    "Optional 'api' module for Use Case interfaces",
                     "Convention plugins (in build-logic)",
                     "Updates to settings.gradle.kts",
                     "Updates to libs.versions.toml",
@@ -276,11 +277,12 @@ internal fun WelcomeScreen() {
         }
 
         CollapsibleSection("Use Case Generator", "UseCaseGenerator") {
-            Text("Generates a UseCase class in the domain layer.")
+            Text("Generates a UseCase class in the domain layer. If an 'api' module exists within the feature, it will also generate a UseCase interface in the 'api' module and make the implementation implement it.")
 
             CollapsibleSubSection("What is Generated", "UseCase:WhatIsGenerated") {
                 BulletedList(
                     "UseCase class (in domain)",
+                    "UseCase interface (in 'api' module, if it exists)",
                     "DI Module update (Hilt or Koin based on selection)"
                 )
             }
@@ -313,7 +315,8 @@ internal fun WelcomeScreen() {
             CollapsibleSubSection("Assumptions", "Presentation:Assumptions") {
                 BulletedList(
                     "You select a 'presentation' module directory.",
-                    "UseCases are detected from across the project to be injected into the ViewModel."
+                    "UseCases are detected from across the project to be injected into the ViewModel.",
+                    "If a feature has both 'api' and 'domain' modules, UseCases from the 'api' module are preferred and the 'domain' implementations are excluded from the discovery results."
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(

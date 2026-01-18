@@ -11,6 +11,8 @@
 ### Changed
 
 - Refactored all DI contributions to resolve binary compatibility issues for plugin publishing
+- When an 'api' module exists, the presentation generator will exclude the domain implementations
+  - If 'api' module does not exist, domain is used
 
 ## [0.0.6-alpha] - 2026-01-17
 

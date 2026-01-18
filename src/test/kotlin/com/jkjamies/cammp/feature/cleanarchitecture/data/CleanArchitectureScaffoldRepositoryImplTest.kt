@@ -123,6 +123,10 @@ class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
                     fs.exists(featureDir.resolve("data/src/main/kotlin/$basePkg/data/remoteDataSource")) shouldBe true
                     fs.exists(featureDir.resolve("data/src/main/kotlin/$basePkg/data/localDataSource")) shouldBe true
 
+                    // verify di subpackages
+                    fs.exists(featureDir.resolve("di/src/main/kotlin/$basePkg/di/usecase")) shouldBe true
+                    fs.exists(featureDir.resolve("di/src/main/kotlin/$basePkg/di/repository")) shouldBe true
+
                     // Koin annotations should trigger annotation module generation under di
                     annotationRepo.calls.size shouldBe 1
                 }

@@ -4,7 +4,7 @@ import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import java.nio.file.Path
 
 sealed interface StepResult {
-    data class Success(val path: Path? = null) : StepResult
+    data class Success(val path: Path? = null, val message: String? = null) : StepResult
     data class Failure(val error: Throwable) : StepResult
 }
 

@@ -2,6 +2,7 @@ package com.jkjamies.cammp.feature.usecasegenerator.domain.step
 
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
+import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationResult
 import com.jkjamies.cammp.feature.usecasegenerator.testutil.ModulePackageRepositoryFake
 import com.jkjamies.cammp.feature.usecasegenerator.testutil.UseCaseGenerationRepositoryFake
 import io.kotest.core.spec.style.BehaviorSpec
@@ -31,7 +32,7 @@ class GenerateUseCaseStepTest : BehaviorSpec({
                 val genRepo = UseCaseGenerationRepositoryFake { _, useCasePkg, domainPkg, _ ->
                     useCasePkg shouldBe "com.example.feature.domain.usecase"
                     domainPkg shouldBe "com.example.feature.domain"
-                    Paths.get("/out/MyUseCase.kt")
+                    UseCaseGenerationResult(Paths.get("/out/MyUseCase.kt"))
                 }
                 val step = GenerateUseCaseStep(genRepo, pkgRepo)
 
@@ -48,7 +49,7 @@ class GenerateUseCaseStepTest : BehaviorSpec({
                 val pkgRepo = ModulePackageRepositoryFake(mapping = mapOf(domainDir to "com.example.feature.domain.usecase"))
                 val genRepo = UseCaseGenerationRepositoryFake { _, useCasePkg, _, _ ->
                     useCasePkg shouldBe "com.example.feature.domain.usecase"
-                    Paths.get("/out/MyUseCase.kt")
+                    UseCaseGenerationResult(Paths.get("/out/MyUseCase.kt"))
                 }
                 val step = GenerateUseCaseStep(genRepo, pkgRepo)
 

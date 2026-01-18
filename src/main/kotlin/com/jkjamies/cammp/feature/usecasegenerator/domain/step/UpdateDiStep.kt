@@ -23,8 +23,14 @@ class UpdateDiStep(
                  return StepResult.Success(null)
             }
 
-            val diPackage = modulePackageRepository.findModulePackage(diDir)
+            val diPackageRaw = modulePackageRepository.findModulePackage(diDir)
                 ?: return StepResult.Success(null)
+            val diPackage = diPackageRaw.removeSuffix(".usecase").removeSuffix(".repository")
+            
+            val diTargetDir = diDir.resolve("src/main/kotlin").resolve(diPackage.replace('.', '/'))
+            if (!diTargetDir.toFile().exists()) {
+                diTargetDir.toFile().mkdirs()
+            }
 
             val packageFound = modulePackageRepository.findModulePackage(params.domainDir) ?: ""
             // The package repo returns the usecase package (e.g. ...domain.usecase). Strip it to find the sibling.
@@ -52,7 +58,7 @@ class UpdateDiStep(
                 useCaseInterfaceFqn = useCaseInterfaceFqn
             )
 
-            StepResult.Success(outcome.outPath)
+            StepResult.Success(path = outcome.outPath, message = "DI: ${outcome.outPath} (${outcome.status})")
         } catch (e: Throwable) {
             StepResult.Failure(e)
         }

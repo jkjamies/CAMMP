@@ -111,5 +111,56 @@ class UpdateDiStepTest : BehaviorSpec({
                 }
             }
         }
+
+        When("di package has .usecase or .repository suffix") {
+            Then("it should strip the suffix") {
+                TestFiles.withTempDir("uc_update_di_strip") { root ->
+                    val featureRoot = root.resolve("feature").also { it.createDirectories() }
+                    val domainDir = featureRoot.resolve("domain").also { it.createDirectories() }
+                    val diDir = featureRoot.resolve("di").also { it.createDirectories() }
+
+                    val pkgRepo = ModulePackageRepositoryFake(
+                        mapping = mapOf(
+                            diDir to "com.example.di.usecase",
+                            domainDir to "com.example.domain",
+                        )
+                    )
+                    val diRepo = UseCaseDiModuleRepositoryFake()
+                    val step = UpdateDiStep(diRepo, pkgRepo)
+
+                    val result = step.execute(params(domainDir))
+                    result.shouldBeInstanceOf<StepResult.Success>()
+
+                    val call = diRepo.calls.single()
+                    call.diPackage shouldBe "com.example.di"
+                }
+            }
+        }
+
+        When("api module exists") {
+            Then("it should pass useCaseInterfaceFqn to repository") {
+                TestFiles.withTempDir("uc_update_di_api") { root ->
+                    val featureRoot = root.resolve("feature").also { it.createDirectories() }
+                    val domainDir = featureRoot.resolve("domain").also { it.createDirectories() }
+                    val diDir = featureRoot.resolve("di").also { it.createDirectories() }
+                    val apiDir = featureRoot.resolve("api").also { it.createDirectories() }
+
+                    val pkgRepo = ModulePackageRepositoryFake(
+                        mapping = mapOf(
+                            diDir to "com.example.feature.di",
+                            domainDir to "com.example.feature.domain",
+                        )
+                    )
+                    val diRepo = UseCaseDiModuleRepositoryFake()
+                    val step = UpdateDiStep(diRepo, pkgRepo)
+
+                    val result = step.execute(params(domainDir))
+                    result.shouldBeInstanceOf<StepResult.Success>()
+
+                    val call = diRepo.calls.single()
+                    call.useCaseInterfaceFqn shouldBe "com.example.feature.usecase.MyUseCase"
+                }
+            }
+        }
     }
 })

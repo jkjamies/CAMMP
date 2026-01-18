@@ -25,7 +25,13 @@ class UpdateRepositoryDiStep(
             val diDir = params.dataDir.parent?.resolve("di")
                 ?: return StepResult.Success("- DI: Skipped (no di module found)")
 
-            val diPackage = modulePkgRepo.findModulePackage(diDir)
+            val diPackageRaw = modulePkgRepo.findModulePackage(diDir)
+            val diPackage = diPackageRaw.removeSuffix(".repository").removeSuffix(".usecase")
+
+            val diTargetDir = diDir.resolve("src/main/kotlin").resolve(diPackage.replace('.', '/'))
+            if (!diTargetDir.toFile().exists()) {
+                diTargetDir.toFile().mkdirs()
+            }
 
             val dataBase = modulePkgRepo.findModulePackage(params.dataDir)
 

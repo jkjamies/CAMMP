@@ -35,6 +35,7 @@ internal class WelcomeScreenTest : ComposeBasedTestCase() {
         robot.clickOnTag("CleanArch:WhatIsGenerated")
         composableRule.waitForIdle()
         robot.verifyTextIsDisplayed("Feature module structure (data, domain, presentation)")
+        robot.verifyTextIsDisplayed("Optional 'api' module for Use Case interfaces")
         
         robot.clickOnTag("CleanArch:ConventionPlugins")
         composableRule.waitForIdle()
@@ -87,16 +88,17 @@ internal class WelcomeScreenTest : ComposeBasedTestCase() {
         // Use Case Generator
         robot.clickOnTag("UseCaseGenerator")
         composableRule.waitForIdle()
-        robot.verifyTextIsDisplayed("Generates a UseCase class in the domain layer.")
+        robot.verifyTextContains("Generates a UseCase class in the domain layer.")
         
         robot.clickOnTag("UseCase:WhatIsGenerated")
         composableRule.waitForIdle()
         robot.verifyTextIsDisplayed("UseCase class (in domain)")
+        robot.verifyTextIsDisplayed("UseCase interface (in 'api' module, if it exists)")
         
         robot.clickOnTag("UseCase:Assumptions")
         composableRule.waitForIdle()
         robot.verifyTextIsDisplayed("You select a 'domain' module directory.")
-
+        
         // Presentation Generator
         robot.clickOnTag("PresentationGenerator")
         composableRule.waitForIdle()
@@ -109,6 +111,7 @@ internal class WelcomeScreenTest : ComposeBasedTestCase() {
         robot.clickOnTag("Presentation:Assumptions")
         composableRule.waitForIdle()
         robot.verifyTextIsDisplayed("You select a 'presentation' module directory.")
+        robot.verifyTextContains("If a feature has both 'api' and 'domain' modules, UseCases from the 'api' module are preferred")
         robot.verifyTextContains("Navigation: ")
         
         robot.clickOnTag("Presentation:UIPatterns")

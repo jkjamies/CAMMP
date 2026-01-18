@@ -78,6 +78,25 @@ class RepositoryDiscoveryRepositoryImplTest : BehaviorSpec({
             }
         }
 
+        When("loadRepositories resolves repository package by NOT having .usecase") {
+            Then("it should map <base>.domain to <base>.domain.repository") {
+                val tempDir = Files.createTempDirectory("test_repo_discovery_domain")
+                val (ds, repo) = newRepo()
+
+                every { ds.findModulePackage(any()) } returns "com.example.feature.domain"
+
+                val repoDir = tempDir
+                    .resolve("src/main/kotlin")
+                    .resolve("com/example/feature/domain/repository")
+                Files.createDirectories(repoDir)
+                Files.createFile(repoDir.resolve("BRepository.kt"))
+
+                repo.loadRepositories(tempDir.toString()) shouldBe listOf("BRepository")
+
+                tempDir.toFile().deleteRecursively()
+            }
+        }
+
         When("src/main/kotlin does not exist") {
             Then("it should return empty list") {
                 val tempDir = Files.createTempDirectory("test_repo_discovery_no_src")
