@@ -122,10 +122,12 @@ jobs:
           name: tests-result
           path: ${{ github.workspace }}/build/reports/tests
 
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+      # Upload the Kover report to CodeCov
+      - name: Upload Code Test Report
+        uses: codecov/codecov-action@v5
         with:
+          report_type: test_results
+          files: ${{ github.workspace }}/build/reports/kover/report.xml
           token: ${{ secrets.CODECOV_TOKEN }}
 
       # Upload the Kover report to CodeCov
