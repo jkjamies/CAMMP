@@ -3,7 +3,6 @@ package org.jetbrains.plugins.template.util
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.vfs.VfsUtil
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -109,4 +108,3 @@ fun refreshUseCases(project: Project): Map<String, List<String>>? {
 
     return result
 }
-

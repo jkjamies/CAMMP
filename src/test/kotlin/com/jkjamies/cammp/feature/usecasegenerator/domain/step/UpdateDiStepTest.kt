@@ -82,6 +82,27 @@ class UpdateDiStepTest : BehaviorSpec({
             }
         }
 
+        When("di package cannot be found") {
+            Then("it should skip") {
+                TestFiles.withTempDir("uc_update_di_skip") { root ->
+                    val featureRoot = root.resolve("feature").also { it.createDirectories() }
+                    val domainDir = featureRoot.resolve("domain").also { it.createDirectories() }
+                    val diDir = featureRoot.resolve("di").also { it.createDirectories() }
+
+                    val diRepo = UseCaseDiModuleRepositoryFake()
+                    val pkgRepo = ModulePackageRepositoryFake(
+                        mapping = mapOf(domainDir to "com.example.domain")
+                        // diDir missing from mapping
+                    )
+                    val step = UpdateDiStep(diRepo, pkgRepo)
+
+                    val result = step.execute(params(domainDir))
+                    result.shouldBeInstanceOf<StepResult.Success>()
+                    diRepo.calls.size shouldBe 0
+                }
+            }
+        }
+
         When("koin without annotations and di dir exists") {
             Then("it should call mergeUseCaseModule with expected args") {
                 TestFiles.withTempDir("uc_update_di") { root ->
