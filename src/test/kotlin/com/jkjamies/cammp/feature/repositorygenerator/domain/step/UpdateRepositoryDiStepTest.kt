@@ -90,6 +90,35 @@ class UpdateRepositoryDiStepTest : BehaviorSpec({
             }
         }
 
+        When("di package has .repository or .usecase suffix") {
+            Then("it should strip the suffix") {
+                val modulePkgRepo = mockk<ModulePackageRepository>()
+                val diRepo = mockk<DiModuleRepository>()
+                val step = UpdateRepositoryDiStep(modulePkgRepo, diRepo)
+
+                every { modulePkgRepo.findModulePackage(diDir) } returns "com.example.di.repository"
+                every { modulePkgRepo.findModulePackage(dataDir) } returns "com.example.data"
+                every { modulePkgRepo.findModulePackage(domainDir) } returns "com.example.domain"
+
+                coEvery {
+                    diRepo.mergeRepositoryModule(any(), any(), any(), any(), any(), any())
+                } returns MergeOutcome(diDir.resolve("RepositoryModule.kt"), "Updated")
+
+                step.execute(params(DiStrategy.Hilt)).shouldBeInstanceOf<StepResult.Success>()
+
+                coVerify(exactly = 1) {
+                    diRepo.mergeRepositoryModule(
+                        diDir = diDir,
+                        diPackage = "com.example.di",
+                        className = "MyRepository",
+                        domainFqn = "com.example.domain.repository",
+                        dataFqn = "com.example.data.repository",
+                        useKoin = false,
+                    )
+                }
+            }
+        }
+
         When("modulePkgRepo throws") {
             Then("it returns Failure") {
                 val modulePkgRepo = mockk<ModulePackageRepository>()

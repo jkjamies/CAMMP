@@ -4,6 +4,7 @@ import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.usecasegenerator.data.factory.UseCaseSpecFactory
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationRepository
+import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationResult
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import java.nio.file.Path
@@ -21,13 +22,16 @@ class UseCaseGenerationRepositoryImpl(
         packageName: String,
         baseDomainPackage: String,
         apiDir: Path?
-    ): Path {
+    ): UseCaseGenerationResult {
+        var interfacePath: Path? = null
         val interfaceFqn = if (apiDir?.toFile()?.exists() == true) {
             val interfacePkg = packageName.replace(".domain.", ".api.")
             val interfaceFileSpec = specFactory.createInterface(interfacePkg, params.className)
             val apiTargetDir = apiDir.resolve("src/main/kotlin").resolve(interfacePkg.replace('.', '/'))
             apiTargetDir.createDirectories()
-            apiTargetDir.resolve("${params.className}.kt").writeText(interfaceFileSpec.toString())
+            val out = apiTargetDir.resolve("${params.className}.kt")
+            out.writeText(interfaceFileSpec.toString())
+            interfacePath = out
             "$interfacePkg.${params.className}"
         } else null
 
@@ -39,6 +43,6 @@ class UseCaseGenerationRepositoryImpl(
         targetDir.createDirectories()
         val out = targetDir.resolve("${params.className}.kt")
         out.writeText(content)
-        return out
+        return UseCaseGenerationResult(out, interfacePath)
     }
 }

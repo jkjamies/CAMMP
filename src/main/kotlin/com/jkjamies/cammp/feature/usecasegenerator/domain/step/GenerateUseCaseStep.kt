@@ -31,9 +31,15 @@ class GenerateUseCaseStep(
             val baseDomainPackage = if (idx >= 0) basePackage.substring(0, idx + marker.length) else basePackage
 
             val apiDir = params.domainDir.parent?.resolve("api")
-            val path = repository.generateUseCase(params, targetPackage, baseDomainPackage, apiDir)
+            val result = repository.generateUseCase(params, targetPackage, baseDomainPackage, apiDir)
             
-            StepResult.Success(path)
+            val message = buildString {
+                append("UseCase: ${result.useCasePath}")
+                result.interfacePath?.let {
+                    append("\nInterface: $it")
+                }
+            }
+            StepResult.Success(path = result.useCasePath, message = message)
         } catch (e: Throwable) {
             StepResult.Failure(e)
         }

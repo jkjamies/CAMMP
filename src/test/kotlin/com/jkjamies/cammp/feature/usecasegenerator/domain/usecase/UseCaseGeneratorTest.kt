@@ -25,13 +25,13 @@ class UseCaseGeneratorTest : BehaviorSpec({
 
         When("all steps succeed and one returns a path") {
             Then("it should return success and normalize className passed to steps") {
-                val step1 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(null))))
-                val step2 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(Paths.get("domain/TestUseCase.kt")))))
+                val step1 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(null, "Step 1 done"))))
+                val step2 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(Paths.get("domain/TestUseCase.kt"), "Step 2 done"))))
                 val generator = UseCaseGenerator(setOf(step1, step2))
 
                 val result = generator(params)
 
-                result.shouldBeSuccess { it shouldBe Paths.get("domain/TestUseCase.kt") }
+                result.shouldBeSuccess { it shouldBe "Step 1 done\n\nStep 2 done" }
 
                 step1.calls.single().className shouldBe "TestUseCase"
                 step2.calls.single().className shouldBe "TestUseCase"

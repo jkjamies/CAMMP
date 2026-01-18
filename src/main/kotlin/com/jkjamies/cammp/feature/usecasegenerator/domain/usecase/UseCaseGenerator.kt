@@ -10,26 +10,25 @@ import java.nio.file.Path
 class UseCaseGenerator(
     private val steps: Set<UseCaseStep>
 ) {
-    suspend operator fun invoke(params: UseCaseParams): Result<Path> {
+    suspend operator fun invoke(params: UseCaseParams): Result<String> {
         return runCatching {
             val className = if (params.className.endsWith("UseCase")) params.className else "${params.className}UseCase"
             val updatedParams = params.copy(className = className)
 
-            var lastPath: Path? = null
+            val messages = mutableListOf<String>()
             
             // Execute all steps
             for (step in steps) {
                 when (val result = step.execute(updatedParams)) {
                     is StepResult.Success -> {
-                        if (result.path != null) {
-                            lastPath = result.path
-                        }
+                        result.message?.let { messages.add(it) }
                     }
                     is StepResult.Failure -> throw result.error
                 }
             }
             
-            lastPath ?: throw IllegalStateException("No path returned from generation steps")
+            if (messages.isEmpty()) throw IllegalStateException("No output from generation steps")
+            messages.joinToString("\n\n")
         }
     }
 }

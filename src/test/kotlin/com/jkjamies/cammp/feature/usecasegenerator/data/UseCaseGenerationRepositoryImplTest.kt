@@ -39,10 +39,10 @@ class UseCaseGenerationRepositoryImplTest : BehaviorSpec({
             )
 
             Then("it should write file to correct path") {
-                result.exists() shouldBe true
-                result.toString() shouldContain "MyUseCase.kt"
+                result.useCasePath.exists() shouldBe true
+                result.useCasePath.toString() shouldContain "MyUseCase.kt"
                 
-                val content = result.readText()
+                val content = result.useCasePath.readText()
                 content shouldContain "package com.example.domain.usecase"
                 content shouldContain "class MyUseCase"
             }
@@ -72,8 +72,8 @@ class UseCaseGenerationRepositoryImplTest : BehaviorSpec({
             }
 
             Then("it should generate implementation implementing the interface") {
-                result.exists() shouldBe true
-                val content = result.readText()
+                result.useCasePath.exists() shouldBe true
+                val content = result.useCasePath.readText()
                 content shouldContain "class MyUseCase"
                 content shouldContain "MyUseCase"
             }

@@ -123,6 +123,10 @@ class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
                     fs.exists(featureDir.resolve("data/src/main/kotlin/$basePkg/data/remoteDataSource")) shouldBe true
                     fs.exists(featureDir.resolve("data/src/main/kotlin/$basePkg/data/localDataSource")) shouldBe true
 
+                    // verify di subpackages
+                    fs.exists(featureDir.resolve("di/src/main/kotlin/$basePkg/di/usecase")) shouldBe true
+                    fs.exists(featureDir.resolve("di/src/main/kotlin/$basePkg/di/repository")) shouldBe true
+
                     // Koin annotations should trigger annotation module generation under di
                     annotationRepo.calls.size shouldBe 1
                 }
@@ -163,9 +167,14 @@ class CleanArchitectureScaffoldRepositoryImplTest : BehaviorSpec({
                 withTempDir("cammp_scaffold2") { tmp ->
                     val p = params(tmp, DiStrategy.Hilt, DatasourceStrategy.None, includePresentation = false)
                     val featureDir = tmp.resolve("feature").resolve("my-feature")
-                    Files.createDirectories(featureDir.resolve("domain"))
-                    Files.createDirectories(featureDir.resolve("data"))
-                    Files.createDirectories(featureDir.resolve("di"))
+                    
+                    // Create full structure to ensure createDirectories is skipped
+                    val domainSrc = featureDir.resolve("domain/src/main/kotlin")
+                    Files.createDirectories(domainSrc)
+                    val dataSrc = featureDir.resolve("data/src/main/kotlin")
+                    Files.createDirectories(dataSrc)
+                    val diSrc = featureDir.resolve("di/src/main/kotlin")
+                    Files.createDirectories(diSrc)
 
                     val repo = CleanArchitectureScaffoldRepositoryImpl(
                         fs = fs,

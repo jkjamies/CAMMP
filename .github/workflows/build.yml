@@ -35,6 +35,18 @@ jobs:
       pluginVerifierHomeDir: ${{ steps.properties.outputs.pluginVerifierHomeDir }}
     steps:
 
+      # Free GitHub Actions Environment Disk Space
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap: true
+          docker-images: true
+
       # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v6
@@ -95,6 +107,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+      # Free GitHub Actions Environment Disk Space
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap: true
+          docker-images: true
+
       # Check out the current repository
       - name: Fetch Sources
         uses: actions/checkout@v6
@@ -122,10 +146,12 @@ jobs:
           name: tests-result
           path: ${{ github.workspace }}/build/reports/tests
 
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+      # Upload the Kover report to CodeCov
+      - name: Upload Code Test Report
+        uses: codecov/codecov-action@v5
         with:
+          report_type: test_results
+          files: ${{ github.workspace }}/build/reports/kover/report.xml
           token: ${{ secrets.CODECOV_TOKEN }}
 
       # Upload the Kover report to CodeCov
@@ -146,8 +172,13 @@ jobs:
       - name: Maximize Build Space
         uses: jlumbroso/free-disk-space@main
         with:
-          tool-cache: false
-          large-packages: false
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap: true
+          docker-images: true
 
       # Check out the current repository
       - name: Fetch Sources

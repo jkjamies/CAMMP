@@ -82,6 +82,27 @@ class UpdateDiStepTest : BehaviorSpec({
             }
         }
 
+        When("di package cannot be found") {
+            Then("it should skip") {
+                TestFiles.withTempDir("uc_update_di_skip") { root ->
+                    val featureRoot = root.resolve("feature").also { it.createDirectories() }
+                    val domainDir = featureRoot.resolve("domain").also { it.createDirectories() }
+                    val diDir = featureRoot.resolve("di").also { it.createDirectories() }
+
+                    val diRepo = UseCaseDiModuleRepositoryFake()
+                    val pkgRepo = ModulePackageRepositoryFake(
+                        mapping = mapOf(domainDir to "com.example.domain")
+                        // diDir missing from mapping
+                    )
+                    val step = UpdateDiStep(diRepo, pkgRepo)
+
+                    val result = step.execute(params(domainDir))
+                    result.shouldBeInstanceOf<StepResult.Success>()
+                    diRepo.calls.size shouldBe 0
+                }
+            }
+        }
+
         When("koin without annotations and di dir exists") {
             Then("it should call mergeUseCaseModule with expected args") {
                 TestFiles.withTempDir("uc_update_di") { root ->
@@ -108,6 +129,57 @@ class UpdateDiStepTest : BehaviorSpec({
                     call.useCaseSimpleName shouldBe "MyUseCase"
                     call.useCaseFqn shouldBe "com.example.domain.usecase.MyUseCase"
                     call.repositoryFqns shouldBe listOf("com.example.domain.repository.MyRepo")
+                }
+            }
+        }
+
+        When("di package has .usecase or .repository suffix") {
+            Then("it should strip the suffix") {
+                TestFiles.withTempDir("uc_update_di_strip") { root ->
+                    val featureRoot = root.resolve("feature").also { it.createDirectories() }
+                    val domainDir = featureRoot.resolve("domain").also { it.createDirectories() }
+                    val diDir = featureRoot.resolve("di").also { it.createDirectories() }
+
+                    val pkgRepo = ModulePackageRepositoryFake(
+                        mapping = mapOf(
+                            diDir to "com.example.di.usecase",
+                            domainDir to "com.example.domain",
+                        )
+                    )
+                    val diRepo = UseCaseDiModuleRepositoryFake()
+                    val step = UpdateDiStep(diRepo, pkgRepo)
+
+                    val result = step.execute(params(domainDir))
+                    result.shouldBeInstanceOf<StepResult.Success>()
+
+                    val call = diRepo.calls.single()
+                    call.diPackage shouldBe "com.example.di"
+                }
+            }
+        }
+
+        When("api module exists") {
+            Then("it should pass useCaseInterfaceFqn to repository") {
+                TestFiles.withTempDir("uc_update_di_api") { root ->
+                    val featureRoot = root.resolve("feature").also { it.createDirectories() }
+                    val domainDir = featureRoot.resolve("domain").also { it.createDirectories() }
+                    val diDir = featureRoot.resolve("di").also { it.createDirectories() }
+                    val apiDir = featureRoot.resolve("api").also { it.createDirectories() }
+
+                    val pkgRepo = ModulePackageRepositoryFake(
+                        mapping = mapOf(
+                            diDir to "com.example.feature.di",
+                            domainDir to "com.example.feature.domain",
+                        )
+                    )
+                    val diRepo = UseCaseDiModuleRepositoryFake()
+                    val step = UpdateDiStep(diRepo, pkgRepo)
+
+                    val result = step.execute(params(domainDir))
+                    result.shouldBeInstanceOf<StepResult.Success>()
+
+                    val call = diRepo.calls.single()
+                    call.useCaseInterfaceFqn shouldBe "com.example.feature.usecase.MyUseCase"
                 }
             }
         }

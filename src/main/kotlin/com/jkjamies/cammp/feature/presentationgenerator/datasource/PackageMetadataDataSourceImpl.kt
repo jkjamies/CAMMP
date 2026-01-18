@@ -19,6 +19,13 @@ internal fun inferPresentationPackageFrom(packages: Set<String>): String? {
     val exactPresentation = packages.firstOrNull { it.endsWith(".presentation") }
     if (exactPresentation != null) return exactPresentation
 
+    val apiPkg = packages.firstOrNull { it.endsWith(".api") || it.contains(".api.") }
+    if (apiPkg != null) {
+        val idx = apiPkg.indexOf(".api")
+        val base = if (idx >= 0) apiPkg.substring(0, idx) else apiPkg
+        return base + ".presentation"
+    }
+
     val domainPkg = packages.firstOrNull { it.endsWith(".domain") || it.contains(".domain.") }
     if (domainPkg != null) {
         val idx = domainPkg.indexOf(".domain")

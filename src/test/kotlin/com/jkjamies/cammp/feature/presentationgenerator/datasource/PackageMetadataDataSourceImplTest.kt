@@ -29,6 +29,24 @@ class PackageMetadataDataSourceImplTest : BehaviorSpec({
             }
         }
 
+        When("an api package exists") {
+            Then("it maps to base + .presentation") {
+                inferPresentationPackageFrom(setOf("com.example.feature.api.usecase")) shouldBe
+                    "com.example.feature.presentation"
+            }
+        }
+
+        When("both api and domain packages exist") {
+            Then("it prefers base from api") {
+                inferPresentationPackageFrom(
+                    setOf(
+                        "com.example.other.domain",
+                        "com.example.feature.api"
+                    )
+                ) shouldBe "com.example.feature.presentation"
+            }
+        }
+
         When("a domain package exists") {
             Then("it maps to base + .presentation") {
                 inferPresentationPackageFrom(setOf("com.example.feature.domain.usecase")) shouldBe
