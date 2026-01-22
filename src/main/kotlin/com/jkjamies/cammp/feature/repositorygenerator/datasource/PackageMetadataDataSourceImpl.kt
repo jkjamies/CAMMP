@@ -39,7 +39,6 @@ internal fun inferRepositoryModulePackageFrom(packages: Set<String>, moduleName:
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class PackageMetadataDataSourceImpl : PackageMetadataDataSource {
     override fun findModulePackage(moduleDir: Path): String? {
         val vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(moduleDir.toString())

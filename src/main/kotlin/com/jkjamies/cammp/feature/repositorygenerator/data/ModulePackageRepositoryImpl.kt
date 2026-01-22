@@ -8,7 +8,6 @@ import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
 @ContributesBinding(AppScope::class)
-@Inject
 class ModulePackageRepositoryImpl(
     private val dataSource: PackageMetadataDataSource
 ) : ModulePackageRepository {

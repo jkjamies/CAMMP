@@ -10,7 +10,6 @@ import dev.zacsweers.metro.Inject
 import kotlin.io.path.exists
 
 @ContributesIntoSet(AppScope::class)
-@Inject
 class UpdatePresentationDiStep(
     private val modulePkgRepo: ModulePackageRepository,
     private val diRepo: PresentationDiModuleRepository

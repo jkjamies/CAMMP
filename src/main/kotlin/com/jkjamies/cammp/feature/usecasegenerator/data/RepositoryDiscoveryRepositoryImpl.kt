@@ -10,7 +10,6 @@ import java.nio.file.Paths
 import java.util.stream.Collectors
 
 @ContributesBinding(AppScope::class)
-@Inject
 class RepositoryDiscoveryRepositoryImpl(
     private val packageMetadataDataSource: PackageMetadataDataSource
 ) : RepositoryDiscoveryRepository {

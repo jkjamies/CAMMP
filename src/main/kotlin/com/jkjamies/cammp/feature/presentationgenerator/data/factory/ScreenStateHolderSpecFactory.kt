@@ -15,7 +15,6 @@ interface ScreenStateHolderSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class ScreenStateHolderSpecFactoryImpl : ScreenStateHolderSpecFactory {
 
     override fun create(packageName: String, screenName: String): FileSpec {

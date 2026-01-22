@@ -17,7 +17,6 @@ interface ModuleSourceSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class ModuleSourceSpecFactoryImpl : ModuleSourceSpecFactory {
 
     override fun packageName(params: CleanArchitectureParams, moduleName: String, featureName: String): String {

@@ -10,7 +10,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 
 @ContributesIntoSet(AppScope::class)
-@Inject
 class GenerateScreenStep(
     private val modulePkgRepo: ModulePackageRepository,
     private val screenRepo: ScreenRepository

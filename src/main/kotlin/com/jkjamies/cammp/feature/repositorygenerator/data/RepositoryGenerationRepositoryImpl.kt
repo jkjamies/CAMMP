@@ -11,7 +11,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
-@Inject
 class RepositoryGenerationRepositoryImpl(
     private val specFactory: RepositorySpecFactory
 ) : RepositoryGenerationRepository {

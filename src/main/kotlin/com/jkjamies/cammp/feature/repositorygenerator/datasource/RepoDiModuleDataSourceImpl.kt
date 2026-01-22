@@ -16,7 +16,6 @@ import dev.zacsweers.metro.Inject
 import kotlin.collections.forEach
 
 @ContributesBinding(AppScope::class)
-@Inject
 class RepoDiModuleDataSourceImpl : RepoDiModuleDataSource {
 
     override fun generateKoinModule(

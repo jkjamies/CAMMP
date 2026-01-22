@@ -21,7 +21,6 @@ interface DataSourceSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class DataSourceSpecFactoryImpl : DataSourceSpecFactory {
     override fun createInterface(packageName: String, className: String): FileSpec {
         return FileSpec.builder(packageName, className)

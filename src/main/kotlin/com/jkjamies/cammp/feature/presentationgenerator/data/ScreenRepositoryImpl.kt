@@ -17,7 +17,6 @@ import kotlin.io.path.writeText
  * Implementation of [ScreenRepository] that generates Composable Screen files using KotlinPoet.
  */
 @ContributesBinding(AppScope::class)
-@Inject
 class ScreenRepositoryImpl(
     private val specFactory: ScreenSpecFactory
 ) : ScreenRepository {

@@ -21,7 +21,6 @@ import java.nio.file.Path
  * Reference: legacy implementation previously in `domain/usecase/CleanArchitectureGenerator.kt`.
  */
 @ContributesBinding(AppScope::class)
-@Inject
 class CleanArchitectureScaffoldRepositoryImpl(
     private val fs: FileSystemRepository,
     private val templateRepo: TemplateRepository,

@@ -14,7 +14,6 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 
 @ContributesBinding(AppScope::class)
-@Inject
 class DiModuleDataSourceImpl : DiModuleDataSource {
     override fun generateKoinModuleContent(
         existingContent: String?,

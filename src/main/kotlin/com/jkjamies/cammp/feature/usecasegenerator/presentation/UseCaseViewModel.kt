@@ -52,7 +52,7 @@ class UseCaseViewModel(
                 _state.update { it.copy(isGenerating = true, errorMessage = null, lastGeneratedPath = null) }
                 scope.launch {
                     val result = generator(params)
-                    val path = result.getOrNull()?.toString()
+                    val path = result.getOrNull()
                     val error = result.exceptionOrNull()?.message
                     _state.update {
                         it.copy(

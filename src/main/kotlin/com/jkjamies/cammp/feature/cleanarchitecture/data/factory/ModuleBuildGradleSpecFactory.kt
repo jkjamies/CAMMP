@@ -21,7 +21,6 @@ interface ModuleBuildGradleSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class ModuleBuildGradleSpecFactoryImpl : ModuleBuildGradleSpecFactory {
 
     override fun create(

@@ -16,7 +16,6 @@ import kotlin.io.path.writeText
  * Implementation of [ScreenStateHolderRepository] that generates Screen State Holder classes using KotlinPoet.
  */
 @ContributesBinding(AppScope::class)
-@Inject
 class ScreenStateHolderRepositoryImpl(
     private val specFactory: ScreenStateHolderSpecFactory
 ) : ScreenStateHolderRepository {

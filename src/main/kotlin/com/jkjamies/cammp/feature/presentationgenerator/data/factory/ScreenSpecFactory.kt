@@ -20,7 +20,6 @@ interface ScreenSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class ScreenSpecFactoryImpl : ScreenSpecFactory {
 
     override fun create(

@@ -8,7 +8,6 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
 @ContributesIntoSet(AppScope::class)
-@Inject
 class GenerateUseCaseStep(
     private val repository: UseCaseGenerationRepository,
     private val modulePackageRepository: ModulePackageRepository

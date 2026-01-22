@@ -14,7 +14,6 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
-@Inject
 class UseCaseDiModuleRepositoryImpl(
     private val dataSource: DiModuleDataSource
 ) : UseCaseDiModuleRepository {

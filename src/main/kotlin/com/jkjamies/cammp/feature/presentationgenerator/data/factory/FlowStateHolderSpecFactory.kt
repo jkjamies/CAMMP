@@ -17,7 +17,6 @@ interface FlowStateHolderSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class FlowStateHolderSpecFactoryImpl : FlowStateHolderSpecFactory {
 
     override fun create(packageName: String, flowName: String): FileSpec {

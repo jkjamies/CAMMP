@@ -14,7 +14,6 @@ import java.nio.file.Path
  * to keep cleanarchitecture generator usable from tests/CI.
  */
 @ContributesBinding(AppScope::class)
-@Inject
 class ModulePackageMetadataDataSourceImpl(
     private val fs: FileSystemRepository,
 ) : ModulePackageMetadataDataSource {

@@ -10,7 +10,6 @@ import dev.zacsweers.metro.Inject
  * Main scaffold step that creates module directories/build files/source skeletons.
  */
 @ContributesIntoSet(AppScope::class)
-@Inject
 class GenerateModulesStep(
     private val scaffoldRepo: CleanArchitectureScaffoldRepository,
 ) : CleanArchitectureStep {

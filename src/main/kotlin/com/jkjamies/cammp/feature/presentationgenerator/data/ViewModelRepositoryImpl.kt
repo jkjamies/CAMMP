@@ -16,7 +16,6 @@ import kotlin.io.path.writeText
  * Implementation of [ViewModelRepository] that generates ViewModel files using KotlinPoet.
  */
 @ContributesBinding(AppScope::class)
-@Inject
 class ViewModelRepositoryImpl(
     private val specFactory: ViewModelSpecFactory
 ) : ViewModelRepository {

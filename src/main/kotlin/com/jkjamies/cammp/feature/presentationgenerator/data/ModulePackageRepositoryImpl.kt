@@ -12,7 +12,6 @@ import java.nio.file.Path
  * to find the most appropriate package name within a module.
  */
 @ContributesBinding(AppScope::class)
-@Inject
 class ModulePackageRepositoryImpl(
     private val dataSource: PackageMetadataDataSource
 ) : ModulePackageRepository {

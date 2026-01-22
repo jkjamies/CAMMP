@@ -24,7 +24,6 @@ interface UseCaseSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class UseCaseSpecFactoryImpl : UseCaseSpecFactory {
     override fun create(
         packageName: String,

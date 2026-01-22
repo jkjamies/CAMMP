@@ -20,7 +20,6 @@ interface RepositorySpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class RepositorySpecFactoryImpl : RepositorySpecFactory {
 
     override fun createDomainInterface(packageName: String, params: RepositoryParams): FileSpec {

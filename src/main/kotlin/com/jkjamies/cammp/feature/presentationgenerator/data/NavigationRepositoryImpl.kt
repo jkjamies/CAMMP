@@ -16,7 +16,6 @@ import kotlin.io.path.writeText
  * Implementation of [NavigationRepository] that generates Navigation components using KotlinPoet.
  */
 @ContributesBinding(AppScope::class)
-@Inject
 class NavigationRepositoryImpl(
     private val specFactory: NavigationSpecFactory
 ) : NavigationRepository {

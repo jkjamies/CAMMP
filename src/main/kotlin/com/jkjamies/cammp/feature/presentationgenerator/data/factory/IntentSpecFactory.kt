@@ -14,7 +14,6 @@ interface IntentSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class IntentSpecFactoryImpl : IntentSpecFactory {
 
     override fun create(packageName: String, params: PresentationParams): FileSpec {

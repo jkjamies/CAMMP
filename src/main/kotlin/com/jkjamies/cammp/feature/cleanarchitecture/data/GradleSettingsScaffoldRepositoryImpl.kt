@@ -9,7 +9,6 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 
 @ContributesBinding(AppScope::class)
-@Inject
 class GradleSettingsScaffoldRepositoryImpl(
     private val dataSource: GradleSettingsDataSource,
 ) : GradleSettingsScaffoldRepository {

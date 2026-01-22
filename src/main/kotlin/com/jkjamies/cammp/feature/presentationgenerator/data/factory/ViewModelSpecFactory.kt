@@ -20,7 +20,6 @@ interface ViewModelSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class ViewModelSpecFactoryImpl : ViewModelSpecFactory {
 
     override fun create(packageName: String, params: PresentationParams): FileSpec {

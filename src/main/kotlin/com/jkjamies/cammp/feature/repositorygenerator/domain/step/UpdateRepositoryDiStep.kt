@@ -9,7 +9,6 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
 @ContributesIntoSet(AppScope::class)
-@Inject
 class UpdateRepositoryDiStep(
     private val modulePkgRepo: ModulePackageRepository,
     private val diRepo: DiModuleRepository

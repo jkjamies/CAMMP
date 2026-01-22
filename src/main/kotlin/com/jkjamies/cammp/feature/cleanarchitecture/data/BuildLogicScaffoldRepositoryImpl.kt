@@ -14,7 +14,6 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 
 @ContributesBinding(AppScope::class)
-@Inject
 class BuildLogicScaffoldRepositoryImpl(
     private val fs: FileSystemRepository,
     private val templateRepo: TemplateRepository,
