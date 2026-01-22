@@ -15,7 +15,6 @@ interface BuildLogicSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class BuildLogicSpecFactoryImpl : BuildLogicSpecFactory {
 
     override fun applyPackageTokens(rawTemplate: String, orgCenter: String): String {

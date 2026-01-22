@@ -10,7 +10,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 
 @ContributesIntoSet(AppScope::class)
-@Inject
 class GenerateNavigationDestinationStep(
     private val modulePkgRepo: ModulePackageRepository,
     private val navigationRepo: NavigationRepository

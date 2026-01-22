@@ -10,7 +10,6 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
 @ContributesIntoSet(AppScope::class)
-@Inject
 class GenerateDataSourceImplementationStep(
     private val modulePkgRepo: ModulePackageRepository,
     private val scaffoldRepo: DatasourceScaffoldRepository

@@ -10,7 +10,6 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
 @ContributesIntoSet(AppScope::class)
-@Inject
 class UpdateSettingsStep(
     private val settingsRepo: GradleSettingsScaffoldRepository,
 ) : CleanArchitectureStep {

@@ -18,7 +18,6 @@ import kotlin.io.path.writeText
  * Implementation of [PresentationDiModuleRepository] for creating and updating Koin ViewModel modules.
  */
 @ContributesBinding(AppScope::class)
-@Inject
 class PresentationDiModuleRepositoryImpl : PresentationDiModuleRepository {
 
     override fun mergeViewModelModule(

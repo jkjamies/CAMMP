@@ -11,7 +11,6 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
 @ContributesBinding(AppScope::class)
-@Inject
 class DataSourceDiscoveryRepositoryImpl(
     private val packageMetadataDataSource: PackageMetadataDataSource
 ) : DataSourceDiscoveryRepository {

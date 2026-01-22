@@ -21,7 +21,6 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
-@Inject
 class DiModuleRepositoryImpl : DiModuleRepository {
 
     override fun mergeRepositoryModule(

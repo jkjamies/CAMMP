@@ -37,7 +37,6 @@ internal fun inferUseCasePackageFrom(packages: Set<String>): String? {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class PackageMetadataDataSourceImpl : PackageMetadataDataSource {
     override fun findModulePackage(moduleDir: Path): String? {
         val vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(moduleDir.toString())

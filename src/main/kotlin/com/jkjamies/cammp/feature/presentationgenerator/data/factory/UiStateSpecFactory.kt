@@ -12,7 +12,6 @@ interface UiStateSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class UiStateSpecFactoryImpl : UiStateSpecFactory {
 
     override fun create(packageName: String, screenName: String): FileSpec {

@@ -18,7 +18,6 @@ import kotlin.io.path.writeText
  * repositories call datasources; datasources do IO/merges.
  */
 @ContributesBinding(AppScope::class)
-@Inject
 class GradleSettingsDataSourceImpl : GradleSettingsDataSource {
 
     override fun ensureIncludes(projectBase: Path, root: String, feature: String, modules: List<String>): Boolean {

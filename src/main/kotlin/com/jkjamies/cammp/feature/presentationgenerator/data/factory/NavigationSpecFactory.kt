@@ -18,7 +18,6 @@ interface NavigationSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-@Inject
 class NavigationSpecFactoryImpl : NavigationSpecFactory {
 
     override fun createHost(packageName: String, navHostName: String): FileSpec {

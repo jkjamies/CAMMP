@@ -8,7 +8,6 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
 @ContributesIntoSet(AppScope::class)
-@Inject
 class UpdateDiStep(
     private val diRepository: UseCaseDiModuleRepository,
     private val modulePackageRepository: ModulePackageRepository

@@ -11,7 +11,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 
 @ContributesIntoSet(AppScope::class)
-@Inject
 class GenerateIntentStep(
     private val modulePkgRepo: ModulePackageRepository,
     private val intentRepo: IntentRepository

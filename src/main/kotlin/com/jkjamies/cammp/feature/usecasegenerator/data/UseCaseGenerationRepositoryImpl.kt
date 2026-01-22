@@ -12,7 +12,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
-@Inject
 class UseCaseGenerationRepositoryImpl(
     private val specFactory: UseCaseSpecFactory
 ) : UseCaseGenerationRepository {

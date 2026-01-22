@@ -10,7 +10,6 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
-@Inject
 class DatasourceScaffoldRepositoryImpl(
     private val specFactory: DataSourceSpecFactory
 ) : DatasourceScaffoldRepository {

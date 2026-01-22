@@ -10,7 +10,6 @@ import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
 @ContributesIntoSet(AppScope::class)
-@Inject
 class EnsureBuildLogicStep(
     private val buildLogicRepo: BuildLogicScaffoldRepository,
 ) : CleanArchitectureStep {
