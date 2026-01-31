@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- Metro DI Option now adds plugin to version catalog and convention plugins
+
+### Changed
+
+- Updated dependencies
+
 ## [0.0.7-alpha] - 2026-01-22
 
 ### Added
