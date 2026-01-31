@@ -106,7 +106,7 @@ class RepositoryViewModelTest : BehaviorSpec({
             }
         }
 
-        When("Generate is called with valid input (Hilt)") {
+        When("Generate is called with valid input (Metro default)") {
             Then("it should call generator with correct params and update lastGeneratedMessage") {
                 val (scope, generator, loadDataSources, vm) = newHarness()
 
@@ -118,7 +118,9 @@ class RepositoryViewModelTest : BehaviorSpec({
                 scope.testScheduler.advanceUntilIdle()
 
                 vm.handleIntent(RepositoryIntent.SetName("UserRepository"))
-                vm.handleIntent(RepositoryIntent.SetDiHilt(true))
+                // Default is Metro, so we don't need to set Hilt explicitly if we want to test default behavior.
+                // But the original test was testing a successful generation, assuming Hilt. 
+                // Let's test with Metro as it is the default now.
 
                 vm.handleIntent(RepositoryIntent.SetIncludeDatasource(true))
                 vm.handleIntent(RepositoryIntent.SetDatasourceCombined(true))
@@ -139,7 +141,7 @@ class RepositoryViewModelTest : BehaviorSpec({
                 val captured = paramsSlot.captured
                 captured.className shouldBe "UserRepository"
                 captured.dataDir.toString() shouldBe "/project/feature/data"
-                captured.diStrategy shouldBe DiStrategy.Hilt
+                captured.diStrategy shouldBe DiStrategy.Metro
                 captured.datasourceStrategy shouldBe DatasourceStrategy.Combined
                 captured.selectedDataSources.shouldContainExactly("com.example.RemoteDS")
 
@@ -180,8 +182,8 @@ class RepositoryViewModelTest : BehaviorSpec({
             Then("it should keep the flags consistent") {
                 val (_, _, _, vm) = newHarness()
 
-                vm.state.value.diMetro shouldBe false
-                vm.state.value.diHilt shouldBe true
+                vm.state.value.diMetro shouldBe true
+                vm.state.value.diHilt shouldBe false
                 vm.state.value.diKoin shouldBe false
 
                 vm.handleIntent(RepositoryIntent.SetDiKoin(true))

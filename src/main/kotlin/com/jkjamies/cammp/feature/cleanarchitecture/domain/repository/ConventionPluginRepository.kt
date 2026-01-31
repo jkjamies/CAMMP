@@ -26,7 +26,7 @@ interface ConventionPluginRepository {
  * Specifies the dependency injection framework to be used.
  */
 enum class DiMode {
-    HILT, KOIN, KOIN_ANNOTATIONS
+    HILT, KOIN, KOIN_ANNOTATIONS, METRO
 }
 
 /**

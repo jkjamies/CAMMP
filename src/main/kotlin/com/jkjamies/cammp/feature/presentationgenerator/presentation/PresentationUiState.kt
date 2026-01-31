@@ -15,8 +15,8 @@ data class PresentationUiState(
     val patternMVI: Boolean = true,
     val patternMVVM: Boolean = false,
     val patternCircuit: Boolean = false,
-    val diMetro: Boolean = false,
-    val diHilt: Boolean = true,
+    val diMetro: Boolean = true,
+    val diHilt: Boolean = false,
     val diKoin: Boolean = false,
     val diKoinAnnotations: Boolean = false,
 

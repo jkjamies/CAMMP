@@ -42,7 +42,7 @@ class UpdateSettingsStep(
 
     private fun resolveDiMode(p: CleanArchitectureParams): DiMode = when (val s = p.diStrategy) {
         DiStrategy.Hilt -> DiMode.HILT
-        DiStrategy.Metro -> DiMode.HILT // TODO: Metro support (for now generate same as Hilt)
+        DiStrategy.Metro -> DiMode.METRO
         is DiStrategy.Koin -> if (s.useAnnotations) DiMode.KOIN_ANNOTATIONS else DiMode.KOIN
     }
 }

@@ -26,9 +26,9 @@ class GenerateModulesViewModel(
             projectBasePath = projectBasePath,
             root = projectBasePath,
             orgCenter = projectBasePath.substringAfterLast('/').ifBlank { "cammp" },
-            diMetro = false,
-            diHilt = true,
-            includeDiModule = true,
+            diMetro = true,
+            diHilt = false,
+            includeDiModule = false,
         )
     )
     val state: StateFlow<GenerateModulesUiState> = _state.asStateFlow()

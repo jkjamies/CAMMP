@@ -20,8 +20,8 @@ data class GenerateModulesUiState(
     val datasourceCombined: Boolean = false,
     val datasourceRemote: Boolean = true,
     val datasourceLocal: Boolean = true,
-    val diMetro: Boolean = false,
-    val diHilt: Boolean = true,
+    val diMetro: Boolean = true,
+    val diHilt: Boolean = false,
     val diKoin: Boolean = false,
     val diKoinAnnotations: Boolean = false,
 
