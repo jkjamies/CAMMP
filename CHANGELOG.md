@@ -6,7 +6,7 @@
 
 ### Added
 
-- Metro DI Option
+- Metro DI Option now adds plugin to version catalog and convention plugins
 
 ### Changed
 
