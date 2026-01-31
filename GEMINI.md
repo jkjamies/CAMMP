@@ -69,7 +69,7 @@ All presentation logic MUST follow this flow:
     *   Always inject `CoroutineDispatcher`.
     *   Never expose `suspend` functions if `Flow` is more appropriate.
     *   Use `StateFlow` for state, `SharedFlow` for events.
-*   **License Headers:** All source files must include the Apache 2.0 license header. The year should be `2026` (if current year) or `2026-<currentYear>`.
+*   **Copyright Headers**: All Kotlin (`.kt`) and Gradle (`.kts`) files MUST include the standard Apache 2.0 copyright header with `Copyright 2025-2026 Jason Jamieson`.
 
 ### 2. Testing Strategy
 *   **The Pyramid**:
