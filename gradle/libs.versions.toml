@@ -9,7 +9,7 @@ junit-vintage = "5.10.2"
 mockk = "1.14.9"
 turbine = "1.2.1"
 # Has to be in sync with IntelliJ Platform
-composeuitest = "1.11.0-alpha01"
+composeuitest = "1.11.0-alpha02"
 jewelstandalone = "0.33.0-253.29795"
 skikoAwtRuntimeAll = "0.9.22"
 
