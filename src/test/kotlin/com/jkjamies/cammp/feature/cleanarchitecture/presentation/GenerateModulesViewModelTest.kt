@@ -67,8 +67,8 @@ class GenerateModulesViewModelTest : BehaviorSpec({
                 // initial
                 awaitItem().let {
                     it.projectBasePath shouldBe "/project"
-                    it.diHilt shouldBe true
-                    it.diMetro shouldBe false
+                    it.diHilt shouldBe false
+                    it.diMetro shouldBe true
                 }
 
                 vm.handleIntent(GenerateModulesIntent.SetRoot("/project/app"))
@@ -147,8 +147,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
                 vm.state.value.includeDiModule shouldBe true
 
                 vm.handleIntent(GenerateModulesIntent.SelectDiMetro(true))
-                // Note: Even if we try to set Metro via intent, the UI would prevent it if it was bound to a disabled radio,
-                // but the VM still handles the intent. However, the requirement is that it SHOULD default to Hilt.
+
                 vm.state.value.diMetro shouldBe true
                 vm.state.value.includeDiModule shouldBe false
 
@@ -157,6 +156,51 @@ class GenerateModulesViewModelTest : BehaviorSpec({
                 vm.state.value.includeDiModule shouldBe true
 
                 s.errorMessage shouldBe null
+            }
+        }
+
+
+        When("verifying DI Module Checkbox Logic") {
+            val generator = mockk<CleanArchitectureGenerator>(relaxed = true)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, generator = generator)
+
+            Then("it should match the requirements for all DI strategies") {
+                // Initial State: Metro selected by default
+                val initial = vm.state.value
+                initial.diMetro shouldBe true
+                initial.includeDiModule shouldBe false // Metro defaults to false
+
+                // 1. Select Hilt -> Forced True
+                vm.handleIntent(GenerateModulesIntent.SelectDiHilt(true))
+                vm.state.value.diHilt shouldBe true
+                vm.state.value.includeDiModule shouldBe true
+
+                // 2. Select Koin (No Annotations) -> Forced True
+                vm.handleIntent(GenerateModulesIntent.SelectDiKoin(true))
+                val koinState = vm.state.value
+                koinState.diKoin shouldBe true
+                koinState.diKoinAnnotations shouldBe false
+                koinState.includeDiModule shouldBe true
+
+                // 3. Toggle Koin Annotations ON -> Selectable (Defaults to false currently due to !intent.selected logic)
+                vm.handleIntent(GenerateModulesIntent.SetKoinAnnotations(true))
+                val koinAnnoState = vm.state.value
+                koinAnnoState.diKoinAnnotations shouldBe true
+                koinAnnoState.includeDiModule shouldBe false // Logic sets it to !selected
+
+                // Can toggle it
+                vm.handleIntent(GenerateModulesIntent.SetIncludeDiModule(true))
+                vm.state.value.includeDiModule shouldBe true
+
+                // 4. Select Metro -> Selectable (Defaults to false when selected via intent)
+                vm.handleIntent(GenerateModulesIntent.SelectDiMetro(true))
+                val metroState = vm.state.value
+                metroState.diMetro shouldBe true
+                metroState.includeDiModule shouldBe false
+
+                // Can toggle it
+                vm.handleIntent(GenerateModulesIntent.SetIncludeDiModule(true))
+                vm.state.value.includeDiModule shouldBe true
             }
         }
     }

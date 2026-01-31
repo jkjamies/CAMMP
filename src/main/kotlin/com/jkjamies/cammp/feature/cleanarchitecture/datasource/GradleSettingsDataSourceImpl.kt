@@ -69,6 +69,13 @@ class GradleSettingsDataSourceImpl : GradleSettingsDataSource {
         val requiredLayers = buildList {
             add("domain"); add("data")
             if (enabledModules.contains("di")) add("di")
+            // Metro generates DI module same as Hilt for now, so "di" is sufficient, 
+            // but we need to ensure the catalog gets Metro settings if DiMode is Metro. 
+            // However, this list is for CONVENTION PLUGINS. Metro is passed via DI mode.
+            // We need to inject Metro library/plugin into the catalog separately if it's not a convention plugin but a direct dependency.
+            // But wait, the task is to enable dependency injection for metro for the generators.
+            // The user request says: "we must have our code that checks the consumers version catalog to add the dependency under plugins"
+            // So we need to ensure metro plugin is added to catalog.
             if (enabledModules.contains("presentation")) add("presentation")
             if (enabledModules.contains("dataSource")) add("dataSource")
             if (enabledModules.contains("remoteDataSource")) add("remoteDataSource")

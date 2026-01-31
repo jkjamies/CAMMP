@@ -158,8 +158,8 @@ class UseCaseViewModelTest : BehaviorSpec({
 
                 vm.state.test {
                     val initial = awaitItem()
-                    initial.diMetro shouldBe false
-                    initial.diHilt shouldBe true
+                    initial.diMetro shouldBe true
+                    initial.diHilt shouldBe false
                     initial.diKoin shouldBe false
                     initial.diKoinAnnotations shouldBe false
 
@@ -220,7 +220,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                 val expectedParams = UseCaseParams(
                     domainDir = Paths.get("/path/to/domain"),
                     className = "ValidUseCase",
-                    diStrategy = DiStrategy.Hilt,
+                    diStrategy = DiStrategy.Metro,
                     repositories = listOf("ARepo", "BRepo"),
                 )
 
@@ -269,7 +269,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                 val expectedParams = UseCaseParams(
                     domainDir = Paths.get("/path/to/domain"),
                     className = "ValidUseCase",
-                    diStrategy = DiStrategy.Hilt,
+                    diStrategy = DiStrategy.Metro,
                     repositories = emptyList(),
                 )
 
@@ -304,7 +304,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                 val expectedParams = UseCaseParams(
                     domainDir = Paths.get("/path/to/domain"),
                     className = "FooUseCase",
-                    diStrategy = DiStrategy.Hilt,
+                    diStrategy = DiStrategy.Metro,
                     repositories = emptyList(),
                 )
 

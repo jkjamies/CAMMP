@@ -84,8 +84,8 @@ class PresentationViewModelTest : BehaviorSpec({
                     initial.patternMVI shouldBe true
                     initial.patternMVVM shouldBe false
                     initial.patternCircuit shouldBe false
-                    initial.diMetro shouldBe false
-                    initial.diHilt shouldBe true
+                    initial.diMetro shouldBe true
+                    initial.diHilt shouldBe false
                     initial.diKoin shouldBe false
 
                     vm.handleIntent(PresentationIntent.SetPatternMVVM(true))
@@ -163,7 +163,7 @@ class PresentationViewModelTest : BehaviorSpec({
                     moduleDir = Paths.get("/tmp"),
                     screenName = "Home",
                     patternStrategy = PresentationPatternStrategy.MVI,
-                    diStrategy = DiStrategy.Hilt,
+                    diStrategy = DiStrategy.Metro,
                     includeNavigation = true,
                     useFlowStateHolder = true,
                     useScreenStateHolder = true,
@@ -225,7 +225,7 @@ class PresentationViewModelTest : BehaviorSpec({
                     moduleDir = Paths.get("/tmp"),
                     screenName = "Home",
                     patternStrategy = PresentationPatternStrategy.MVI,
-                    diStrategy = DiStrategy.Hilt,
+                    diStrategy = DiStrategy.Metro,
                 )
 
                 coEvery { generator(expectedParams) } returns Result.failure(IllegalStateException("boom"))

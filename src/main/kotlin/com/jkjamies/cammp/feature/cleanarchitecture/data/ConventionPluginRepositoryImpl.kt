@@ -141,6 +141,9 @@ class ConventionPluginRepositoryImpl(
         if (diMode == DiMode.HILT) {
             addStatement("%T.HILT,", pluginAliases)
         }
+        if (diMode == DiMode.METRO) {
+            addStatement("%T.METRO,", pluginAliases)
+        }
         addStatement("%T.PARCELIZE,", pluginAliases)
         addStatement("%T.KOTLIN_SERIALIZATION,", pluginAliases)
         if (includeCompose) {
@@ -205,6 +208,7 @@ class ConventionPluginRepositoryImpl(
                 builder.addStatement("deps.implementation(%T.KOIN_ANNOTATIONS)", libsCommon)
                 builder.addStatement("deps.ksp(%T.KOIN_KSP_COMPILER)", libsCommon)
             }
+            DiMode.METRO -> Unit // Metro uses only the plugin, no dependencies needed here
         }
     }
 
@@ -229,9 +233,10 @@ class ConventionPluginRepositoryImpl(
         builder.addStatement("deps.implementation(%T.NAVIGATION)", libsCompose)
         if (diMode == DiMode.HILT) {
             builder.addStatement("deps.implementation(%T.HILT_NAVIGATION)", libsCompose)
-        } else {
+        } else if (diMode == DiMode.KOIN || diMode == DiMode.KOIN_ANNOTATIONS) {
             builder.addStatement("deps.implementation(%T.KOIN_NAVIGATION)", libsCompose)
         }
+        // METRO: No navigation integration yet
         builder.addStatement("deps.debugImplementation(%T.TOOLING)", libsCompose)
         builder.addStatement("deps.debugImplementation(%T.PREVIEW)", libsCompose)
     }

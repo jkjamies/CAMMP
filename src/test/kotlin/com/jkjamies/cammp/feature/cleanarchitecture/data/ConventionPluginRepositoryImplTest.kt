@@ -84,5 +84,32 @@ class ConventionPluginRepositoryImplTest : BehaviorSpec({
                 }
             }
         }
+
+        When("generating presentation plugin with Metro") {
+            Then("it should apply Metro plugin but NOT Hilt dependencies") {
+                withTempDir("cammp_convention_metro") { tmp ->
+                    repo.generate(
+                        outputDirectory = tmp,
+                        packageName = "com.example.convention",
+                        diMode = DiMode.METRO,
+                        type = PluginType.PRESENTATION,
+                    )
+
+                    val out = tmp.resolve("PresentationConventionPlugin.kt")
+                    fs.readText(out)!!.also { content ->
+                        content shouldContain "package com.example.convention"
+                        content shouldContain "class PresentationConventionPlugin"
+
+                        // Metro Plugin
+                        content shouldContain "Aliases.PluginAliases.METRO"
+
+                        // NO Hilt Plugin
+                        content.contains("Aliases.PluginAliases.HILT") shouldBe false
+                        // NO Hilt Dependencies
+                        content.contains("LibsCompose.HILT_NAVIGATION") shouldBe false
+                    }
+                }
+            }
+        }
     }
 })

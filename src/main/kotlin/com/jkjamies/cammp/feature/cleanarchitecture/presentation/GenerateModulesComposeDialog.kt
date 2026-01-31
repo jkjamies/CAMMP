@@ -142,10 +142,10 @@ fun GenerateModulesScreen(
         Text("Dependency Injection:")
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             RadioWithLabel(
-                label = "Metro (coming soon)",
+                label = "Metro",
                 selected = state.diMetro,
-                enabled = false,
-                onClick = {}
+                enabled = true,
+                onClick = { onIntent(GenerateModulesIntent.SelectDiMetro(true)) }
             )
             RadioWithLabel(label = "Hilt", selected = state.diHilt, enabled = !state.platformKmp) {
                 onIntent(GenerateModulesIntent.SelectDiHilt(true))
@@ -163,7 +163,7 @@ fun GenerateModulesScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = state.includeDiModule,
-                    enabled = !state.diMetro,
+                    enabled = true,
                     onCheckedChange = { onIntent(GenerateModulesIntent.SetIncludeDiModule(it)) })
                 Text("Include DI module")
             }
