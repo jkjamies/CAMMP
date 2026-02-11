@@ -17,7 +17,7 @@ skikoAwtRuntimeAll = "0.9.22"
 changelog = "2.5.0"
 intelliJPlatform = "2.11.0"
 kotlin = "2.3.10"
-kover = "0.9.4"
+kover = "0.9.7"
 metro = "0.10.2"
 
 [libraries]
