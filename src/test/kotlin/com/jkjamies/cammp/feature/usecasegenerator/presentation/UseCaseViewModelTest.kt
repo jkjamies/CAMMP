@@ -17,7 +17,7 @@
 package com.jkjamies.cammp.feature.usecasegenerator.presentation
 
 import app.cash.turbine.test
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.LoadRepositories
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.UseCaseGenerator
@@ -44,9 +44,11 @@ class UseCaseViewModelTest : BehaviorSpec({
         generator: UseCaseGenerator,
         loadRepositories: LoadRepositories,
         domainPackage: String = "",
+        dispatcher: kotlinx.coroutines.CoroutineDispatcher = StandardTestDispatcher(scope.testScheduler),
     ) = UseCaseViewModel(
         domainPackage = domainPackage,
         scope = scope,
+        ioDispatcher = dispatcher,
         generator = generator,
         loadRepositories = loadRepositories,
     )

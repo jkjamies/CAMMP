@@ -24,7 +24,7 @@ import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
 @ContributesBinding(AppScope::class)
-class VersionCatalogDataSourceImpl(
+internal class VersionCatalogDataSourceImpl(
     private val fs: FileSystemRepository
 ) : VersionCatalogDataSource {
 

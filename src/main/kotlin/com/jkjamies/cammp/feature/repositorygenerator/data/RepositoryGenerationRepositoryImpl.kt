@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import com.jkjamies.cammp.domain.codegen.toCleanString
 import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.repositorygenerator.data.factory.RepositorySpecFactory
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
@@ -27,7 +28,7 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
-class RepositoryGenerationRepositoryImpl(
+internal class RepositoryGenerationRepositoryImpl(
     private val specFactory: RepositorySpecFactory
 ) : RepositoryGenerationRepository {
 
@@ -36,7 +37,7 @@ class RepositoryGenerationRepositoryImpl(
         val targetDir = domainDir.resolve("src/main/kotlin").resolve(packageName.replace('.', '/'))
         targetDir.createDirectories()
         val out = targetDir.resolve("${params.className}.kt")
-        out.writeText(fileSpec.toString().replace("`data`", "data"))
+        out.writeText(fileSpec.toCleanString())
         return out
     }
 
@@ -45,10 +46,7 @@ class RepositoryGenerationRepositoryImpl(
         val targetDir = params.dataDir.resolve("src/main/kotlin").resolve(dataPackage.replace('.', '/'))
         targetDir.createDirectories()
         val out = targetDir.resolve("${params.className}Impl.kt")
-        out.writeText(
-            fileSpec.toString().replace("`data`", "data")
-                .replace("import org.koin.core.`annotation`.Single", "import org.koin.core.annotation.Single")
-        )
+        out.writeText(fileSpec.toCleanString())
         return out
     }
 }

@@ -16,8 +16,10 @@
 
 package com.jkjamies.cammp.feature.usecasegenerator.domain.step
 
+import com.jkjamies.cammp.domain.step.StepResult
+
 import com.jkjamies.cammp.feature.presentationgenerator.testutil.TestFiles
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationResult
 import com.jkjamies.cammp.feature.usecasegenerator.testutil.ModulePackageRepositoryFake

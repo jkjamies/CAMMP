@@ -18,7 +18,6 @@ package com.jkjamies.cammp.feature.presentationgenerator.data
 
 import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.presentationgenerator.data.factory.ScreenSpecFactory
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.FileGenerationResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
@@ -33,7 +32,7 @@ import kotlin.io.path.writeText
  * Implementation of [ScreenRepository] that generates Composable Screen files using KotlinPoet.
  */
 @ContributesBinding(AppScope::class)
-class ScreenRepositoryImpl(
+internal class ScreenRepositoryImpl(
     private val specFactory: ScreenSpecFactory
 ) : ScreenRepository {
 
@@ -50,10 +49,7 @@ class ScreenRepositoryImpl(
             return FileGenerationResult(target, GenerationStatus.SKIPPED, fileName)
         }
 
-        val diHilt = params.diStrategy is DiStrategy.Hilt || params.diStrategy is DiStrategy.Metro
-        val diKoin = params.diStrategy is DiStrategy.Koin
-
-        val fileSpec = specFactory.create(packageName, screenName, diHilt, diKoin)
+        val fileSpec = specFactory.create(packageName, screenName, params.diStrategy)
 
         target.writeText(fileSpec.toString())
         return FileGenerationResult(target, GenerationStatus.CREATED, fileName)

@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.usecasegenerator.datasource
 
+import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
 import com.jkjamies.cammp.feature.usecasegenerator.data.datasource.DiModuleDataSource
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -30,7 +31,7 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 
 @ContributesBinding(AppScope::class)
-class DiModuleDataSourceImpl : DiModuleDataSource {
+internal class DiModuleDataSourceImpl : DiModuleDataSource {
     override fun generateKoinModuleContent(
         existingContent: String?,
         diPackage: String,
@@ -101,7 +102,7 @@ class DiModuleDataSourceImpl : DiModuleDataSource {
 
         val fileSpec = fileSpecBuilder
             .addProperty(
-                PropertySpec.builder("useCaseModule", ClassName("org.koin.core.module", "Module"))
+                PropertySpec.builder("useCaseModule", GeneratedAnnotations.KOIN_MODULE)
                     .initializer(moduleBlockBuilder.build())
                     .build()
             )
@@ -124,7 +125,7 @@ class DiModuleDataSourceImpl : DiModuleDataSource {
 
         val bindFunName = "binds$useCaseSimpleName"
         val bindFun = FunSpec.builder(bindFunName)
-            .addAnnotation(ClassName("dagger", "Binds"))
+            .addAnnotation(GeneratedAnnotations.DAGGER_BINDS)
             .addModifiers(KModifier.ABSTRACT)
             .addParameter("impl", useCaseClassName)
             .returns(interfaceClassName)
@@ -132,10 +133,10 @@ class DiModuleDataSourceImpl : DiModuleDataSource {
 
         val moduleBuilder = TypeSpec.classBuilder("UseCaseModule")
             .addModifiers(KModifier.ABSTRACT)
-            .addAnnotation(ClassName("dagger", "Module"))
+            .addAnnotation(GeneratedAnnotations.DAGGER_MODULE)
             .addAnnotation(
-                AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
-                    .addMember("%T::class", ClassName("dagger.hilt.components", "SingletonComponent"))
+                AnnotationSpec.builder(GeneratedAnnotations.HILT_INSTALL_IN)
+                    .addMember("%T::class", GeneratedAnnotations.SINGLETON_COMPONENT)
                     .build()
             )
             .addFunction(bindFun)

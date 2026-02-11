@@ -16,25 +16,28 @@
 
 package com.jkjamies.cammp.feature.presentationgenerator.presentation
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.usecase.PresentationGenerator
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.nio.file.Paths
 
 @AssistedInject
 class PresentationViewModel(
     @Assisted private val directory: String,
     @Assisted private val scope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher,
     private val generator: PresentationGenerator,
 ) {
     private val _state = MutableStateFlow(PresentationUiState(directory = directory))
@@ -89,7 +92,7 @@ class PresentationViewModel(
         }
 
         scope.launch {
-            val result = run {
+            val result = withContext(ioDispatcher) {
                 val patternStrategy = when {
                     s.patternMVI -> PresentationPatternStrategy.MVI
                     s.patternCircuit -> PresentationPatternStrategy.Circuit

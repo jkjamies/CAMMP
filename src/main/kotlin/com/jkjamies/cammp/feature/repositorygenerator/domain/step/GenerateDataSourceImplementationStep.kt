@@ -16,8 +16,12 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.domain.step
 
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.codegen.PackageSuffixes
+import com.jkjamies.cammp.domain.step.StepPhase
+import com.jkjamies.cammp.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.runStepCatching
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
@@ -31,40 +35,30 @@ class GenerateDataSourceImplementationStep(
     private val scaffoldRepo: DatasourceScaffoldRepository
 ) : RepositoryStep {
 
+    override val phase: StepPhase = StepPhase.GENERATE
+
     override suspend fun execute(params: RepositoryParams): StepResult {
         if (params.datasourceStrategy is DatasourceStrategy.None) return StepResult.Success(null)
 
-        val results = mutableListOf<String>()
-        val dataPkg = modulePkgRepo.findModulePackage(params.dataDir)
-        val dataBasePkg = if (dataPkg.contains(".data")) dataPkg.substringBefore(".data") + ".data" else dataPkg
+        return runStepCatching {
+            val results = mutableListOf<String>()
+            val dataPkg = modulePkgRepo.findModulePackage(params.dataDir)
+            val dataBasePkg = if (dataPkg.contains(PackageSuffixes.DATA)) dataPkg.substringBefore(PackageSuffixes.DATA) + PackageSuffixes.DATA else dataPkg
+            val useKoin = params.diStrategy is DiStrategy.Koin
 
-        val entries = when (params.datasourceStrategy) {
-            DatasourceStrategy.None -> emptyList()
-            DatasourceStrategy.Combined -> listOf("dataSource" to "DataSource")
-            DatasourceStrategy.RemoteOnly -> listOf("remoteDataSource" to "RemoteDataSource")
-            DatasourceStrategy.LocalOnly -> listOf("localDataSource" to "LocalDataSource")
-            DatasourceStrategy.RemoteAndLocal -> listOf(
-                "remoteDataSource" to "RemoteDataSource",
-                "localDataSource" to "LocalDataSource",
-            )
-        }
+            for ((moduleName, suffix) in params.datasourceStrategy.toEntries()) {
+                val moduleDir = params.dataDir.parent?.resolve(moduleName)
+                    ?: throw IllegalStateException("Sibling module $moduleName not found")
 
-        val useKoin = params.diStrategy is DiStrategy.Koin
+                if (!moduleDir.toFile().exists()) continue
 
-        for ((moduleName, suffix) in entries) {
-            val moduleDir = params.dataDir.parent?.resolve(moduleName)
-                ?: return StepResult.Failure(IllegalStateException("Sibling module $moduleName not found"))
+                val modulePkg = modulePkgRepo.findModulePackage(moduleDir)
+                val implDir = moduleDir.resolve("src/main/kotlin").resolve(modulePkg.replace('.', '/'))
 
-            if (!moduleDir.toFile().exists()) continue
+                val ifaceName = params.className + suffix
+                val ifacePkg = "$dataBasePkg.$moduleName"
+                val implName = "${ifaceName}Impl"
 
-            val modulePkg = modulePkgRepo.findModulePackage(moduleDir)
-            val implDir = moduleDir.resolve("src/main/kotlin").resolve(modulePkg.replace('.', '/'))
-
-            val ifaceName = params.className + suffix
-            val ifacePkg = "$dataBasePkg.$moduleName" // Assuming subpackage matches module name
-            val implName = "${ifaceName}Impl"
-
-            try {
                 val out = scaffoldRepo.generateImplementation(
                     directory = implDir,
                     packageName = modulePkg,
@@ -74,11 +68,9 @@ class GenerateDataSourceImplementationStep(
                     useKoin = useKoin
                 )
                 results += "- DataSource Impl: $out (generated)"
-            } catch (e: Exception) {
-                return StepResult.Failure(e)
             }
-        }
 
-        return StepResult.Success(results.joinToString("\n"))
+            StepResult.Success(results.joinToString("\n"))
+        }
     }
 }

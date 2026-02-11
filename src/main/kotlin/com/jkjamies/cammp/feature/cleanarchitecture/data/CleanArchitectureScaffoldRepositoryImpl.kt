@@ -16,12 +16,13 @@
 
 package com.jkjamies.cammp.feature.cleanarchitecture.data
 
+import com.jkjamies.cammp.domain.codegen.PackageSuffixes
 import com.jkjamies.cammp.feature.cleanarchitecture.data.factory.ModuleBuildGradleSpecFactory
 import com.jkjamies.cammp.feature.cleanarchitecture.data.factory.ModuleSourceSpecFactory
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureResult
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DatasourceStrategy
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.AnnotationModuleRepository
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.CleanArchitectureScaffoldRepository
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.FileSystemRepository
@@ -37,7 +38,7 @@ import java.nio.file.Path
  * Reference: legacy implementation previously in `domain/usecase/CleanArchitectureGenerator.kt`.
  */
 @ContributesBinding(AppScope::class)
-class CleanArchitectureScaffoldRepositoryImpl(
+internal class CleanArchitectureScaffoldRepositoryImpl(
     private val fs: FileSystemRepository,
     private val templateRepo: TemplateRepository,
     private val annotationModuleRepo: AnnotationModuleRepository,
@@ -206,7 +207,7 @@ class CleanArchitectureScaffoldRepositoryImpl(
                     ?.useAnnotations == true
                 if (useKoinAnnotations && p.includeDiModule) {
                     val scanBase = sourceSpecFactory.packageName(p, moduleName = "di", featureName = featureName)
-                        .removeSuffix(".di")
+                        .removeSuffix(PackageSuffixes.DI)
                     annotationModuleRepo.generate(
                         outputDirectory = pkgDir,
                         packageName = pkg,

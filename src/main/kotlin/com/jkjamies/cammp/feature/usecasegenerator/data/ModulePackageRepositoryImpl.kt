@@ -24,7 +24,7 @@ import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
 @ContributesBinding(AppScope::class)
-class ModulePackageRepositoryImpl(
+internal class ModulePackageRepositoryImpl(
     private val dataSource: PackageMetadataDataSource
 ) : ModulePackageRepository {
     override fun findModulePackage(moduleDir: Path): String? {

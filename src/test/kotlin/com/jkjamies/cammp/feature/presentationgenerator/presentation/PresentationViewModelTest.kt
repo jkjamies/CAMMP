@@ -17,7 +17,7 @@
 package com.jkjamies.cammp.feature.presentationgenerator.presentation
 
 import app.cash.turbine.test
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.usecase.PresentationGenerator
@@ -46,7 +46,7 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 vm.state.test {
                     awaitItem() // initial
@@ -70,7 +70,7 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 val fqn = "com.example.UseCase"
 
@@ -93,7 +93,7 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 vm.state.test {
                     val initial = awaitItem()
@@ -155,7 +155,7 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 vm.state.test {
                     awaitItem()
@@ -173,7 +173,7 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 val expectedParams = PresentationParams(
                     moduleDir = Paths.get("/tmp"),
@@ -232,7 +232,7 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 vm.handleIntent(PresentationIntent.SetDirectory("/tmp"))
                 vm.handleIntent(PresentationIntent.SetScreenName("Home"))

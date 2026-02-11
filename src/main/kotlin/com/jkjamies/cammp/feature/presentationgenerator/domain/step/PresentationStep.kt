@@ -16,13 +16,11 @@
 
 package com.jkjamies.cammp.feature.presentationgenerator.domain.step
 
+import com.jkjamies.cammp.domain.step.StepPhase
+import com.jkjamies.cammp.domain.step.StepResult
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 
-sealed interface StepResult {
-    data class Success(val message: String? = null) : StepResult
-    data class Failure(val error: Throwable) : StepResult
-}
-
 interface PresentationStep {
+    val phase: StepPhase
     suspend fun execute(params: PresentationParams): StepResult
 }

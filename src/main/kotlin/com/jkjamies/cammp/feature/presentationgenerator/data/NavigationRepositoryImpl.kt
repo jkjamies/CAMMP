@@ -32,7 +32,7 @@ import kotlin.io.path.writeText
  * Implementation of [NavigationRepository] that generates Navigation components using KotlinPoet.
  */
 @ContributesBinding(AppScope::class)
-class NavigationRepositoryImpl(
+internal class NavigationRepositoryImpl(
     private val specFactory: NavigationSpecFactory
 ) : NavigationRepository {
 

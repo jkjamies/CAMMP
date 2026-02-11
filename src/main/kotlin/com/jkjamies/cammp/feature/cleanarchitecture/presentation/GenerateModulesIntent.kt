@@ -33,5 +33,5 @@ sealed interface GenerateModulesIntent {
     data class SelectDiKoin(val selected: Boolean) : GenerateModulesIntent
     data class SetKoinAnnotations(val selected: Boolean) : GenerateModulesIntent
     data class SetIncludeDiModule(val selected: Boolean) : GenerateModulesIntent
-    object Generate : GenerateModulesIntent
+    data object Generate : GenerateModulesIntent
 }

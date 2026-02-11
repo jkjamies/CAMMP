@@ -16,7 +16,8 @@
 
 package com.jkjamies.cammp.feature.usecasegenerator.data.factory
 
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
@@ -40,7 +41,7 @@ interface UseCaseSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class UseCaseSpecFactoryImpl : UseCaseSpecFactory {
+internal class UseCaseSpecFactoryImpl : UseCaseSpecFactory {
     override fun create(
         packageName: String,
         params: UseCaseParams,
@@ -61,11 +62,11 @@ class UseCaseSpecFactoryImpl : UseCaseSpecFactory {
         when (val di = params.diStrategy) {
             is DiStrategy.Metro,
             is DiStrategy.Hilt -> {
-                constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
+                constructorBuilder.addAnnotation(GeneratedAnnotations.JAVAX_INJECT)
             }
             is DiStrategy.Koin -> {
                 if (di.useAnnotations && interfaceFqn == null) {
-                    classBuilder.addAnnotation(ClassName("org.koin.core.annotation", "Single"))
+                    classBuilder.addAnnotation(GeneratedAnnotations.KOIN_SINGLE)
                 }
             }
         }

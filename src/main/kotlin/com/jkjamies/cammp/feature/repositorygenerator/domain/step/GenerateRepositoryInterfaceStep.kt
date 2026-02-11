@@ -16,6 +16,10 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.domain.step
 
+import com.jkjamies.cammp.domain.codegen.PackageSuffixes
+import com.jkjamies.cammp.domain.step.StepPhase
+import com.jkjamies.cammp.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.runStepCatching
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.RepositoryGenerationRepository
@@ -29,25 +33,23 @@ class GenerateRepositoryInterfaceStep(
     private val generationRepo: RepositoryGenerationRepository
 ) : RepositoryStep {
 
-    override suspend fun execute(params: RepositoryParams): StepResult {
-        return try {
-            val domainDir = params.dataDir.parent?.resolve("domain")
-                ?: error("Could not locate sibling domain module for ${params.dataDir}")
-            
-            val domainExisting = modulePkgRepo.findModulePackage(domainDir)
-            // Simple heuristic to ensure we are in the base package
-            val domainBase = if (domainExisting.contains(".domain")) {
-                 domainExisting.substringBefore(".domain") + ".domain"
-            } else {
-                 domainExisting
-            }
-            
-            val domainFull = "$domainBase.repository"
+    override val phase: StepPhase = StepPhase.GENERATE
 
-            val out = generationRepo.generateDomainLayer(params, domainFull, domainDir)
-            StepResult.Success("- Domain Interface: $out (generated)")
-        } catch (e: Exception) {
-            StepResult.Failure(e)
+    override suspend fun execute(params: RepositoryParams): StepResult = runStepCatching {
+        val domainDir = params.dataDir.parent?.resolve("domain")
+            ?: error("Could not locate sibling domain module for ${params.dataDir}")
+
+        val domainExisting = modulePkgRepo.findModulePackage(domainDir)
+        // Simple heuristic to ensure we are in the base package
+        val domainBase = if (domainExisting.contains(PackageSuffixes.DOMAIN)) {
+            domainExisting.substringBefore(PackageSuffixes.DOMAIN) + PackageSuffixes.DOMAIN
+        } else {
+            domainExisting
         }
+
+        val domainFull = "$domainBase.repository"
+
+        val out = generationRepo.generateDomainLayer(params, domainFull, domainDir)
+        StepResult.Success("- Domain Interface: $out (generated)")
     }
 }

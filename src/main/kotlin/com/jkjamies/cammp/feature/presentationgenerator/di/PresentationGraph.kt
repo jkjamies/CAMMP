@@ -16,11 +16,16 @@
 
 package com.jkjamies.cammp.feature.presentationgenerator.di
 
+import com.jkjamies.cammp.feature.presentationgenerator.domain.step.PresentationStep
 import com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationViewModel
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Multibinds
 
 @ContributesTo(AppScope::class)
 interface PresentationGraph {
     val presentationViewModelFactory: PresentationViewModel.Factory
+
+    @Multibinds(allowEmpty = true)
+    val presentationSteps: Set<PresentationStep>
 }

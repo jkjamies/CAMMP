@@ -18,7 +18,7 @@ package com.jkjamies.cammp.feature.repositorygenerator.domain.usecase
 
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.step.RepositoryStep
-import com.jkjamies.cammp.feature.repositorygenerator.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.StepResult
 import dev.zacsweers.metro.Inject
 
 @Inject
@@ -28,7 +28,7 @@ class RepositoryGenerator(
     suspend operator fun invoke(params: RepositoryParams): Result<String> = runCatching {
         val results = mutableListOf<String>()
         
-        for (step in steps) {
+        for (step in steps.sortedBy { it.phase }) {
             when (val result = step.execute(params)) {
                 is StepResult.Success -> {
                     if (result.message != null) {

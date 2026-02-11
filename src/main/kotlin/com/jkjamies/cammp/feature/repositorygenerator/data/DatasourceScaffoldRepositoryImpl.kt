@@ -26,7 +26,7 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
-class DatasourceScaffoldRepositoryImpl(
+internal class DatasourceScaffoldRepositoryImpl(
     private val specFactory: DataSourceSpecFactory
 ) : DatasourceScaffoldRepository {
 

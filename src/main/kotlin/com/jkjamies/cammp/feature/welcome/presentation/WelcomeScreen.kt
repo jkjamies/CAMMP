@@ -112,7 +112,7 @@ internal fun WelcomeScreen() {
                     "Local Datasource (if 'Local' selected)",
                     "Remote Datasource (if 'Remote' selected)",
                     "Combined Datasource (if 'Combined' selected)",
-                    "DI Module (Hilt or Koin based on selection)"
+                    "DI Module (Metro, Hilt, or Koin based on selection)"
                 )
             }
 
@@ -123,7 +123,7 @@ internal fun WelcomeScreen() {
                     boldItem(
                         "Note: ",
                         "AGP Version: ",
-                        "Assumes AGP 8.13.2 or earlier. AGP 9+ may require manual modifications to the generated convention plugins."
+                        "Assumes AGP 8.x. AGP 9+ may require manual modifications to the generated convention plugins."
                     ),
                     fontSize = 12.sp
                 )
@@ -150,7 +150,7 @@ internal fun WelcomeScreen() {
                         "kotlin-serialization",
                         "compose-compiler",
                         "hilt (if Hilt selected)",
-                        "metro (if Metro selected - coming soon)"
+                        "metro (if Metro selected)"
                     )
                 }
 
@@ -173,7 +173,7 @@ internal fun WelcomeScreen() {
                         "koin-core (if Koin Annotations selected)",
                         "koin-annotations (if Koin Annotations selected)",
                         "koin-ksp-compiler (if Koin Annotations selected)",
-                        "metro (if Metro selected - coming soon)"
+                        "metro (if Metro selected)"
                     )
                 }
 
@@ -213,7 +213,7 @@ internal fun WelcomeScreen() {
             }
 
             CollapsibleSubSection("Dependency Injection", "CleanArch:DI") {
-                Text("Supports Hilt, Koin, and Metro (coming soon). For Koin, you can choose between standard DSL and Koin Annotations.")
+                Text("Supports Metro, Hilt, and Koin. For Koin, you can choose between standard DSL and Koin Annotations.")
                 Spacer(Modifier.height(4.dp))
                 Text(
                     boldItem(

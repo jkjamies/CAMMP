@@ -16,7 +16,8 @@
 
 package com.jkjamies.cammp.feature.presentationgenerator.data.factory
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
 import com.squareup.kotlinpoet.ClassName
@@ -36,14 +37,14 @@ interface ViewModelSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class ViewModelSpecFactoryImpl : ViewModelSpecFactory {
+internal class ViewModelSpecFactoryImpl : ViewModelSpecFactory {
 
     override fun create(packageName: String, params: PresentationParams): FileSpec {
         val viewModelName = "${params.screenName}ViewModel"
         val uiStateName = "${params.screenName}UiState"
         val intentName = "${params.screenName}Intent"
 
-        val viewModelClass = ClassName("androidx.lifecycle", "ViewModel")
+        val viewModelClass = GeneratedAnnotations.VIEW_MODEL
         val mutableStateFlowClass = ClassName("kotlinx.coroutines.flow", "MutableStateFlow")
         val stateFlowClass = ClassName("kotlinx.coroutines.flow", "StateFlow")
         val asStateFlowMember = MemberName("kotlinx.coroutines.flow", "asStateFlow")
@@ -61,12 +62,12 @@ class ViewModelSpecFactoryImpl : ViewModelSpecFactory {
         when (val di = params.diStrategy) {
             is DiStrategy.Metro,
             is DiStrategy.Hilt -> {
-                classBuilder.addAnnotation(ClassName("dagger.hilt.android.lifecycle", "HiltViewModel"))
-                constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
+                classBuilder.addAnnotation(GeneratedAnnotations.HILT_VIEW_MODEL)
+                constructorBuilder.addAnnotation(GeneratedAnnotations.JAVAX_INJECT)
             }
             is DiStrategy.Koin -> {
                 if (di.useAnnotations) {
-                    classBuilder.addAnnotation(ClassName("org.koin.android.annotation", "KoinViewModel"))
+                    classBuilder.addAnnotation(GeneratedAnnotations.KOIN_VIEW_MODEL)
                 }
             }
         }

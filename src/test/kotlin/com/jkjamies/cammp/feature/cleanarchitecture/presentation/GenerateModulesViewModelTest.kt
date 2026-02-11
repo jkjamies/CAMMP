@@ -41,7 +41,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
 
         When("Generate is invoked with missing project base") {
             val generator = mockk<CleanArchitectureGenerator>()
-            val vm = GenerateModulesViewModel(projectBasePath = "", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
             vm.handleIntent(GenerateModulesIntent.Generate)
 
@@ -52,7 +52,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
 
         When("Generate is invoked for KMP") {
             val generator = mockk<CleanArchitectureGenerator>()
-            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
             vm.handleIntent(GenerateModulesIntent.SetPlatformKmp(true))
             vm.handleIntent(GenerateModulesIntent.Generate)
@@ -77,7 +77,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
                 generator.invoke(any<CleanArchitectureParams>())
             } returns Result.success(result)
 
-            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
             vm.state.test {
                 // initial
@@ -114,7 +114,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
             val generator = mockk<CleanArchitectureGenerator>()
             coEvery { generator.invoke(any()) } returns Result.failure(IllegalStateException("boom"))
 
-            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, ioDispatcher = dispatcher, generator = generator)
             vm.handleIntent(GenerateModulesIntent.SetRoot("app"))
             vm.handleIntent(GenerateModulesIntent.SetFeature("my-feature"))
 
@@ -128,7 +128,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
 
         When("non-generate intents are dispatched") {
             val generator = mockk<CleanArchitectureGenerator>(relaxed = true)
-            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
             vm.handleIntent(GenerateModulesIntent.SetOrgCenter("com.example"))
             vm.handleIntent(GenerateModulesIntent.SetIncludePresentation(true))
@@ -177,7 +177,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
 
         When("verifying DI Module Checkbox Logic") {
             val generator = mockk<CleanArchitectureGenerator>(relaxed = true)
-            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
             Then("it should match the requirements for all DI strategies") {
                 // Initial State: Metro selected by default

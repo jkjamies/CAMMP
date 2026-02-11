@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.cleanarchitecture.domain.step
 
+import com.jkjamies.cammp.domain.step.StepPhase
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.CleanArchitectureScaffoldRepository
 import dev.zacsweers.metro.AppScope
@@ -30,7 +31,9 @@ class GenerateModulesStep(
     private val scaffoldRepo: CleanArchitectureScaffoldRepository,
 ) : CleanArchitectureStep {
 
-    override suspend fun execute(params: CleanArchitectureParams): StepResult = runCatching {
+    override val phase: StepPhase = StepPhase.SCAFFOLD
+
+    override suspend fun execute(params: CleanArchitectureParams): StepResult = runCleanArchStepCatching {
         StepResult.Scaffold(scaffoldRepo.generateModules(params))
-    }.getOrElse { StepResult.Failure(it) }
+    }
 }

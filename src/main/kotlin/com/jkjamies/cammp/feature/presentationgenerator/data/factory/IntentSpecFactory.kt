@@ -30,7 +30,7 @@ interface IntentSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class IntentSpecFactoryImpl : IntentSpecFactory {
+internal class IntentSpecFactoryImpl : IntentSpecFactory {
 
     override fun create(packageName: String, params: PresentationParams): FileSpec {
         val intentName = "${params.screenName}Intent"

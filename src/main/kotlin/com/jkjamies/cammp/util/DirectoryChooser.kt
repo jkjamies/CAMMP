@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.jetbrains.plugins.template.util
+package com.jkjamies.cammp.util
 
 import com.intellij.openapi.fileChooser.FileChooser
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
@@ -38,4 +38,3 @@ fun chooseDirectoryPath(project: Project, currentPath: String?): String? {
     val file = FileChooser.chooseFile(descriptor, project, toSelect)
     return file?.path
 }
-

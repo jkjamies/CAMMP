@@ -16,7 +16,7 @@
 
 package com.jkjamies.cammp.feature.usecasegenerator.testutil
 
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.ModulePackageRepository
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.RepositoryDiscoveryRepository
@@ -24,12 +24,14 @@ import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseDiMo
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationRepository
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseGenerationResult
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseMergeOutcome
-import com.jkjamies.cammp.feature.usecasegenerator.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.StepPhase
+import com.jkjamies.cammp.domain.step.StepResult
 import com.jkjamies.cammp.feature.usecasegenerator.domain.step.UseCaseStep
 import java.nio.file.Path
 
 internal class UseCaseStepFake(
     private val results: ArrayDeque<StepResult> = ArrayDeque(),
+    override val phase: StepPhase = StepPhase.GENERATE,
 ) : UseCaseStep {
     val calls = mutableListOf<UseCaseParams>()
 

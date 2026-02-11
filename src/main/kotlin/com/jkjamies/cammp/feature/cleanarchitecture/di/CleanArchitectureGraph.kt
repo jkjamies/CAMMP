@@ -16,11 +16,16 @@
 
 package com.jkjamies.cammp.feature.cleanarchitecture.di
 
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.step.CleanArchitectureStep
 import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesViewModel
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Multibinds
 
 @ContributesTo(AppScope::class)
 interface CleanArchitectureGraph {
     val generateModulesViewModelFactory: GenerateModulesViewModel.Factory
+
+    @Multibinds(allowEmpty = true)
+    val cleanArchitectureSteps: Set<CleanArchitectureStep>
 }

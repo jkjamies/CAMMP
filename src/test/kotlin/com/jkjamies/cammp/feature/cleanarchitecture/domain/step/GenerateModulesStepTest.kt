@@ -18,8 +18,8 @@ package com.jkjamies.cammp.feature.cleanarchitecture.domain.step
 
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureResult
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DatasourceStrategy
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.cleanarchitecture.testutil.CleanArchitectureScaffoldRepositoryFake
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe

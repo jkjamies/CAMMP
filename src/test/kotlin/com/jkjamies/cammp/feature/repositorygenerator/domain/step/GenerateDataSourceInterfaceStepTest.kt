@@ -16,9 +16,11 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.domain.step
 
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.step.StepResult
+
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
 import io.kotest.core.spec.style.BehaviorSpec

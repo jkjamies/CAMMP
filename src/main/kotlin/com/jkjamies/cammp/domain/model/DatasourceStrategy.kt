@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package org.jetbrains.plugins.template
+package com.jkjamies.cammp.domain.model
 
-import com.intellij.ui.IconManager
-
-@Suppress("unused")
-object ComposeIcons {
-    @JvmField
-    val ComposeToolWindow =
-        IconManager.getInstance().getIcon("/icons/composeToolWindow.svg", javaClass.getClassLoader())
+sealed interface DatasourceStrategy {
+    data object None : DatasourceStrategy
+    data object Combined : DatasourceStrategy
+    data object LocalOnly : DatasourceStrategy
+    data object RemoteOnly : DatasourceStrategy
+    data object RemoteAndLocal : DatasourceStrategy
 }

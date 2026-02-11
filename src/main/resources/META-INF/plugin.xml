@@ -7,11 +7,9 @@
         <module name="intellij.platform.compose"/>
     </dependencies>
 
-    <resource-bundle>messages.ComposeTemplateBundle</resource-bundle>
-
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="org.jetbrains.plugins.template.toolWindow.ComposeSamplesToolWindowFactory"
-                    icon="org.jetbrains.plugins.template.ComposeIcons.ComposeToolWindow"
+        <toolWindow factoryClass="com.jkjamies.cammp.toolwindow.CammpToolWindowFactory"
+                    icon="com.jkjamies.cammp.toolwindow.CammpIcons.ComposeToolWindow"
                     id="CAMMP"/>
     </extensions>
 </idea-plugin>

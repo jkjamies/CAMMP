@@ -16,9 +16,9 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.data.factory
 
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
 import java.nio.file.Paths

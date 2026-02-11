@@ -22,7 +22,7 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 
 @ContributesBinding(AppScope::class)
-class TemplateRepositoryImpl : TemplateRepository {
+internal class TemplateRepositoryImpl : TemplateRepository {
     override fun getTemplateText(resourcePath: String): String {
         val url = this::class.java.classLoader.getResource(resourcePath)
             ?: error("Template not found: $resourcePath")

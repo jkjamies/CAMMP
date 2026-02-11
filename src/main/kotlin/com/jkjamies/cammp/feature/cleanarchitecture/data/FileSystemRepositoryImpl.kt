@@ -29,7 +29,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
-class FileSystemRepositoryImpl : FileSystemRepository {
+internal class FileSystemRepositoryImpl : FileSystemRepository {
     override fun exists(path: Path): Boolean = path.exists()
     override fun isDirectory(path: Path): Boolean = path.isDirectory()
     override fun createDirectories(path: Path): Path = path.createDirectories()

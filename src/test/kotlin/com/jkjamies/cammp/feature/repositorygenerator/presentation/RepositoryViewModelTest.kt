@@ -16,8 +16,8 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.presentation
 
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryGenerator
@@ -31,6 +31,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 
 /**
@@ -46,12 +47,14 @@ class RepositoryViewModelTest : BehaviorSpec({
     )
 
     fun newHarness(domainPackage: String = ""): Harness {
-        val scope = TestScope()
+        val dispatcher = StandardTestDispatcher()
+        val scope = TestScope(dispatcher)
         val generator = mockk<RepositoryGenerator>()
         val loadDataSources = mockk<LoadDataSourcesByType>()
         val vm = RepositoryViewModel(
             domainPackage = domainPackage,
             scope = scope,
+            ioDispatcher = dispatcher,
             generator = generator,
             loadDataSourcesByType = loadDataSources,
         )

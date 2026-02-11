@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.cleanarchitecture.domain.step
 
+import com.jkjamies.cammp.domain.step.StepPhase
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureResult
 
@@ -28,5 +29,13 @@ sealed interface StepResult {
 }
 
 interface CleanArchitectureStep {
+    val phase: StepPhase
     suspend fun execute(params: CleanArchitectureParams): StepResult
 }
+
+inline fun runCleanArchStepCatching(block: () -> StepResult): StepResult =
+    try {
+        block()
+    } catch (e: Throwable) {
+        StepResult.Failure(e)
+    }

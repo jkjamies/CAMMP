@@ -17,7 +17,7 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.data.factory
 
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain

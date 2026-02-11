@@ -16,7 +16,7 @@
 
 package com.jkjamies.cammp.feature.usecasegenerator.domain.repository
 
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import java.nio.file.Path
 
 data class UseCaseMergeOutcome(val outPath: Path, val status: String)

@@ -87,7 +87,7 @@ CAMMP respects that not all repositories are created equal. Choose a strategy th
 
 ### 🔧 Modern Tech Stack Support
 Support for the bleeding edge of Android & KMP development:
-*   **Language**: Kotlin 2.2.20+
+*   **Language**: Kotlin 2.3.0+
 *   **UI**: Jetpack Compose (Jewel Theme for Plugin UI)
 *   **Dependency Injection**:
     *   **Metro**

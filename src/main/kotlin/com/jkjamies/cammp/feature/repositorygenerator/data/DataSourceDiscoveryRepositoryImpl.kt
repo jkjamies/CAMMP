@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import com.intellij.openapi.diagnostic.Logger
 import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.repositorygenerator.data.datasource.PackageMetadataDataSource
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceDiscoveryRepository
@@ -27,9 +28,12 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
 @ContributesBinding(AppScope::class)
-class DataSourceDiscoveryRepositoryImpl(
+internal class DataSourceDiscoveryRepositoryImpl(
     private val packageMetadataDataSource: PackageMetadataDataSource
 ) : DataSourceDiscoveryRepository {
+
+    private val log = Logger.getInstance(DataSourceDiscoveryRepositoryImpl::class.java)
+
     override fun loadDataSourcesByType(dataModulePath: String): Map<String, List<String>> {
         return try {
             val moduleDir = Paths.get(dataModulePath)
@@ -65,7 +69,8 @@ class DataSourceDiscoveryRepositoryImpl(
                 "Remote" to listFqnsInPackage(remotePkg),
                 "Local" to listFqnsInPackage(localPkg),
             ).filterValues { it.isNotEmpty() }
-        } catch (_: Throwable) {
+        } catch (t: Throwable) {
+            log.warn("Failed to discover data sources in $dataModulePath", t)
             emptyMap()
         }
     }

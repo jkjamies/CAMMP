@@ -16,11 +16,11 @@
 
 package com.jkjamies.cammp.feature.presentationgenerator.data.factory
 
+import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -33,15 +33,15 @@ interface FlowStateHolderSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class FlowStateHolderSpecFactoryImpl : FlowStateHolderSpecFactory {
+internal class FlowStateHolderSpecFactoryImpl : FlowStateHolderSpecFactory {
 
     override fun create(packageName: String, flowName: String): FileSpec {
-        val navHostController = ClassName("androidx.navigation", "NavHostController")
-        val rememberNavController = MemberName("androidx.navigation.compose", "rememberNavController")
-        val composableAnnotation = ClassName("androidx.compose.runtime", "Composable")
-        val remember = MemberName("androidx.compose.runtime", "remember")
-        val coroutineScope = ClassName("kotlinx.coroutines", "CoroutineScope")
-        val rememberCoroutineScope = MemberName("androidx.compose.runtime", "rememberCoroutineScope")
+        val navHostController = GeneratedAnnotations.NAV_HOST_CONTROLLER
+        val rememberNavController = GeneratedAnnotations.REMEMBER_NAV_CONTROLLER
+        val composableAnnotation = GeneratedAnnotations.COMPOSABLE
+        val remember = GeneratedAnnotations.REMEMBER
+        val coroutineScope = GeneratedAnnotations.COROUTINE_SCOPE
+        val rememberCoroutineScope = GeneratedAnnotations.REMEMBER_COROUTINE_SCOPE
 
         val stateHolderClass = TypeSpec.classBuilder(flowName)
             .addModifiers(KModifier.INTERNAL)
