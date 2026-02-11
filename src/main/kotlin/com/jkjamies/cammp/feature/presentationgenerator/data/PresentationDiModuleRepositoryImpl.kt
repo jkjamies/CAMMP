@@ -17,6 +17,7 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data
 
 import dev.zacsweers.metro.AppScope
+import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationDiModuleRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationMergeOutcome
 import com.squareup.kotlinpoet.CodeBlock
@@ -34,7 +35,7 @@ import kotlin.io.path.writeText
  * Implementation of [PresentationDiModuleRepository] for creating and updating Koin ViewModel modules.
  */
 @ContributesBinding(AppScope::class)
-class PresentationDiModuleRepositoryImpl : PresentationDiModuleRepository {
+internal class PresentationDiModuleRepositoryImpl : PresentationDiModuleRepository {
 
     override fun mergeViewModelModule(
         diDir: Path,
@@ -59,7 +60,7 @@ class PresentationDiModuleRepositoryImpl : PresentationDiModuleRepository {
 
             val property = PropertySpec.builder(
                 "viewModelModule",
-                com.squareup.kotlinpoet.ClassName("org.koin.core.module", "Module")
+                GeneratedAnnotations.KOIN_MODULE
             )
                 .initializer(codeBlock)
                 .build()

@@ -27,6 +27,7 @@ import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.GradleSett
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.PluginType
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.DiMode
 import java.nio.file.Path
+import java.util.Collections
 
 /**
  * Keep test doubles for cleanarchitecture in one place.
@@ -45,14 +46,14 @@ class GradleSettingsDataSourceFake(
         val modules: List<String>,
     )
 
-    val ensureIncludesCalls = mutableListOf<EnsureIncludesCall>()
+    val ensureIncludesCalls: MutableList<EnsureIncludesCall> = Collections.synchronizedList(mutableListOf())
 
     data class EnsureIncludeBuildCall(
         val projectBase: Path,
         val buildLogicName: String,
     )
 
-    val ensureIncludeBuildCalls = mutableListOf<EnsureIncludeBuildCall>()
+    val ensureIncludeBuildCalls: MutableList<EnsureIncludeBuildCall> = Collections.synchronizedList(mutableListOf())
 
     data class EnsureVersionCatalogPluginAliasesCall(
         val projectBase: Path,
@@ -60,7 +61,7 @@ class GradleSettingsDataSourceFake(
         val enabledModules: List<String>,
     )
 
-    val ensureVersionCatalogPluginAliasesCalls = mutableListOf<EnsureVersionCatalogPluginAliasesCall>()
+    val ensureVersionCatalogPluginAliasesCalls: MutableList<EnsureVersionCatalogPluginAliasesCall> = Collections.synchronizedList(mutableListOf())
 
     data class EnsureAppDependencyCall(
         val projectBase: Path,
@@ -69,7 +70,7 @@ class GradleSettingsDataSourceFake(
         val diMode: DiMode,
     )
 
-    val ensureAppDependencyCalls = mutableListOf<EnsureAppDependencyCall>()
+    val ensureAppDependencyCalls: MutableList<EnsureAppDependencyCall> = Collections.synchronizedList(mutableListOf())
 
     override fun ensureIncludes(projectBase: Path, root: String, feature: String, modules: List<String>): Boolean {
         ensureIncludesCalls += EnsureIncludesCall(projectBase, root, feature, modules)
@@ -102,7 +103,7 @@ class BuildLogicScaffoldRepositoryFake(
         val diMode: DiMode,
     )
 
-    val calls = mutableListOf<Call>()
+    val calls: MutableList<Call> = Collections.synchronizedList(mutableListOf())
 
     override fun ensureBuildLogic(params: CleanArchitectureParams, enabledModules: List<String>, diMode: DiMode): Boolean {
         calls += Call(params, enabledModules, diMode)
@@ -120,7 +121,7 @@ class GradleSettingsScaffoldRepositoryFake(
         val diMode: DiMode,
     )
 
-    val calls = mutableListOf<Call>()
+    val calls: MutableList<Call> = Collections.synchronizedList(mutableListOf())
 
     override fun ensureSettings(params: CleanArchitectureParams, enabledModules: List<String>, diMode: DiMode): Boolean {
         calls += Call(params, enabledModules, diMode)
@@ -132,7 +133,7 @@ class CleanArchitectureScaffoldRepositoryFake(
     private val onGenerate: (CleanArchitectureParams) -> CleanArchitectureResult,
 ) : CleanArchitectureScaffoldRepository {
 
-    val calls = mutableListOf<CleanArchitectureParams>()
+    val calls: MutableList<CleanArchitectureParams> = Collections.synchronizedList(mutableListOf())
 
     override suspend fun generateModules(params: CleanArchitectureParams): CleanArchitectureResult {
         calls += params
@@ -141,11 +142,11 @@ class CleanArchitectureScaffoldRepositoryFake(
 }
 
 /**
- * A fake [AliasesRepository] that writes the generated output to a real [com.jkjamies.cammp.feature.cleanarchitecture.data.FileSystemRepositoryImpl]
+ * A fake [AliasesRepository] that writes the generated output to a [FileSystemRepository]
  * so higher-level repository integration tests can assert on the presence of files.
  */
 class AliasesRepositoryWritingFake(
-    private val fs: com.jkjamies.cammp.feature.cleanarchitecture.data.FileSystemRepositoryImpl,
+    private val fs: com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.FileSystemRepository,
 ) : AliasesRepository {
 
     override fun generateAliases(outputDirectory: Path, packageName: String, diMode: DiMode, tomlPath: Path) {
@@ -163,7 +164,7 @@ class AliasesRepositoryWritingFake(
  * A fake [ConventionPluginRepository] that writes a placeholder plugin file so callers can assert on filesystem effects.
  */
 class ConventionPluginRepositoryWritingFake(
-    private val fs: com.jkjamies.cammp.feature.cleanarchitecture.data.FileSystemRepositoryImpl,
+    private val fs: com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.FileSystemRepository,
 ) : ConventionPluginRepository {
 
     override fun generate(outputDirectory: Path, packageName: String, diMode: DiMode, type: PluginType) {

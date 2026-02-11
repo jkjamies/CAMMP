@@ -16,6 +16,9 @@
 
 package com.jkjamies.cammp.feature.presentationgenerator.domain.step
 
+import com.jkjamies.cammp.domain.step.StepPhase
+import com.jkjamies.cammp.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.runStepCatching
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.FlowStateHolderRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ModulePackageRepository
@@ -31,17 +34,19 @@ class GenerateFlowStateHolderStep(
     private val flowStateHolderRepo: FlowStateHolderRepository
 ) : PresentationStep {
 
+    override val phase: StepPhase = StepPhase.GENERATE
+
     override suspend fun execute(params: PresentationParams): StepResult {
         if (!params.useFlowStateHolder) {
             return StepResult.Success(null)
         }
 
-        return try {
-            val pkg = inferPresentationPackage(params.moduleDir)
+        return runStepCatching {
+            val pkg = inferPresentationPackage(modulePkgRepo, params.moduleDir)
             val kotlinDir = params.moduleDir.resolve("src/main/kotlin").also { if (!it.exists()) it.createDirectories() }
             val pkgDir = kotlinDir.resolve(pkg.replace('.', '/')).also { if (!it.exists()) it.createDirectories() }
-            
-            val moduleName = deriveModuleNameForFlowHolder(pkg)
+
+            val moduleName = deriveModuleName(pkg)
             val result = flowStateHolderRepo.generateFlowStateHolder(
                 targetDir = pkgDir,
                 packageName = pkg,
@@ -49,22 +54,6 @@ class GenerateFlowStateHolderStep(
                 params = params
             )
             StepResult.Success("- ${result.fileName}: ${result.path} (${result.status})")
-        } catch (e: Exception) {
-            StepResult.Failure(e)
         }
-    }
-
-    private fun inferPresentationPackage(moduleDir: java.nio.file.Path): String {
-        val existing = modulePkgRepo.findModulePackage(moduleDir)
-        return existing ?: "com.example.presentation"
-    }
-
-    private fun deriveModuleNameForFlowHolder(pkg: String): String {
-        val parts = pkg.split('.')
-        val idx = parts.indexOf("presentation")
-        if (idx > 0) {
-            return parts.getOrNull(idx - 1)?.replaceFirstChar { it.uppercase() } ?: "App"
-        }
-        return parts.lastOrNull()?.replaceFirstChar { it.uppercase() } ?: "App"
     }
 }

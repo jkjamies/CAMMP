@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.jetbrains.plugins.template.toolWindow
+package com.jkjamies.cammp.toolwindow
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -27,45 +27,40 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import com.jkjamies.cammp.di.CammpGraph
 import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesIntent
 import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesScreen
-import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesUiState
-import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesViewModel
 import com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationGeneratorScreen
 import com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationIntent
-import com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationUiState
 import com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationViewModel
 import com.jkjamies.cammp.feature.repositorygenerator.presentation.RepositoryGeneratorScreen
 import com.jkjamies.cammp.feature.repositorygenerator.presentation.RepositoryIntent
-import com.jkjamies.cammp.feature.repositorygenerator.presentation.RepositoryUiState
 import com.jkjamies.cammp.feature.repositorygenerator.presentation.RepositoryViewModel
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseGeneratorScreen
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseIntent
-import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseUiState
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseViewModel
 import com.jkjamies.cammp.feature.welcome.presentation.WelcomeScreen
+import com.jkjamies.cammp.util.chooseDirectoryPath
+import com.jkjamies.cammp.util.refreshUseCases
 import dev.zacsweers.metro.createGraph
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import org.jetbrains.jewel.bridge.addComposeTab
-import org.jetbrains.plugins.template.util.chooseDirectoryPath
-import org.jetbrains.plugins.template.util.refreshUseCases
 
-class ComposeSamplesToolWindowFactory : ToolWindowFactory, DumbAware {
+class CammpToolWindowFactory : ToolWindowFactory, DumbAware {
     override fun shouldBeAvailable(project: Project) = true
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        cleanArchitecture(project, toolWindow)
+        setupTabs(project, toolWindow)
     }
 
-    private fun cleanArchitecture(project: Project, toolWindow: ToolWindow) {
+    private fun setupTabs(project: Project, toolWindow: ToolWindow) {
         val basePath = project.basePath ?: ""
-        
+
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
         Disposer.register(toolWindow.disposable) { scope.cancel() }
 
         val graph = createGraph<CammpGraph>()
-        
+
         val vm = graph.generateModulesViewModelFactory.create(basePath, scope)
         val presentationVm = graph.presentationViewModelFactory.create(basePath, scope)
         val repositoryVm = graph.repositoryViewModelFactory.create(basePath, scope)

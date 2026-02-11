@@ -18,6 +18,7 @@ package com.jkjamies.cammp.feature.repositorygenerator.datasource
 
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
+import com.jkjamies.cammp.domain.codegen.PackageSuffixes
 import com.jkjamies.cammp.feature.repositorygenerator.data.datasource.PackageMetadataDataSource
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -34,9 +35,9 @@ internal fun inferRepositoryModulePackageFrom(packages: Set<String>, moduleName:
 
     val name = moduleName?.lowercase().orEmpty()
     val preferredSuffix = when (name) {
-        "data" -> ".data"
-        "domain" -> ".domain"
-        "di" -> ".di"
+        "data" -> PackageSuffixes.DATA
+        "domain" -> PackageSuffixes.DOMAIN
+        "di" -> PackageSuffixes.DI
         else -> null
     }
 
@@ -55,7 +56,7 @@ internal fun inferRepositoryModulePackageFrom(packages: Set<String>, moduleName:
 }
 
 @ContributesBinding(AppScope::class)
-class PackageMetadataDataSourceImpl : PackageMetadataDataSource {
+internal class PackageMetadataDataSourceImpl : PackageMetadataDataSource {
     override fun findModulePackage(moduleDir: Path): String? {
         val vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(moduleDir.toString())
             ?: return null

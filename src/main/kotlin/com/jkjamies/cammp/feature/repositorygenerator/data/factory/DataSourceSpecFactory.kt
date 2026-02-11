@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.data.factory
 
+import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -37,7 +38,7 @@ interface DataSourceSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class DataSourceSpecFactoryImpl : DataSourceSpecFactory {
+internal class DataSourceSpecFactoryImpl : DataSourceSpecFactory {
     override fun createInterface(packageName: String, className: String): FileSpec {
         return FileSpec.builder(packageName, className)
             .addType(TypeSpec.interfaceBuilder(className).build())
@@ -54,7 +55,7 @@ class DataSourceSpecFactoryImpl : DataSourceSpecFactory {
         val ifaceClassName = ClassName(interfacePackage, interfaceName)
         val constructorBuilder = FunSpec.constructorBuilder()
         if (!useKoin) {
-            constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
+            constructorBuilder.addAnnotation(GeneratedAnnotations.JAVAX_INJECT)
         }
 
         return FileSpec.builder(packageName, className)

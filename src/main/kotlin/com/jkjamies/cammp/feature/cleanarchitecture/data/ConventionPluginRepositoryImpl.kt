@@ -33,7 +33,7 @@ import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
 @ContributesBinding(AppScope::class)
-class ConventionPluginRepositoryImpl(
+internal class ConventionPluginRepositoryImpl(
     private val fs: FileSystemRepository
 ) : ConventionPluginRepository {
 

@@ -18,8 +18,8 @@ package com.jkjamies.cammp.feature.repositorygenerator.data
 
 import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempDir
 import com.jkjamies.cammp.feature.repositorygenerator.data.factory.RepositorySpecFactory
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec

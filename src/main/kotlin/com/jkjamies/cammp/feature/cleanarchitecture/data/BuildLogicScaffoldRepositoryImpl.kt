@@ -30,7 +30,7 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 
 @ContributesBinding(AppScope::class)
-class BuildLogicScaffoldRepositoryImpl(
+internal class BuildLogicScaffoldRepositoryImpl(
     private val fs: FileSystemRepository,
     private val templateRepo: TemplateRepository,
     private val aliasesRepo: AliasesRepository,

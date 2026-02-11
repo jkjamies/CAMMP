@@ -23,7 +23,7 @@ import com.jkjamies.cammp.feature.presentationgenerator.data.factory.ScreenSpecF
 import com.jkjamies.cammp.feature.presentationgenerator.data.factory.ScreenStateHolderSpecFactoryImpl
 import com.jkjamies.cammp.feature.presentationgenerator.data.factory.UiStateSpecFactoryImpl
 import com.jkjamies.cammp.feature.presentationgenerator.data.factory.ViewModelSpecFactoryImpl
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.GenerationStatus
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy

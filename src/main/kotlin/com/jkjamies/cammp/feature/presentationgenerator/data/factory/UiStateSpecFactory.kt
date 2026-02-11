@@ -17,7 +17,10 @@
 package com.jkjamies.cammp.feature.presentationgenerator.data.factory
 
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -28,23 +31,23 @@ interface UiStateSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class UiStateSpecFactoryImpl : UiStateSpecFactory {
+internal class UiStateSpecFactoryImpl : UiStateSpecFactory {
 
     override fun create(packageName: String, screenName: String): FileSpec {
         val uiStateName = "${screenName}UiState"
         val classBuilder = TypeSpec.classBuilder(uiStateName)
             .addModifiers(KModifier.INTERNAL, KModifier.DATA)
             .primaryConstructor(
-                com.squareup.kotlinpoet.FunSpec.constructorBuilder()
+                FunSpec.constructorBuilder()
                     .addParameter(
-                        com.squareup.kotlinpoet.ParameterSpec.builder("isLoading", Boolean::class)
+                        ParameterSpec.builder("isLoading", Boolean::class)
                             .defaultValue("false")
                             .build()
                     )
                     .build()
             )
             .addProperty(
-                com.squareup.kotlinpoet.PropertySpec.builder("isLoading", Boolean::class)
+                PropertySpec.builder("isLoading", Boolean::class)
                     .initializer("isLoading")
                     .build()
             )

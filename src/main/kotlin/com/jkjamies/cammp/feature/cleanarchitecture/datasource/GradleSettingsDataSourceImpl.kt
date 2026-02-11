@@ -34,7 +34,7 @@ import kotlin.io.path.writeText
  * repositories call datasources; datasources do IO/merges.
  */
 @ContributesBinding(AppScope::class)
-class GradleSettingsDataSourceImpl : GradleSettingsDataSource {
+internal class GradleSettingsDataSourceImpl : GradleSettingsDataSource {
 
     override fun ensureIncludes(projectBase: Path, root: String, feature: String, modules: List<String>): Boolean {
         val settings = projectBase.resolve("settings.gradle.kts")

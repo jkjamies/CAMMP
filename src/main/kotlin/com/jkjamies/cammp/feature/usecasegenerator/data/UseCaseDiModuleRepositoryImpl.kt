@@ -18,7 +18,7 @@ package com.jkjamies.cammp.feature.usecasegenerator.data
 
 import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.usecasegenerator.data.datasource.DiModuleDataSource
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseDiModuleRepository
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.UseCaseMergeOutcome
 import dev.zacsweers.metro.ContributesBinding
@@ -30,7 +30,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
-class UseCaseDiModuleRepositoryImpl(
+internal class UseCaseDiModuleRepositoryImpl(
     private val dataSource: DiModuleDataSource
 ) : UseCaseDiModuleRepository {
 

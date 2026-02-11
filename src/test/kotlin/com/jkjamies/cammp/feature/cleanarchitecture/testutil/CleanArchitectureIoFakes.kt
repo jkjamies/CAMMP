@@ -20,13 +20,15 @@ import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.Annotation
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.FileSystemRepository
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.TemplateRepository
 import java.nio.file.Path
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
 
 internal class FileSystemRepositoryFake : FileSystemRepository {
 
-    val createdDirectories = mutableSetOf<Path>()
-    val writes = mutableMapOf<Path, String>()
+    val createdDirectories: MutableSet<Path> = ConcurrentHashMap.newKeySet()
+    val writes: MutableMap<Path, String> = ConcurrentHashMap()
 
-    private val existing = mutableSetOf<Path>()
+    private val existing: MutableSet<Path> = ConcurrentHashMap.newKeySet()
 
     override fun exists(path: Path): Boolean = path in existing || path in createdDirectories || path in writes
 
@@ -63,7 +65,7 @@ internal class TemplateRepositoryFake(
 
 internal class AnnotationModuleRepositoryFake : AnnotationModuleRepository {
     data class Call(val outputDirectory: Path, val packageName: String, val scanPackage: String, val featureName: String)
-    val calls = mutableListOf<Call>()
+    val calls: MutableList<Call> = Collections.synchronizedList(mutableListOf())
 
     override fun generate(outputDirectory: Path, packageName: String, scanPackage: String, featureName: String) {
         calls.add(Call(outputDirectory, packageName, scanPackage, featureName))

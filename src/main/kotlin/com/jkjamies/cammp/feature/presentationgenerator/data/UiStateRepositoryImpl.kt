@@ -32,7 +32,7 @@ import kotlin.io.path.writeText
  * Implementation of [UiStateRepository] that generates UI State data classes using KotlinPoet.
  */
 @ContributesBinding(AppScope::class)
-class UiStateRepositoryImpl(
+internal class UiStateRepositoryImpl(
     private val specFactory: UiStateSpecFactory
 ) : UiStateRepository {
 

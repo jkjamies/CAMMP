@@ -18,7 +18,8 @@ package com.jkjamies.cammp.feature.cleanarchitecture.domain.usecase
 
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureResult
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.step.StepPhase
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.step.CleanArchitectureStep
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.step.StepResult
 import io.kotest.core.spec.style.BehaviorSpec
@@ -46,10 +47,12 @@ class CleanArchitectureGeneratorTest : BehaviorSpec({
 
         When("a step fails") {
             val failingStep = object : CleanArchitectureStep {
+                override val phase = StepPhase.GENERATE
                 override suspend fun execute(params: CleanArchitectureParams): StepResult =
                     StepResult.Failure(IllegalStateException("boom"))
             }
             val scaffoldStep = object : CleanArchitectureStep {
+                override val phase = StepPhase.SCAFFOLD
                 override suspend fun execute(params: CleanArchitectureParams): StepResult =
                     StepResult.Scaffold(
                         CleanArchitectureResult(
@@ -71,6 +74,7 @@ class CleanArchitectureGeneratorTest : BehaviorSpec({
 
         When("scaffold step is missing") {
             val okStep = object : CleanArchitectureStep {
+                override val phase = StepPhase.GENERATE
                 override suspend fun execute(params: CleanArchitectureParams): StepResult =
                     StepResult.Success("ok")
             }
@@ -84,6 +88,7 @@ class CleanArchitectureGeneratorTest : BehaviorSpec({
 
         When("steps provide scaffold + settings/buildlogic") {
             val scaffoldStep = object : CleanArchitectureStep {
+                override val phase = StepPhase.SCAFFOLD
                 override suspend fun execute(params: CleanArchitectureParams): StepResult =
                     StepResult.Scaffold(
                         CleanArchitectureResult(
@@ -96,10 +101,12 @@ class CleanArchitectureGeneratorTest : BehaviorSpec({
                     )
             }
             val settingsStep = object : CleanArchitectureStep {
+                override val phase = StepPhase.CONFIGURE
                 override suspend fun execute(params: CleanArchitectureParams): StepResult =
                     StepResult.Settings(updated = true, message = "settings")
             }
             val buildLogicStep = object : CleanArchitectureStep {
+                override val phase = StepPhase.CONFIGURE
                 override suspend fun execute(params: CleanArchitectureParams): StepResult =
                     StepResult.BuildLogic(updated = true, message = "buildlogic")
             }

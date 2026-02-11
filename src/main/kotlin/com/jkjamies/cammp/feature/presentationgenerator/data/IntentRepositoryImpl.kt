@@ -32,7 +32,7 @@ import kotlin.io.path.writeText
  * Implementation of [IntentRepository] that generates MVI Intent interfaces using KotlinPoet.
  */
 @ContributesBinding(AppScope::class)
-class IntentRepositoryImpl(
+internal class IntentRepositoryImpl(
     private val specFactory: IntentSpecFactory
 ) : IntentRepository {
 

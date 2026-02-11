@@ -30,7 +30,7 @@ import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
 @ContributesBinding(AppScope::class)
-class AliasesRepositoryImpl(
+internal class AliasesRepositoryImpl(
     private val fs: FileSystemRepository,
     private val versionCatalogDataSource: VersionCatalogDataSource
 ) : AliasesRepository {

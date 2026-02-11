@@ -16,11 +16,12 @@
 
 package com.jkjamies.cammp.feature.presentationgenerator.domain.usecase
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
+import com.jkjamies.cammp.domain.step.StepPhase
 import com.jkjamies.cammp.feature.presentationgenerator.domain.step.PresentationStep
-import com.jkjamies.cammp.feature.presentationgenerator.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.StepResult
 import com.jkjamies.cammp.feature.presentationgenerator.testutil.TestFiles
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
@@ -45,14 +46,17 @@ class PresentationGeneratorTest : BehaviorSpec({
                 TestFiles.withTempDir("pg_usecase") { dir ->
                     val steps = linkedSetOf(
                         object : PresentationStep {
+                            override val phase = StepPhase.GENERATE
                             override suspend fun execute(params: PresentationParams): StepResult =
                                 StepResult.Success("- A")
                         },
                         object : PresentationStep {
+                            override val phase = StepPhase.GENERATE
                             override suspend fun execute(params: PresentationParams): StepResult =
                                 StepResult.Success(null)
                         },
                         object : PresentationStep {
+                            override val phase = StepPhase.GENERATE
                             override suspend fun execute(params: PresentationParams): StepResult =
                                 StepResult.Success("- B")
                         }
@@ -74,9 +78,11 @@ class PresentationGeneratorTest : BehaviorSpec({
 
                     val steps = linkedSetOf(
                         object : PresentationStep {
+                            override val phase = StepPhase.GENERATE
                             override suspend fun execute(params: PresentationParams): StepResult = StepResult.Success("- A")
                         },
                         object : PresentationStep {
+                            override val phase = StepPhase.GENERATE
                             override suspend fun execute(params: PresentationParams): StepResult = StepResult.Failure(boom)
                         }
                     )

@@ -16,8 +16,10 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.data.factory
 
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
+import com.jkjamies.cammp.domain.codegen.PackageSuffixes
+import com.jkjamies.cammp.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -36,7 +38,7 @@ interface RepositorySpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class RepositorySpecFactoryImpl : RepositorySpecFactory {
+internal class RepositorySpecFactoryImpl : RepositorySpecFactory {
 
     override fun createDomainInterface(packageName: String, params: RepositoryParams): FileSpec {
         return FileSpec.builder(packageName, params.className)
@@ -54,16 +56,16 @@ class RepositorySpecFactoryImpl : RepositorySpecFactory {
             .addSuperinterface(domainClassName)
 
         if (params.diStrategy is DiStrategy.Koin && params.diStrategy.useAnnotations) {
-            classBuilder.addAnnotation(AnnotationSpec.builder(ClassName("org.koin.core.annotation", "Single")).build())
+            classBuilder.addAnnotation(AnnotationSpec.builder(GeneratedAnnotations.KOIN_SINGLE).build())
         }
 
         val constructorBuilder = FunSpec.constructorBuilder()
         if (params.diStrategy is DiStrategy.Hilt || params.diStrategy is DiStrategy.Metro) {
-            constructorBuilder.addAnnotation(ClassName("javax.inject", "Inject"))
+            constructorBuilder.addAnnotation(GeneratedAnnotations.JAVAX_INJECT)
         }
 
         val baseName = params.className
-        val dataBasePkg = dataPackage.substringBeforeLast(".repository")
+        val dataBasePkg = dataPackage.substringBeforeLast(PackageSuffixes.REPOSITORY)
 
         val generatedFqns = buildList {
             when (params.datasourceStrategy) {

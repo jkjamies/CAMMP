@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.datasource
 
+import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
 import com.jkjamies.cammp.feature.repositorygenerator.data.datasource.RepoDiModuleDataSource
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -32,7 +33,7 @@ import dev.zacsweers.metro.Inject
 import kotlin.collections.forEach
 
 @ContributesBinding(AppScope::class)
-class RepoDiModuleDataSourceImpl : RepoDiModuleDataSource {
+internal class RepoDiModuleDataSourceImpl : RepoDiModuleDataSource {
 
     override fun generateKoinModule(
         packageName: String,
@@ -66,7 +67,7 @@ class RepoDiModuleDataSourceImpl : RepoDiModuleDataSource {
                 classBuilder.addFunction(
                     FunSpec.builder(bindingFunctionName)
                         .addModifiers(KModifier.ABSTRACT)
-                        .addAnnotation(ClassName("dagger", "Binds"))
+                        .addAnnotation(GeneratedAnnotations.DAGGER_BINDS)
                         .addParameter("repositoryImpl", dataClassName)
                         .returns(domainClassName)
                         .build()
@@ -116,7 +117,7 @@ class RepoDiModuleDataSourceImpl : RepoDiModuleDataSource {
                     classBuilder.addFunction(
                         FunSpec.builder("bind${iface.simpleName}")
                             .addModifiers(KModifier.ABSTRACT)
-                            .addAnnotation(ClassName("dagger", "Binds"))
+                            .addAnnotation(GeneratedAnnotations.DAGGER_BINDS)
                             .addParameter("dataSourceImpl", impl)
                             .returns(iface)
                             .build()
@@ -155,7 +156,7 @@ class RepoDiModuleDataSourceImpl : RepoDiModuleDataSource {
 
         return fileSpecBuilder
             .addProperty(
-                PropertySpec.builder(propertyName, ClassName("org.koin.core.module", "Module"))
+                PropertySpec.builder(propertyName, GeneratedAnnotations.KOIN_MODULE)
                     .initializer(
                         CodeBlock.builder().beginControlFlow("module").add(moduleBlock.build()).endControlFlow().build()
                     )
@@ -172,10 +173,10 @@ class RepoDiModuleDataSourceImpl : RepoDiModuleDataSource {
     ): FileSpec {
         val classBuilder = TypeSpec.classBuilder(fileName)
             .addModifiers(KModifier.ABSTRACT)
-            .addAnnotation(ClassName("dagger", "Module"))
+            .addAnnotation(GeneratedAnnotations.DAGGER_MODULE)
             .addAnnotation(
-                AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
-                    .addMember("%T::class", ClassName("dagger.hilt.components", "SingletonComponent"))
+                AnnotationSpec.builder(GeneratedAnnotations.HILT_INSTALL_IN)
+                    .addMember("%T::class", GeneratedAnnotations.SINGLETON_COMPONENT)
                     .build()
             )
 
@@ -273,7 +274,7 @@ class RepoDiModuleDataSourceImpl : RepoDiModuleDataSource {
         classBuilder.addFunction(
             FunSpec.builder(funName)
                 .addModifiers(KModifier.ABSTRACT)
-                .addAnnotation(ClassName("dagger", "Binds"))
+                .addAnnotation(GeneratedAnnotations.DAGGER_BINDS)
                 .addParameter(
                     paramName,
                     paramClassName

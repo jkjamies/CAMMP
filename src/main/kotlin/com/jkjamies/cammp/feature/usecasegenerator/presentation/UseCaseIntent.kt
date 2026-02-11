@@ -26,5 +26,5 @@ sealed interface UseCaseIntent {
     data class SetDiHilt(val selected: Boolean) : UseCaseIntent
     data class SetDiKoin(val selected: Boolean) : UseCaseIntent
     data class ToggleKoinAnnotations(val selected: Boolean) : UseCaseIntent
-    object Generate : UseCaseIntent
+    data object Generate : UseCaseIntent
 }

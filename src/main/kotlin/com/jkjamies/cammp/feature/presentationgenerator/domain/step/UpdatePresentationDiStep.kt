@@ -16,7 +16,11 @@
 
 package com.jkjamies.cammp.feature.presentationgenerator.domain.step
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.codegen.PackageSuffixes
+import com.jkjamies.cammp.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.step.StepPhase
+import com.jkjamies.cammp.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.runStepCatching
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ModulePackageRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.PresentationDiModuleRepository
@@ -31,21 +35,23 @@ class UpdatePresentationDiStep(
     private val diRepo: PresentationDiModuleRepository
 ) : PresentationStep {
 
+    override val phase: StepPhase = StepPhase.DI
+
     override suspend fun execute(params: PresentationParams): StepResult {
         val diStrategy = params.diStrategy
         if (diStrategy !is DiStrategy.Koin || diStrategy.useAnnotations) {
             return StepResult.Success(null)
         }
 
-        return try {
+        return runStepCatching {
             val diDir = params.moduleDir.parent?.resolve("di")
             if (diDir == null || !diDir.exists()) {
                 return StepResult.Success(null)
             }
 
-            val pkg = inferPresentationPackage(params.moduleDir)
-            val diPackage = if (pkg.endsWith(".presentation")) {
-                pkg.replace(".presentation", ".di")
+            val pkg = inferPresentationPackage(modulePkgRepo, params.moduleDir)
+            val diPackage = if (pkg.endsWith(PackageSuffixes.PRESENTATION)) {
+                pkg.replace(PackageSuffixes.PRESENTATION, PackageSuffixes.DI)
             } else {
                 val found = modulePkgRepo.findModulePackage(diDir)
                 found ?: "$pkg.di"
@@ -60,7 +66,7 @@ class UpdatePresentationDiStep(
             val screenPackage = "$pkg.$folder"
             val viewModelSimpleName = "${sanitizedName}ViewModel"
             val viewModelFqn = "$screenPackage.${sanitizedName}ViewModel"
-            
+
             val useCaseFqns = params.selectedUseCases.distinct().sorted()
 
             val mergeOutcome = diRepo.mergeViewModelModule(
@@ -71,19 +77,6 @@ class UpdatePresentationDiStep(
                 dependencyCount = useCaseFqns.size,
             )
             StepResult.Success("- DI ViewModel: ${mergeOutcome.outPath} (${mergeOutcome.status})")
-        } catch (e: Exception) {
-            StepResult.Failure(e)
         }
-    }
-
-    private fun sanitizeScreenName(raw: String): String {
-        val base = raw.trim().replace(Regex("[^A-Za-z0-9_]"), "")
-        if (base.isEmpty()) return "Screen"
-        return base.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-    }
-
-    private fun inferPresentationPackage(moduleDir: java.nio.file.Path): String {
-        val existing = modulePkgRepo.findModulePackage(moduleDir)
-        return existing ?: "com.example.presentation"
     }
 }

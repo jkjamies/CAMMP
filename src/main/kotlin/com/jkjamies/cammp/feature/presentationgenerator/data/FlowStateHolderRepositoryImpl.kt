@@ -32,7 +32,7 @@ import kotlin.io.path.writeText
  * Implementation of [FlowStateHolderRepository] that generates Flow State Holder classes using KotlinPoet.
  */
 @ContributesBinding(AppScope::class)
-class FlowStateHolderRepositoryImpl(
+internal class FlowStateHolderRepositoryImpl(
     private val specFactory: FlowStateHolderSpecFactory
 ) : FlowStateHolderRepository {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.jetbrains.plugins.template.util
+package com.jkjamies.cammp.util
 
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
@@ -50,4 +50,3 @@ fun findRepositoriesGroupedByPackage(domainDirPath: String): Map<String, List<Pa
     visit(kotlinRoot)
     return map
 }
-

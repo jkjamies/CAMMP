@@ -19,8 +19,8 @@ package com.jkjamies.cammp.feature.cleanarchitecture.data
 import com.jkjamies.cammp.feature.cleanarchitecture.data.factory.ModuleBuildGradleSpecFactoryImpl
 import com.jkjamies.cammp.feature.cleanarchitecture.data.factory.ModuleSourceSpecFactoryImpl
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DatasourceStrategy
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.cleanarchitecture.testutil.AnnotationModuleRepositoryFake
 import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempDir
 import io.kotest.core.spec.style.BehaviorSpec

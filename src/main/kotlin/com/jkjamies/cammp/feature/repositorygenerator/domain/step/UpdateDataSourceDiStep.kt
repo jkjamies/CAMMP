@@ -16,8 +16,12 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.domain.step
 
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.codegen.PackageSuffixes
+import com.jkjamies.cammp.domain.step.StepPhase
+import com.jkjamies.cammp.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.runStepCatching
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DataSourceBinding
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModuleRepository
@@ -32,6 +36,8 @@ class UpdateDataSourceDiStep(
     private val diRepo: DiModuleRepository
 ) : RepositoryStep {
 
+    override val phase: StepPhase = StepPhase.DI
+
     override suspend fun execute(params: RepositoryParams): StepResult {
         if (params.datasourceStrategy is DatasourceStrategy.None) return StepResult.Success(null)
         if (params.diStrategy is DiStrategy.Koin && params.diStrategy.useAnnotations) return StepResult.Success(null)
@@ -41,18 +47,9 @@ class UpdateDataSourceDiStep(
 
         val diPackage = modulePkgRepo.findModulePackage(diDir)
         val dataPkg = modulePkgRepo.findModulePackage(params.dataDir)
-        val dataBasePkg = if (dataPkg.contains(".data")) dataPkg.substringBefore(".data") + ".data" else dataPkg
+        val dataBasePkg = if (dataPkg.contains(PackageSuffixes.DATA)) dataPkg.substringBefore(PackageSuffixes.DATA) + PackageSuffixes.DATA else dataPkg
 
-        val entries = when (params.datasourceStrategy) {
-            DatasourceStrategy.None -> emptyList()
-            DatasourceStrategy.Combined -> listOf("dataSource" to "DataSource")
-            DatasourceStrategy.RemoteOnly -> listOf("remoteDataSource" to "RemoteDataSource")
-            DatasourceStrategy.LocalOnly -> listOf("localDataSource" to "LocalDataSource")
-            DatasourceStrategy.RemoteAndLocal -> listOf(
-                "remoteDataSource" to "RemoteDataSource",
-                "localDataSource" to "LocalDataSource",
-            )
-        }
+        val entries = params.datasourceStrategy.toEntries()
 
         val useKoin = params.diStrategy is DiStrategy.Koin
         val bindings = mutableListOf<DataSourceBinding>()
@@ -84,7 +81,7 @@ class UpdateDataSourceDiStep(
 
         if (bindings.isEmpty()) return StepResult.Success(null)
 
-        return try {
+        return runStepCatching {
             val outcome = diRepo.mergeDataSourceModule(
                 diDir = diDir,
                 diPackage = diPackage,
@@ -92,8 +89,6 @@ class UpdateDataSourceDiStep(
                 useKoin = useKoin
             )
             StepResult.Success("- DI: ${outcome.outPath} (${outcome.status})")
-        } catch (e: Exception) {
-            StepResult.Failure(e)
         }
     }
 }

@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
+import com.jkjamies.cammp.domain.codegen.toCleanString
 import dev.zacsweers.metro.AppScope
 import com.jkjamies.cammp.feature.usecasegenerator.data.factory.UseCaseSpecFactory
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
@@ -28,7 +29,7 @@ import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 
 @ContributesBinding(AppScope::class)
-class UseCaseGenerationRepositoryImpl(
+internal class UseCaseGenerationRepositoryImpl(
     private val specFactory: UseCaseSpecFactory
 ) : UseCaseGenerationRepository {
 
@@ -51,9 +52,8 @@ class UseCaseGenerationRepositoryImpl(
         } else null
 
         val fileSpec = specFactory.create(packageName, params, baseDomainPackage, interfaceFqn)
-        val content = fileSpec.toString()
-            .replace("import org.koin.core.`annotation`.Single", "import org.koin.core.annotation.Single")
-        
+        val content = fileSpec.toCleanString()
+
         val targetDir = params.domainDir.resolve("src/main/kotlin").resolve(packageName.replace('.', '/'))
         targetDir.createDirectories()
         val out = targetDir.resolve("${params.className}.kt")

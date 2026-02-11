@@ -16,26 +16,30 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.presentation
 
-import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryGenerator
+import com.jkjamies.cammp.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.validation.validateModulePath
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryGenerator
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import java.nio.file.Paths
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AssistedInject
 class RepositoryViewModel(
     @Assisted private val domainPackage: String,
     @Assisted private val scope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher,
     private val generator: RepositoryGenerator,
     private val loadDataSourcesByType: LoadDataSourcesByType
 ) {
@@ -76,15 +80,17 @@ class RepositoryViewModel(
                 )
                 _state.update { it.copy(isGenerating = true, errorMessage = null, lastGeneratedMessage = null) }
                 scope.launch {
-                    val result = generator(params)
-                    val message = result.getOrNull()
-                    val error = result.exceptionOrNull()?.message
-                    _state.update {
-                        it.copy(
-                            isGenerating = false,
-                            lastGeneratedMessage = message,
-                            errorMessage = error,
-                        )
+                    withContext(ioDispatcher) {
+                        val result = generator(params)
+                        val message = result.getOrNull()
+                        val error = result.exceptionOrNull()?.message
+                        _state.update {
+                            it.copy(
+                                isGenerating = false,
+                                lastGeneratedMessage = message,
+                                errorMessage = error,
+                            )
+                        }
                     }
                 }
             }
@@ -93,15 +99,17 @@ class RepositoryViewModel(
             is RepositoryIntent.SetDomainPackage -> {
                 val newPath = intent.value
                 _state.update { it.copy(domainPackage = newPath) }
-                val err = validateDataPath(newPath)
+                val err = validateModulePath(newPath, "data")
                 if (err == null && newPath.isNotBlank()) {
                     scope.launch {
-                        val map = loadDataSourcesByType(newPath)
-                        _state.update { current ->
-                            val allowed = current.selectedDataSources.filter { fqn ->
-                                map.values.flatten().contains(fqn)
-                            }.toSet()
-                            current.copy(dataSourcesByType = map, selectedDataSources = allowed)
+                        withContext(ioDispatcher) {
+                            val map = loadDataSourcesByType(newPath)
+                            _state.update { current ->
+                                val allowed = current.selectedDataSources.filter { fqn ->
+                                    map.values.flatten().contains(fqn)
+                                }.toSet()
+                                current.copy(dataSourcesByType = map, selectedDataSources = allowed)
+                            }
                         }
                     }
                 } else {
@@ -188,13 +196,7 @@ class RepositoryViewModel(
         if (s.name.isBlank()) return "Name is required"
         val path = s.domainPackage
         if (path.isBlank()) return "Data directory is required"
-        return validateDataPath(path)
-    }
-
-    private fun validateDataPath(path: String): String? {
-        val trimmed = path.trimEnd('/', '\\')
-        val last = trimmed.substringAfterLast('/').substringAfterLast('\\')
-        return if (!last.equals("data", ignoreCase = true)) "Selected directory must be a data module" else null
+        return validateModulePath(path, "data")
     }
 
     private fun RepositoryUiState.updateDiStates(): RepositoryUiState =

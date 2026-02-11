@@ -16,6 +16,9 @@
 
 package com.jkjamies.cammp.feature.presentationgenerator.domain.step
 
+import com.jkjamies.cammp.domain.step.StepPhase
+import com.jkjamies.cammp.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.runStepCatching
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.ModulePackageRepository
 import com.jkjamies.cammp.feature.presentationgenerator.domain.repository.NavigationRepository
@@ -31,19 +34,21 @@ class GenerateNavigationHostStep(
     private val navigationRepo: NavigationRepository
 ) : PresentationStep {
 
+    override val phase: StepPhase = StepPhase.GENERATE
+
     override suspend fun execute(params: PresentationParams): StepResult {
         if (!params.includeNavigation) {
             return StepResult.Success(null)
         }
 
-        return try {
-            val pkg = inferPresentationPackage(params.moduleDir)
+        return runStepCatching {
+            val pkg = inferPresentationPackage(modulePkgRepo, params.moduleDir)
             val kotlinDir = params.moduleDir.resolve("src/main/kotlin").also { if (!it.exists()) it.createDirectories() }
             val pkgDir = kotlinDir.resolve(pkg.replace('.', '/')).also { if (!it.exists()) it.createDirectories() }
-            
+
             val navDir = pkgDir.resolve("navigation").also { if (!it.exists()) it.createDirectories() }
             val navPkg = "$pkg.navigation"
-            val navHostName = "${deriveModuleNameForFlowHolder(pkg)}NavigationHost"
+            val navHostName = "${deriveModuleName(pkg)}NavigationHost"
 
             val result = navigationRepo.generateNavigationHost(
                 targetDir = navDir,
@@ -51,22 +56,6 @@ class GenerateNavigationHostStep(
                 navHostName = navHostName
             )
             StepResult.Success("- navigation/${result.fileName}: ${result.path} (${result.status})")
-        } catch (e: Exception) {
-            StepResult.Failure(e)
         }
-    }
-
-    private fun inferPresentationPackage(moduleDir: java.nio.file.Path): String {
-        val existing = modulePkgRepo.findModulePackage(moduleDir)
-        return existing ?: "com.example.presentation"
-    }
-
-    private fun deriveModuleNameForFlowHolder(pkg: String): String {
-        val parts = pkg.split('.')
-        val idx = parts.indexOf("presentation")
-        if (idx > 0) {
-            return parts.getOrNull(idx - 1)?.replaceFirstChar { it.uppercase() } ?: "App"
-        }
-        return parts.lastOrNull()?.replaceFirstChar { it.uppercase() } ?: "App"
     }
 }

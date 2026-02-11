@@ -31,7 +31,7 @@ interface BuildLogicSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class BuildLogicSpecFactoryImpl : BuildLogicSpecFactory {
+internal class BuildLogicSpecFactoryImpl : BuildLogicSpecFactory {
 
     override fun applyPackageTokens(rawTemplate: String, orgCenter: String): String {
         val org = sanitizeOrgCenter(orgCenter)

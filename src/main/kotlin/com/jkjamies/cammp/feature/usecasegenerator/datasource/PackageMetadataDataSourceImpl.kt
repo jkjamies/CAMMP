@@ -18,6 +18,7 @@ package com.jkjamies.cammp.feature.usecasegenerator.datasource
 
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
+import com.jkjamies.cammp.domain.codegen.PackageSuffixes
 import com.jkjamies.cammp.feature.usecasegenerator.data.datasource.PackageMetadataDataSource
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -33,27 +34,27 @@ internal fun inferUseCasePackageFrom(packages: Set<String>): String? {
     if (packages.isEmpty()) return null
 
     // Prefer exact .domain.usecase package
-    val exactUseCase = packages.firstOrNull { it.endsWith(".domain.usecase") }
+    val exactUseCase = packages.firstOrNull { it.endsWith("${PackageSuffixes.DOMAIN}${PackageSuffixes.USE_CASE}") }
     if (exactUseCase != null) return exactUseCase
 
     // Prefer exact .domain package and append .usecase
-    val exactDomain = packages.firstOrNull { it.endsWith(".domain") }
-    if (exactDomain != null) return exactDomain + ".usecase"
+    val exactDomain = packages.firstOrNull { it.endsWith(PackageSuffixes.DOMAIN) }
+    if (exactDomain != null) return exactDomain + PackageSuffixes.USE_CASE
 
     // Prefer any that contains .domain, truncated to .domain and append .usecase
-    val containingDomain = packages.firstOrNull { it.contains(".domain") }
+    val containingDomain = packages.firstOrNull { it.contains(PackageSuffixes.DOMAIN) }
     if (containingDomain != null) {
-        val idx = containingDomain.indexOf(".domain")
-        return containingDomain.substring(0, idx + ".domain".length) + ".usecase"
+        val idx = containingDomain.indexOf(PackageSuffixes.DOMAIN)
+        return containingDomain.substring(0, idx + PackageSuffixes.DOMAIN.length) + PackageSuffixes.USE_CASE
     }
 
     // Fallback: choose the shortest package and attempt to append .usecase
     val shortest = packages.minByOrNull { it.length } ?: return null
-    return if (shortest.endsWith(".usecase")) shortest else shortest + ".usecase"
+    return if (shortest.endsWith(PackageSuffixes.USE_CASE)) shortest else shortest + PackageSuffixes.USE_CASE
 }
 
 @ContributesBinding(AppScope::class)
-class PackageMetadataDataSourceImpl : PackageMetadataDataSource {
+internal class PackageMetadataDataSourceImpl : PackageMetadataDataSource {
     override fun findModulePackage(moduleDir: Path): String? {
         val vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(moduleDir.toString())
             ?: return null

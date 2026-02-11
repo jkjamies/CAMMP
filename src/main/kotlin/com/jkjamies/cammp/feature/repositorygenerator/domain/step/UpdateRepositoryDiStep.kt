@@ -16,7 +16,11 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.domain.step
 
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.codegen.PackageSuffixes
+import com.jkjamies.cammp.domain.step.StepPhase
+import com.jkjamies.cammp.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.runStepCatching
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModuleRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
@@ -30,18 +34,20 @@ class UpdateRepositoryDiStep(
     private val diRepo: DiModuleRepository
 ) : RepositoryStep {
 
+    override val phase: StepPhase = StepPhase.DI
+
     override suspend fun execute(params: RepositoryParams): StepResult {
         // Skip logic: If no DI strategy is chosen, this does nothing.
         if (params.diStrategy !is DiStrategy.Hilt && params.diStrategy !is DiStrategy.Metro && params.diStrategy !is DiStrategy.Koin) {
             return StepResult.Success(null)
         }
 
-        return try {
+        return runStepCatching {
             val diDir = params.dataDir.parent?.resolve("di")
                 ?: return StepResult.Success("- DI: Skipped (no di module found)")
 
             val diPackageRaw = modulePkgRepo.findModulePackage(diDir)
-            val diPackage = diPackageRaw.removeSuffix(".repository").removeSuffix(".usecase")
+            val diPackage = diPackageRaw.removeSuffix(PackageSuffixes.REPOSITORY).removeSuffix(PackageSuffixes.USE_CASE)
 
             val diTargetDir = diDir.resolve("src/main/kotlin").resolve(diPackage.replace('.', '/'))
             if (!diTargetDir.toFile().exists()) {
@@ -67,8 +73,6 @@ class UpdateRepositoryDiStep(
             )
 
             StepResult.Success("- DI: ${outcome.outPath} (${outcome.status})")
-        } catch (e: Exception) {
-            StepResult.Failure(e)
         }
     }
 }

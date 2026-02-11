@@ -16,7 +16,9 @@
 
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
+import com.intellij.openapi.diagnostic.Logger
 import dev.zacsweers.metro.AppScope
+import com.jkjamies.cammp.domain.codegen.PackageSuffixes
 import com.jkjamies.cammp.feature.usecasegenerator.data.datasource.PackageMetadataDataSource
 import com.jkjamies.cammp.feature.usecasegenerator.domain.repository.RepositoryDiscoveryRepository
 import dev.zacsweers.metro.ContributesBinding
@@ -26,16 +28,18 @@ import java.nio.file.Paths
 import java.util.stream.Collectors
 
 @ContributesBinding(AppScope::class)
-class RepositoryDiscoveryRepositoryImpl(
+internal class RepositoryDiscoveryRepositoryImpl(
     private val packageMetadataDataSource: PackageMetadataDataSource
 ) : RepositoryDiscoveryRepository {
+
+    private val log = Logger.getInstance(RepositoryDiscoveryRepositoryImpl::class.java)
 
     override fun loadRepositories(domainModulePath: String): List<String> {
         return try {
             val moduleDir = Paths.get(domainModulePath)
             val useCasePackage = packageMetadataDataSource.findModulePackage(moduleDir)
             val repoPackage = useCasePackage?.let { pkg ->
-                if (pkg.endsWith(".usecase")) pkg.removeSuffix(".usecase") + ".repository" else pkg + ".repository"
+                if (pkg.endsWith(PackageSuffixes.USE_CASE)) pkg.removeSuffix(PackageSuffixes.USE_CASE) + PackageSuffixes.REPOSITORY else pkg + PackageSuffixes.REPOSITORY
             } ?: return emptyList()
 
             val packagePath = repoPackage.replace('.', '/')
@@ -53,6 +57,7 @@ class RepositoryDiscoveryRepositoryImpl(
                         .collect(Collectors.toList())
                 }
         } catch (t: Throwable) {
+            log.warn("Failed to discover repositories in $domainModulePath", t)
             emptyList()
         }
     }

@@ -36,5 +36,5 @@ sealed interface PresentationIntent {
 
     data class SetUseCasesByModule(val value: Map<String, List<String>>) : PresentationIntent
     data class ToggleUseCaseSelection(val fqn: String, val selected: Boolean) : PresentationIntent
-    object Generate : PresentationIntent
+    data object Generate : PresentationIntent
 }

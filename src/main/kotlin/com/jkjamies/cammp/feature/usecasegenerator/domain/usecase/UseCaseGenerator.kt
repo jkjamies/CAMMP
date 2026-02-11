@@ -17,10 +17,9 @@
 package com.jkjamies.cammp.feature.usecasegenerator.domain.usecase
 
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
-import com.jkjamies.cammp.feature.usecasegenerator.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.StepResult
 import com.jkjamies.cammp.feature.usecasegenerator.domain.step.UseCaseStep
 import dev.zacsweers.metro.Inject
-import java.nio.file.Path
 
 @Inject
 class UseCaseGenerator(
@@ -33,8 +32,7 @@ class UseCaseGenerator(
 
             val messages = mutableListOf<String>()
             
-            // Execute all steps
-            for (step in steps) {
+            for (step in steps.sortedBy { it.phase }) {
                 when (val result = step.execute(updatedParams)) {
                     is StepResult.Success -> {
                         result.message?.let { messages.add(it) }

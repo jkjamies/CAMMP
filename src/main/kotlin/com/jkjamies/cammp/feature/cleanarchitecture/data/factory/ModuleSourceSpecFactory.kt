@@ -33,7 +33,7 @@ interface ModuleSourceSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class ModuleSourceSpecFactoryImpl : ModuleSourceSpecFactory {
+internal class ModuleSourceSpecFactoryImpl : ModuleSourceSpecFactory {
 
     override fun packageName(params: CleanArchitectureParams, moduleName: String, featureName: String): String {
         val safeOrg = sanitizeOrgCenter(params.orgCenter)

@@ -30,5 +30,5 @@ sealed interface RepositoryIntent {
     data class SetDiHilt(val selected: Boolean) : RepositoryIntent
     data class SetDiKoin(val selected: Boolean) : RepositoryIntent
     data class ToggleKoinAnnotations(val selected: Boolean) : RepositoryIntent
-    object Generate : RepositoryIntent
+    data object Generate : RepositoryIntent
 }

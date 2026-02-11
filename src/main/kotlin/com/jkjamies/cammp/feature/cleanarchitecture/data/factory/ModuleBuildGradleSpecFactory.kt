@@ -37,7 +37,7 @@ interface ModuleBuildGradleSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class ModuleBuildGradleSpecFactoryImpl : ModuleBuildGradleSpecFactory {
+internal class ModuleBuildGradleSpecFactoryImpl : ModuleBuildGradleSpecFactory {
 
     override fun create(
         params: CleanArchitectureParams,

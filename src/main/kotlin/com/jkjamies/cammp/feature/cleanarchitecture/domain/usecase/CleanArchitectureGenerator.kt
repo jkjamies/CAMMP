@@ -34,14 +34,12 @@ class CleanArchitectureGenerator(
      * @return A [Result] containing the [CleanArchitectureResult], or an exception.
      */
     suspend operator fun invoke(p: CleanArchitectureParams): Result<CleanArchitectureResult> = runCatching {
-        val orderedSteps = steps.sortedBy { it::class.qualifiedName ?: it::class.simpleName ?: "" }
-
         val messages = mutableListOf<String>()
         var scaffoldResult: CleanArchitectureResult? = null
         var settingsUpdated = false
         var buildLogicUpdated = false
 
-        for (step in orderedSteps) {
+        for (step in steps.sortedBy { it.phase }) {
             when (val r = step.execute(p)) {
                 is StepResult.Scaffold -> scaffoldResult = r.result
                 is StepResult.Settings -> {

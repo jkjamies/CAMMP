@@ -17,8 +17,8 @@
 package com.jkjamies.cammp.feature.cleanarchitecture.data
 
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DatasourceStrategy
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.DiMode
 import com.jkjamies.cammp.feature.cleanarchitecture.testutil.GradleSettingsDataSourceFake
 import io.kotest.core.spec.style.BehaviorSpec

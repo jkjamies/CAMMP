@@ -28,7 +28,7 @@ import java.nio.file.Path
  * to find the most appropriate package name within a module.
  */
 @ContributesBinding(AppScope::class)
-class ModulePackageRepositoryImpl(
+internal class ModulePackageRepositoryImpl(
     private val dataSource: PackageMetadataDataSource
 ) : ModulePackageRepository {
     override fun findModulePackage(moduleDir: Path): String? {

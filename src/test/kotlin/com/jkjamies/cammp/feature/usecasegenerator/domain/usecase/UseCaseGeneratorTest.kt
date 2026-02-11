@@ -16,9 +16,9 @@
 
 package com.jkjamies.cammp.feature.usecasegenerator.domain.usecase
 
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
-import com.jkjamies.cammp.feature.usecasegenerator.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.StepResult
 import com.jkjamies.cammp.feature.usecasegenerator.testutil.UseCaseStepFake
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
@@ -41,8 +41,8 @@ class UseCaseGeneratorTest : BehaviorSpec({
 
         When("all steps succeed and one returns a path") {
             Then("it should return success and normalize className passed to steps") {
-                val step1 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(null, "Step 1 done"))))
-                val step2 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(Paths.get("domain/TestUseCase.kt"), "Step 2 done"))))
+                val step1 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success("Step 1 done"))))
+                val step2 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success("Step 2 done"))))
                 val generator = UseCaseGenerator(setOf(step1, step2))
 
                 val result = generator(params)
