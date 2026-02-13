@@ -44,7 +44,7 @@ class ScreenSpecFactoryImplTest : BehaviorSpec({
         }
 
         When("DI strategy is Metro") {
-            Then("it should use hiltViewModel default (same as Hilt)") {
+            Then("it should use metroViewModel default") {
                 val spec = factory.create(
                     packageName = "com.example.presentation.home",
                     screenName = "Home",
@@ -53,7 +53,8 @@ class ScreenSpecFactoryImplTest : BehaviorSpec({
 
                 val text = spec.toString()
                 text.contains("internal fun Home") shouldBe true
-                text.contains("hiltViewModel") shouldBe true
+                text.contains("metroViewModel") shouldBe true
+                text.contains("hiltViewModel") shouldBe false
             }
         }
 

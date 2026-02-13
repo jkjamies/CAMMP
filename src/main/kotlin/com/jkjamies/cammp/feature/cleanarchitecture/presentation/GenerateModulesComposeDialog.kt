@@ -175,7 +175,7 @@ fun GenerateModulesScreen(
                 }
             }
         }
-        if (state.diMetro || (state.diKoin && state.diKoinAnnotations)) {
+        if (state.diKoin && state.diKoinAnnotations) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(
                     checked = state.includeDiModule,

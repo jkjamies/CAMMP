@@ -68,6 +68,40 @@ class UseCaseSpecFactoryTest : BehaviorSpec({
             }
         }
 
+        When("creating a spec for Metro without interface") {
+            Then("it should include Metro @Inject on class") {
+                val spec = factory.create(
+                    "com.example.usecase",
+                    params(di = DiStrategy.Metro),
+                    "com.example.domain"
+                )
+                val content = spec.toString()
+
+                content shouldContain "import dev.zacsweers.metro.Inject"
+                content shouldContain "@Inject"
+                content shouldNotContain "javax.inject"
+                content shouldNotContain "ContributesBinding"
+            }
+        }
+
+        When("creating a spec for Metro with interface") {
+            Then("it should include @ContributesBinding and no explicit @Inject") {
+                val spec = factory.create(
+                    "com.example.usecase",
+                    params(di = DiStrategy.Metro),
+                    "com.example.domain",
+                    interfaceFqn = "com.example.api.usecase.MyUseCase"
+                )
+                val content = spec.toString()
+
+                content shouldContain "import dev.zacsweers.metro.ContributesBinding"
+                content shouldContain "@ContributesBinding"
+                content shouldContain "AppScope"
+                content shouldNotContain "import dev.zacsweers.metro.Inject"
+                content shouldNotContain "javax.inject"
+            }
+        }
+
         When("creating a spec for Koin with annotations") {
             Then("it should include @Single and a constructor") {
                 val spec = factory.create(

@@ -52,7 +52,16 @@ internal class ScreenSpecFactoryImpl : ScreenSpecFactory {
             .addModifiers(KModifier.INTERNAL)
 
         when (diStrategy) {
-            is DiStrategy.Hilt, is DiStrategy.Metro -> {
+            is DiStrategy.Metro -> {
+                val metroViewModel = GeneratedAnnotations.METRO_VIEW_MODEL_COMPOSE
+                screenFunc.addParameter(
+                    ParameterSpec.builder("viewModel", viewModelClass)
+                        .defaultValue("%M()", metroViewModel)
+                        .build()
+                )
+            }
+
+            is DiStrategy.Hilt -> {
                 val hiltViewModel = GeneratedAnnotations.HILT_VIEW_MODEL_COMPOSE
                 screenFunc.addParameter(
                     ParameterSpec.builder("viewModel", viewModelClass)

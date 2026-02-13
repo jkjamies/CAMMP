@@ -19,6 +19,7 @@ package com.jkjamies.cammp.feature.usecasegenerator.data.factory
 import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
 import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -60,7 +61,19 @@ internal class UseCaseSpecFactoryImpl : UseCaseSpecFactory {
         val constructorBuilder = FunSpec.constructorBuilder()
 
         when (val di = params.diStrategy) {
-            is DiStrategy.Metro,
+            is DiStrategy.Metro -> {
+                if (interfaceFqn != null) {
+                    // @ContributesBinding implies @Inject, no explicit @Inject needed
+                    classBuilder.addAnnotation(
+                        AnnotationSpec.builder(GeneratedAnnotations.METRO_CONTRIBUTES_BINDING)
+                            .addMember("%T::class", GeneratedAnnotations.METRO_APP_SCOPE)
+                            .build()
+                    )
+                } else {
+                    // Standalone use case — explicit @Inject required
+                    classBuilder.addAnnotation(GeneratedAnnotations.METRO_INJECT)
+                }
+            }
             is DiStrategy.Hilt -> {
                 constructorBuilder.addAnnotation(GeneratedAnnotations.JAVAX_INJECT)
             }

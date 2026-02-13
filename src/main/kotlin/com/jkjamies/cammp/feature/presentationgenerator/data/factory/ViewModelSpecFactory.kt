@@ -20,6 +20,7 @@ import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
 import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -60,7 +61,19 @@ internal class ViewModelSpecFactoryImpl : ViewModelSpecFactory {
         val constructorBuilder = FunSpec.constructorBuilder()
 
         when (val di = params.diStrategy) {
-            is DiStrategy.Metro,
+            is DiStrategy.Metro -> {
+                // @ContributesIntoMap implies @Inject, so no explicit @Inject needed
+                classBuilder.addAnnotation(
+                    AnnotationSpec.builder(GeneratedAnnotations.METRO_VIEW_MODEL_KEY)
+                        .addMember("%T::class", ClassName(packageName, viewModelName))
+                        .build()
+                )
+                classBuilder.addAnnotation(
+                    AnnotationSpec.builder(GeneratedAnnotations.METRO_CONTRIBUTES_INTO_MAP)
+                        .addMember("%T::class", GeneratedAnnotations.METRO_APP_SCOPE)
+                        .build()
+                )
+            }
             is DiStrategy.Hilt -> {
                 classBuilder.addAnnotation(GeneratedAnnotations.HILT_VIEW_MODEL)
                 constructorBuilder.addAnnotation(GeneratedAnnotations.JAVAX_INJECT)

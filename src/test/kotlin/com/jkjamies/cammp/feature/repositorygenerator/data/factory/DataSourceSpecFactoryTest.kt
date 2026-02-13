@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.data.factory
 
+import com.jkjamies.cammp.domain.model.DiStrategy
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
@@ -46,13 +47,34 @@ class DataSourceSpecFactoryTest : BehaviorSpec({
                     className = "UserDataSourceImpl",
                     interfacePackage = "com.example.data",
                     interfaceName = "UserDataSource",
-                    useKoin = false,
+                    diStrategy = DiStrategy.Hilt,
                 )
                 val content = spec.toString()
 
                 content shouldContain "class UserDataSourceImpl"
                 content shouldContain ": UserDataSource"
                 content shouldContain "@Inject"
+                content shouldContain "javax.inject"
+            }
+        }
+
+        When("creating an implementation with Metro") {
+            Then("it adds @ContributesBinding and no explicit @Inject") {
+                val spec = factory.createImplementation(
+                    packageName = "com.example.data",
+                    className = "UserDataSourceImpl",
+                    interfacePackage = "com.example.data",
+                    interfaceName = "UserDataSource",
+                    diStrategy = DiStrategy.Metro,
+                )
+                val content = spec.toString()
+
+                content shouldContain "class UserDataSourceImpl"
+                content shouldContain ": UserDataSource"
+                content shouldContain "ContributesBinding"
+                content shouldContain "AppScope"
+                content shouldNotContain "javax.inject"
+                content shouldNotContain "import dev.zacsweers.metro.Inject"
             }
         }
 
@@ -63,7 +85,7 @@ class DataSourceSpecFactoryTest : BehaviorSpec({
                     className = "UserDataSourceImpl",
                     interfacePackage = "com.example.data",
                     interfaceName = "UserDataSource",
-                    useKoin = true,
+                    diStrategy = DiStrategy.Koin(useAnnotations = false),
                 )
                 val content = spec.toString()
 

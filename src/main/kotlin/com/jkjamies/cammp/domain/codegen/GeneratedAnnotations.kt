@@ -56,9 +56,17 @@ object GeneratedAnnotations {
     val KOIN_ANNOTATION_MODULE = ClassName("org.koin.core.annotation", "Module")
     val KOIN_COMPONENT_SCAN = ClassName("org.koin.core.annotation", "ComponentScan")
 
+    // ── DI — Metro ──────────────────────────────────────────────────────
+    val METRO_INJECT = ClassName("dev.zacsweers.metro", "Inject")
+    val METRO_CONTRIBUTES_BINDING = ClassName("dev.zacsweers.metro", "ContributesBinding")
+    val METRO_APP_SCOPE = ClassName("dev.zacsweers.metro", "AppScope")
+    val METRO_CONTRIBUTES_INTO_MAP = ClassName("dev.zacsweers.metro", "ContributesIntoMap")
+    val METRO_VIEW_MODEL_KEY = ClassName("dev.zacsweers.metro.viewmodel", "ViewModelKey")
+
     // ── DI — Compose integration ───────────────────────────────────────
     val HILT_VIEW_MODEL_COMPOSE = MemberName("androidx.hilt.lifecycle.viewmodel.compose", "hiltViewModel")
     val KOIN_VIEW_MODEL_COMPOSE = MemberName("org.koin.androidx.compose", "koinViewModel")
+    val METRO_VIEW_MODEL_COMPOSE = MemberName("dev.zacsweers.metro.viewmodel.compose", "metroViewModel")
 
     // ── AndroidX Lifecycle ─────────────────────────────────────────────
     val VIEW_MODEL = ClassName("androidx.lifecycle", "ViewModel")

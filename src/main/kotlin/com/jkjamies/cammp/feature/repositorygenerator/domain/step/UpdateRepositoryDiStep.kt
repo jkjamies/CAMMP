@@ -37,8 +37,11 @@ class UpdateRepositoryDiStep(
     override val phase: StepPhase = StepPhase.DI
 
     override suspend fun execute(params: RepositoryParams): StepResult {
-        // Skip logic: If no DI strategy is chosen, this does nothing.
-        if (params.diStrategy !is DiStrategy.Hilt && params.diStrategy !is DiStrategy.Metro && params.diStrategy !is DiStrategy.Koin) {
+        // Metro uses @ContributesBinding on implementations, no DI module needed
+        if (params.diStrategy is DiStrategy.Metro) {
+            return StepResult.Success("- DI: Skipped (Metro uses @ContributesBinding)")
+        }
+        if (params.diStrategy !is DiStrategy.Hilt && params.diStrategy !is DiStrategy.Koin) {
             return StepResult.Success(null)
         }
 

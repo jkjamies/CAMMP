@@ -90,7 +90,7 @@ class GenerateDataSourceImplementationStepTest : BehaviorSpec({
                         className = "UserDataSourceImpl",
                         interfacePackage = "com.example.data.dataSource",
                         interfaceName = "UserDataSource",
-                        useKoin = false
+                        diStrategy = DiStrategy.Hilt
                     )
                 }
             }
@@ -114,7 +114,7 @@ class GenerateDataSourceImplementationStepTest : BehaviorSpec({
                         className = "UserRemoteDataSourceImpl",
                         interfacePackage = "com.example.data.remoteDataSource",
                         interfaceName = "UserRemoteDataSource",
-                        useKoin = true
+                        diStrategy = DiStrategy.Koin(false)
                     )
                 }
                 coVerify(exactly = 1) {
@@ -124,7 +124,7 @@ class GenerateDataSourceImplementationStepTest : BehaviorSpec({
                         className = "UserLocalDataSourceImpl",
                         interfacePackage = "com.example.data.localDataSource",
                         interfaceName = "UserLocalDataSource",
-                        useKoin = true
+                        diStrategy = DiStrategy.Koin(false)
                     )
                 }
             }

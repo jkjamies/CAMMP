@@ -151,10 +151,10 @@ fun PresentationGeneratorScreen(
         Text("Dependency Injection:")
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
             RadioWithLabel(
-                label = "Metro (coming soon)",
+                label = "Metro",
                 selected = state.diMetro,
-                enabled = false,
-                onClick = {}
+                enabled = true,
+                onClick = { if (!state.diMetro) onIntent(PresentationIntent.SetDiMetro(true)) }
             )
             RadioWithLabel(
                 label = "Hilt",

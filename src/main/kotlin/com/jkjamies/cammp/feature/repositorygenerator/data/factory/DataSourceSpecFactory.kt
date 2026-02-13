@@ -17,6 +17,8 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data.factory
 
 import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
+import com.jkjamies.cammp.domain.model.DiStrategy
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -33,7 +35,7 @@ interface DataSourceSpecFactory {
         className: String,
         interfacePackage: String,
         interfaceName: String,
-        useKoin: Boolean
+        diStrategy: DiStrategy
     ): FileSpec
 }
 
@@ -50,21 +52,32 @@ internal class DataSourceSpecFactoryImpl : DataSourceSpecFactory {
         className: String,
         interfacePackage: String,
         interfaceName: String,
-        useKoin: Boolean
+        diStrategy: DiStrategy
     ): FileSpec {
         val ifaceClassName = ClassName(interfacePackage, interfaceName)
+        val classBuilder = TypeSpec.classBuilder(className)
+            .addSuperinterface(ifaceClassName)
         val constructorBuilder = FunSpec.constructorBuilder()
-        if (!useKoin) {
-            constructorBuilder.addAnnotation(GeneratedAnnotations.JAVAX_INJECT)
+
+        when (diStrategy) {
+            is DiStrategy.Metro -> {
+                // @ContributesBinding implies @Inject, no explicit @Inject needed
+                classBuilder.addAnnotation(
+                    AnnotationSpec.builder(GeneratedAnnotations.METRO_CONTRIBUTES_BINDING)
+                        .addMember("%T::class", GeneratedAnnotations.METRO_APP_SCOPE)
+                        .build()
+                )
+            }
+            is DiStrategy.Hilt -> {
+                constructorBuilder.addAnnotation(GeneratedAnnotations.JAVAX_INJECT)
+            }
+            is DiStrategy.Koin -> Unit
         }
 
+        classBuilder.primaryConstructor(constructorBuilder.build())
+
         return FileSpec.builder(packageName, className)
-            .addType(
-                TypeSpec.classBuilder(className)
-                    .addSuperinterface(ifaceClassName)
-                    .primaryConstructor(constructorBuilder.build())
-                    .build()
-            )
+            .addType(classBuilder.build())
             .build()
     }
 }

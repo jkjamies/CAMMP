@@ -40,6 +40,10 @@ class UpdateDataSourceDiStep(
 
     override suspend fun execute(params: RepositoryParams): StepResult {
         if (params.datasourceStrategy is DatasourceStrategy.None) return StepResult.Success(null)
+        // Metro uses @ContributesBinding on implementations, no DI module needed
+        if (params.diStrategy is DiStrategy.Metro) {
+            return StepResult.Success("- DI: Skipped (Metro uses @ContributesBinding)")
+        }
         if (params.diStrategy is DiStrategy.Koin && params.diStrategy.useAnnotations) return StepResult.Success(null)
 
         val diDir = params.dataDir.parent?.resolve("di") ?: return StepResult.Success(null)
