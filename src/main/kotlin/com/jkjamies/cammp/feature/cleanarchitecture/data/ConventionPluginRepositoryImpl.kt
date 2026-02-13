@@ -247,12 +247,17 @@ internal class ConventionPluginRepositoryImpl(
         builder.addStatement("deps.implementation(%T.UI)", libsCompose)
         builder.addStatement("deps.implementation(%T.UI_GRAPHICS)", libsCompose)
         builder.addStatement("deps.implementation(%T.NAVIGATION)", libsCompose)
-        if (diMode == DiMode.HILT) {
-            builder.addStatement("deps.implementation(%T.HILT_NAVIGATION)", libsCompose)
-        } else if (diMode == DiMode.KOIN || diMode == DiMode.KOIN_ANNOTATIONS) {
-            builder.addStatement("deps.implementation(%T.KOIN_NAVIGATION)", libsCompose)
+        when (diMode) {
+            DiMode.HILT -> {
+                builder.addStatement("deps.implementation(%T.HILT_NAVIGATION)", libsCompose)
+            }
+            DiMode.METRO -> {
+                builder.addStatement("deps.implementation(%T.METRO_VIEWMODEL_COMPOSE)", libsCompose)
+            }
+            DiMode.KOIN, DiMode.KOIN_ANNOTATIONS -> {
+                builder.addStatement("deps.implementation(%T.KOIN_NAVIGATION)", libsCompose)
+            }
         }
-        // METRO: No navigation integration yet
         builder.addStatement("deps.debugImplementation(%T.TOOLING)", libsCompose)
         builder.addStatement("deps.debugImplementation(%T.PREVIEW)", libsCompose)
     }

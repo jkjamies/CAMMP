@@ -139,7 +139,9 @@ internal class AliasesRepositoryImpl(
                 dependencies.add(DependencyDefinition.Plugin("KSP", "ksp", "com.google.devtools.ksp", "2.3.4"))
             }
 
-            DiMode.METRO -> Unit
+            DiMode.METRO -> {
+                dependencies.add(DependencyDefinition.Library("METRO_VIEWMODEL_COMPOSE", "metro-viewmodel-compose", "dev.zacsweers.metro", "metrox-viewmodel-compose", "0.10.2"))
+            }
         }
 
         return dependencies
@@ -248,10 +250,16 @@ internal class AliasesRepositoryImpl(
             .addProperty(buildConstProperty("PREVIEW", resolvedAliases["PREVIEW"] ?: "androidx-compose-ui-tooling-preview"))
             .addProperty(buildConstProperty("UI_TEST_MANIFEST", resolvedAliases["UI_TEST_MANIFEST"] ?: "androidx-compose-ui-test-manifest"))
 
-        if (diMode == DiMode.HILT) {
-            builder.addProperty(buildConstProperty("HILT_NAVIGATION", resolvedAliases["HILT_NAVIGATION"] ?: "compose-hilt-navigation"))
-        } else {
-            builder.addProperty(buildConstProperty("KOIN_NAVIGATION", resolvedAliases["KOIN_NAVIGATION"] ?: "compose-koin-navigation"))
+        when (diMode) {
+            DiMode.HILT -> {
+                builder.addProperty(buildConstProperty("HILT_NAVIGATION", resolvedAliases["HILT_NAVIGATION"] ?: "compose-hilt-navigation"))
+            }
+            DiMode.METRO -> {
+                builder.addProperty(buildConstProperty("METRO_VIEWMODEL_COMPOSE", resolvedAliases["METRO_VIEWMODEL_COMPOSE"] ?: "metro-viewmodel-compose"))
+            }
+            DiMode.KOIN, DiMode.KOIN_ANNOTATIONS -> {
+                builder.addProperty(buildConstProperty("KOIN_NAVIGATION", resolvedAliases["KOIN_NAVIGATION"] ?: "compose-koin-navigation"))
+            }
         }
         return builder.build()
     }

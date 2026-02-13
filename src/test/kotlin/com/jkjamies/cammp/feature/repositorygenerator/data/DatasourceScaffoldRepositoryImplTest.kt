@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempDir
 import com.jkjamies.cammp.feature.repositorygenerator.data.factory.DataSourceSpecFactory
 import com.squareup.kotlinpoet.FileSpec
@@ -71,7 +72,7 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
                     val className = "UserDataSourceImpl"
                     val interfacePackage = "com.example"
                     val interfaceName = "UserDataSource"
-                    val useKoin = true
+                    val diStrategy = DiStrategy.Koin(useAnnotations = false)
 
                     val dummySpec = FileSpec.builder(packageName, className)
                         .addType(TypeSpec.classBuilder(className).build())
@@ -83,7 +84,7 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
                             className = className,
                             interfacePackage = interfacePackage,
                             interfaceName = interfaceName,
-                            useKoin = useKoin,
+                            diStrategy = diStrategy,
                         )
                     } returns dummySpec
 
@@ -93,7 +94,7 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
                         className = className,
                         interfacePackage = interfacePackage,
                         interfaceName = interfaceName,
-                        useKoin = useKoin,
+                        diStrategy = diStrategy,
                     )
 
                     result.exists() shouldBe true
@@ -106,7 +107,7 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
                             className = className,
                             interfacePackage = interfacePackage,
                             interfaceName = interfaceName,
-                            useKoin = useKoin,
+                            diStrategy = diStrategy,
                         )
                     }
                 }

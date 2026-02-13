@@ -17,6 +17,7 @@
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
 import dev.zacsweers.metro.AppScope
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.data.factory.DataSourceSpecFactory
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
 import dev.zacsweers.metro.ContributesBinding
@@ -48,7 +49,7 @@ internal class DatasourceScaffoldRepositoryImpl(
         className: String,
         interfacePackage: String,
         interfaceName: String,
-        useKoin: Boolean
+        diStrategy: DiStrategy
     ): Path {
         directory.createDirectories()
         val fileSpec = specFactory.createImplementation(
@@ -56,7 +57,7 @@ internal class DatasourceScaffoldRepositoryImpl(
             className = className,
             interfacePackage = interfacePackage,
             interfaceName = interfaceName,
-            useKoin = useKoin
+            diStrategy = diStrategy
         )
         val outFile = directory.resolve("$className.kt")
         outFile.writeText(fileSpec.toString())

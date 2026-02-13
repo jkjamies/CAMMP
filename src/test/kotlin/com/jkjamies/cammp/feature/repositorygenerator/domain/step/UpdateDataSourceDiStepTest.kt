@@ -71,6 +71,28 @@ class UpdateDataSourceDiStepTest : BehaviorSpec({
         tempRoot.toFile().deleteRecursively()
     }
 
+    Given("an UpdateDataSourceDiStep with Metro strategy") {
+        When("execute is called with Metro DI") {
+            val params = RepositoryParams(
+                dataDir = dataDir,
+                className = "User",
+                datasourceStrategy = DatasourceStrategy.Combined,
+                diStrategy = DiStrategy.Metro
+            )
+
+            val result = step.execute(params)
+
+            Then("it should skip DI module generation") {
+                result.shouldBeInstanceOf<StepResult.Success>()
+                (result as StepResult.Success).message shouldContain "Skipped"
+
+                coVerify(exactly = 0) {
+                    diRepo.mergeDataSourceModule(any(), any(), any(), any())
+                }
+            }
+        }
+    }
+
     Given("an UpdateDataSourceDiStep with real file structure") {
         When("execute is called with Combined DataSource and Koin") {
             val params = RepositoryParams(

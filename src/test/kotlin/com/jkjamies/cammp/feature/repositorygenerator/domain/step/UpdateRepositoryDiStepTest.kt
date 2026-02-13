@@ -25,6 +25,7 @@ import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DiModule
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.MergeOutcome
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
 import io.kotest.core.spec.style.BehaviorSpec
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -104,6 +105,22 @@ class UpdateRepositoryDiStepTest : BehaviorSpec({
                         dataFqn = "com.example.data.repository",
                         useKoin = true,
                     )
+                }
+            }
+        }
+
+        When("execute is called with Metro strategy") {
+            Then("it should skip DI module generation") {
+                val modulePkgRepo = mockk<ModulePackageRepository>()
+                val diRepo = mockk<DiModuleRepository>()
+                val step = UpdateRepositoryDiStep(modulePkgRepo, diRepo)
+
+                val result = step.execute(params(DiStrategy.Metro))
+                result.shouldBeInstanceOf<StepResult.Success>()
+                (result as StepResult.Success).message shouldContain "Skipped"
+
+                coVerify(exactly = 0) {
+                    diRepo.mergeRepositoryModule(any(), any(), any(), any(), any(), any())
                 }
             }
         }

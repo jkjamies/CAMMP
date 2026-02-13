@@ -16,6 +16,7 @@
 
 package com.jkjamies.cammp.feature.repositorygenerator.domain.repository
 
+import com.jkjamies.cammp.domain.model.DiStrategy
 import java.nio.file.Path
 
 interface DatasourceScaffoldRepository {
@@ -35,6 +36,6 @@ interface DatasourceScaffoldRepository {
         className: String,
         interfacePackage: String,
         interfaceName: String,
-        useKoin: Boolean
+        diStrategy: DiStrategy
     ): Path
 }

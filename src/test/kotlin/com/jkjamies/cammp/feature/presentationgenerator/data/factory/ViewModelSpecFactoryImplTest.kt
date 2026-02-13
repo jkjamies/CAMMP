@@ -82,9 +82,20 @@ class ViewModelSpecFactoryImplTest : BehaviorSpec({
             val spec = factory.create(pkg, testParams(diStrategy = DiStrategy.Metro))
             val content = spec.toString()
 
-            Then("it should also use HiltViewModel and Inject (same code path)") {
-                content shouldContain "HiltViewModel"
-                content shouldContain "Inject"
+            Then("it should have ViewModelKey and ContributesIntoMap annotations") {
+                content shouldContain "ViewModelKey"
+                content shouldContain "ContributesIntoMap"
+                content shouldContain "AppScope"
+            }
+
+            Then("it should not have Hilt or javax.inject annotations") {
+                content shouldNotContain "HiltViewModel"
+                content shouldNotContain "javax.inject"
+            }
+
+            Then("it should not have explicit @Inject (implied by @ContributesIntoMap)") {
+                // ContributesIntoMap implies @Inject
+                content shouldNotContain "import dev.zacsweers.metro.Inject"
             }
         }
 

@@ -21,6 +21,7 @@ import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryPar
 import com.jkjamies.cammp.domain.model.DatasourceStrategy
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Paths
 
 class RepositorySpecFactoryTest : BehaviorSpec({
@@ -63,6 +64,22 @@ class RepositorySpecFactoryTest : BehaviorSpec({
 
             Then("it should add Inject annotation") {
                 content shouldContain "@Inject"
+            }
+        }
+
+        When("creating data implementation with Metro") {
+            val params = mockParams("UserRepository", DiStrategy.Metro)
+            val spec = factory.createDataImplementation("p", "d", params)
+            val content = spec.toString()
+
+            Then("it should add @ContributesBinding annotation") {
+                content shouldContain "ContributesBinding"
+                content shouldContain "AppScope"
+            }
+
+            Then("it should not have @Inject or javax.inject") {
+                content shouldNotContain "import dev.zacsweers.metro.Inject"
+                content shouldNotContain "javax.inject"
             }
         }
 

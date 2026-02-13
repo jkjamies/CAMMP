@@ -21,7 +21,6 @@ import com.jkjamies.cammp.domain.step.StepPhase
 import com.jkjamies.cammp.domain.step.StepResult
 import com.jkjamies.cammp.domain.step.runStepCatching
 import com.jkjamies.cammp.domain.model.DatasourceStrategy
-import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.DatasourceScaffoldRepository
 import com.jkjamies.cammp.feature.repositorygenerator.domain.repository.ModulePackageRepository
@@ -44,7 +43,6 @@ class GenerateDataSourceImplementationStep(
             val results = mutableListOf<String>()
             val dataPkg = modulePkgRepo.findModulePackage(params.dataDir)
             val dataBasePkg = if (dataPkg.contains(PackageSuffixes.DATA)) dataPkg.substringBefore(PackageSuffixes.DATA) + PackageSuffixes.DATA else dataPkg
-            val useKoin = params.diStrategy is DiStrategy.Koin
 
             for ((moduleName, suffix) in params.datasourceStrategy.toEntries()) {
                 val moduleDir = params.dataDir.parent?.resolve(moduleName)
@@ -65,7 +63,7 @@ class GenerateDataSourceImplementationStep(
                     className = implName,
                     interfacePackage = ifacePkg,
                     interfaceName = ifaceName,
-                    useKoin = useKoin
+                    diStrategy = params.diStrategy
                 )
                 results += "- DataSource Impl: $out (generated)"
             }

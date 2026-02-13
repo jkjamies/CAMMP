@@ -55,12 +55,25 @@ internal class RepositorySpecFactoryImpl : RepositorySpecFactory {
         val classBuilder = TypeSpec.classBuilder(implClassName)
             .addSuperinterface(domainClassName)
 
-        if (params.diStrategy is DiStrategy.Koin && params.diStrategy.useAnnotations) {
-            classBuilder.addAnnotation(AnnotationSpec.builder(GeneratedAnnotations.KOIN_SINGLE).build())
+        when (params.diStrategy) {
+            is DiStrategy.Metro -> {
+                // @ContributesBinding implies @Inject, no explicit @Inject needed
+                classBuilder.addAnnotation(
+                    AnnotationSpec.builder(GeneratedAnnotations.METRO_CONTRIBUTES_BINDING)
+                        .addMember("%T::class", GeneratedAnnotations.METRO_APP_SCOPE)
+                        .build()
+                )
+            }
+            is DiStrategy.Hilt -> Unit // Hilt annotation added to constructor below
+            is DiStrategy.Koin -> {
+                if (params.diStrategy.useAnnotations) {
+                    classBuilder.addAnnotation(AnnotationSpec.builder(GeneratedAnnotations.KOIN_SINGLE).build())
+                }
+            }
         }
 
         val constructorBuilder = FunSpec.constructorBuilder()
-        if (params.diStrategy is DiStrategy.Hilt || params.diStrategy is DiStrategy.Metro) {
+        if (params.diStrategy is DiStrategy.Hilt) {
             constructorBuilder.addAnnotation(GeneratedAnnotations.JAVAX_INJECT)
         }
 

@@ -116,7 +116,9 @@ fun UseCaseGeneratorScreen(
         }
         Text("Dependency Injection:")
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            RadioWithLabel(label = "Metro (coming soon)", selected = state.diMetro, enabled = false, onClick = {})
+            RadioWithLabel(label = "Metro", selected = state.diMetro, enabled = true) {
+                if (!state.diMetro) onIntent(UseCaseIntent.SetDiMetro(true))
+            }
             RadioWithLabel(label = "Hilt", selected = state.diHilt, enabled = true) {
                 if (!state.diHilt) onIntent(UseCaseIntent.SetDiHilt(true))
             }
