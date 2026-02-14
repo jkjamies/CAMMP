@@ -1,7 +1,23 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.usecasegenerator.presentation
 
 import app.cash.turbine.test
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.LoadRepositories
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.UseCaseGenerator
@@ -28,9 +44,11 @@ class UseCaseViewModelTest : BehaviorSpec({
         generator: UseCaseGenerator,
         loadRepositories: LoadRepositories,
         domainPackage: String = "",
+        dispatcher: kotlinx.coroutines.CoroutineDispatcher = StandardTestDispatcher(scope.testScheduler),
     ) = UseCaseViewModel(
         domainPackage = domainPackage,
         scope = scope,
+        ioDispatcher = dispatcher,
         generator = generator,
         loadRepositories = loadRepositories,
     )
@@ -158,8 +176,8 @@ class UseCaseViewModelTest : BehaviorSpec({
 
                 vm.state.test {
                     val initial = awaitItem()
-                    initial.diMetro shouldBe false
-                    initial.diHilt shouldBe true
+                    initial.diMetro shouldBe true
+                    initial.diHilt shouldBe false
                     initial.diKoin shouldBe false
                     initial.diKoinAnnotations shouldBe false
 
@@ -220,7 +238,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                 val expectedParams = UseCaseParams(
                     domainDir = Paths.get("/path/to/domain"),
                     className = "ValidUseCase",
-                    diStrategy = DiStrategy.Hilt,
+                    diStrategy = DiStrategy.Metro,
                     repositories = listOf("ARepo", "BRepo"),
                 )
 
@@ -269,7 +287,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                 val expectedParams = UseCaseParams(
                     domainDir = Paths.get("/path/to/domain"),
                     className = "ValidUseCase",
-                    diStrategy = DiStrategy.Hilt,
+                    diStrategy = DiStrategy.Metro,
                     repositories = emptyList(),
                 )
 
@@ -304,7 +322,7 @@ class UseCaseViewModelTest : BehaviorSpec({
                 val expectedParams = UseCaseParams(
                     domainDir = Paths.get("/path/to/domain"),
                     className = "FooUseCase",
-                    diStrategy = DiStrategy.Hilt,
+                    diStrategy = DiStrategy.Metro,
                     repositories = emptyList(),
                 )
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.cleanarchitecture.data
 
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.DiMode
@@ -80,6 +96,33 @@ class ConventionPluginRepositoryImplTest : BehaviorSpec({
                     val out = tmp.resolve("RemoteDataSourceConventionPlugin.kt")
                     fs.readText(out)!!.also { content ->
                         content shouldContain "class RemoteDataSourceConventionPlugin"
+                    }
+                }
+            }
+        }
+
+        When("generating presentation plugin with Metro") {
+            Then("it should apply Metro plugin but NOT Hilt dependencies") {
+                withTempDir("cammp_convention_metro") { tmp ->
+                    repo.generate(
+                        outputDirectory = tmp,
+                        packageName = "com.example.convention",
+                        diMode = DiMode.METRO,
+                        type = PluginType.PRESENTATION,
+                    )
+
+                    val out = tmp.resolve("PresentationConventionPlugin.kt")
+                    fs.readText(out)!!.also { content ->
+                        content shouldContain "package com.example.convention"
+                        content shouldContain "class PresentationConventionPlugin"
+
+                        // Metro Plugin
+                        content shouldContain "Aliases.PluginAliases.METRO"
+
+                        // NO Hilt Plugin
+                        content.contains("Aliases.PluginAliases.HILT") shouldBe false
+                        // NO Hilt Dependencies
+                        content.contains("LibsCompose.HILT_NAVIGATION") shouldBe false
                     }
                 }
             }

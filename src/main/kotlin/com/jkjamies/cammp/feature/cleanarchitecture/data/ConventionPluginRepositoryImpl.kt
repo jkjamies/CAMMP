@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.cleanarchitecture.data
 
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.ConventionPluginRepository
@@ -17,7 +33,7 @@ import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
 @ContributesBinding(AppScope::class)
-class ConventionPluginRepositoryImpl(
+internal class ConventionPluginRepositoryImpl(
     private val fs: FileSystemRepository
 ) : ConventionPluginRepository {
 
@@ -141,6 +157,9 @@ class ConventionPluginRepositoryImpl(
         if (diMode == DiMode.HILT) {
             addStatement("%T.HILT,", pluginAliases)
         }
+        if (diMode == DiMode.METRO) {
+            addStatement("%T.METRO,", pluginAliases)
+        }
         addStatement("%T.PARCELIZE,", pluginAliases)
         addStatement("%T.KOTLIN_SERIALIZATION,", pluginAliases)
         if (includeCompose) {
@@ -205,6 +224,7 @@ class ConventionPluginRepositoryImpl(
                 builder.addStatement("deps.implementation(%T.KOIN_ANNOTATIONS)", libsCommon)
                 builder.addStatement("deps.ksp(%T.KOIN_KSP_COMPILER)", libsCommon)
             }
+            DiMode.METRO -> Unit // Metro uses only the plugin, no dependencies needed here
         }
     }
 
@@ -227,10 +247,16 @@ class ConventionPluginRepositoryImpl(
         builder.addStatement("deps.implementation(%T.UI)", libsCompose)
         builder.addStatement("deps.implementation(%T.UI_GRAPHICS)", libsCompose)
         builder.addStatement("deps.implementation(%T.NAVIGATION)", libsCompose)
-        if (diMode == DiMode.HILT) {
-            builder.addStatement("deps.implementation(%T.HILT_NAVIGATION)", libsCompose)
-        } else {
-            builder.addStatement("deps.implementation(%T.KOIN_NAVIGATION)", libsCompose)
+        when (diMode) {
+            DiMode.HILT -> {
+                builder.addStatement("deps.implementation(%T.HILT_NAVIGATION)", libsCompose)
+            }
+            DiMode.METRO -> {
+                builder.addStatement("deps.implementation(%T.METRO_VIEWMODEL_COMPOSE)", libsCompose)
+            }
+            DiMode.KOIN, DiMode.KOIN_ANNOTATIONS -> {
+                builder.addStatement("deps.implementation(%T.KOIN_NAVIGATION)", libsCompose)
+            }
         }
         builder.addStatement("deps.debugImplementation(%T.TOOLING)", libsCompose)
         builder.addStatement("deps.debugImplementation(%T.PREVIEW)", libsCompose)

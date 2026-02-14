@@ -1,7 +1,23 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.repositorygenerator.presentation
 
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DiStrategy
-import com.jkjamies.cammp.feature.repositorygenerator.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.repositorygenerator.domain.model.RepositoryParams
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.LoadDataSourcesByType
 import com.jkjamies.cammp.feature.repositorygenerator.domain.usecase.RepositoryGenerator
@@ -15,6 +31,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 
 /**
@@ -30,12 +47,14 @@ class RepositoryViewModelTest : BehaviorSpec({
     )
 
     fun newHarness(domainPackage: String = ""): Harness {
-        val scope = TestScope()
+        val dispatcher = StandardTestDispatcher()
+        val scope = TestScope(dispatcher)
         val generator = mockk<RepositoryGenerator>()
         val loadDataSources = mockk<LoadDataSourcesByType>()
         val vm = RepositoryViewModel(
             domainPackage = domainPackage,
             scope = scope,
+            ioDispatcher = dispatcher,
             generator = generator,
             loadDataSourcesByType = loadDataSources,
         )
@@ -106,7 +125,7 @@ class RepositoryViewModelTest : BehaviorSpec({
             }
         }
 
-        When("Generate is called with valid input (Hilt)") {
+        When("Generate is called with valid input (Metro default)") {
             Then("it should call generator with correct params and update lastGeneratedMessage") {
                 val (scope, generator, loadDataSources, vm) = newHarness()
 
@@ -118,7 +137,6 @@ class RepositoryViewModelTest : BehaviorSpec({
                 scope.testScheduler.advanceUntilIdle()
 
                 vm.handleIntent(RepositoryIntent.SetName("UserRepository"))
-                vm.handleIntent(RepositoryIntent.SetDiHilt(true))
 
                 vm.handleIntent(RepositoryIntent.SetIncludeDatasource(true))
                 vm.handleIntent(RepositoryIntent.SetDatasourceCombined(true))
@@ -139,7 +157,7 @@ class RepositoryViewModelTest : BehaviorSpec({
                 val captured = paramsSlot.captured
                 captured.className shouldBe "UserRepository"
                 captured.dataDir.toString() shouldBe "/project/feature/data"
-                captured.diStrategy shouldBe DiStrategy.Hilt
+                captured.diStrategy shouldBe DiStrategy.Metro
                 captured.datasourceStrategy shouldBe DatasourceStrategy.Combined
                 captured.selectedDataSources.shouldContainExactly("com.example.RemoteDS")
 
@@ -180,8 +198,8 @@ class RepositoryViewModelTest : BehaviorSpec({
             Then("it should keep the flags consistent") {
                 val (_, _, _, vm) = newHarness()
 
-                vm.state.value.diMetro shouldBe false
-                vm.state.value.diHilt shouldBe true
+                vm.state.value.diMetro shouldBe true
+                vm.state.value.diHilt shouldBe false
                 vm.state.value.diKoin shouldBe false
 
                 vm.handleIntent(RepositoryIntent.SetDiKoin(true))

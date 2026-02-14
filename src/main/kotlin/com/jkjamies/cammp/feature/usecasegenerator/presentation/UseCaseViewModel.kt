@@ -1,24 +1,44 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.usecasegenerator.presentation
 
-import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.UseCaseGenerator
+import com.jkjamies.cammp.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.validation.validateModulePath
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.UseCaseGenerator
 import com.jkjamies.cammp.feature.usecasegenerator.domain.usecase.LoadRepositories
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import java.nio.file.Paths
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @AssistedInject
 class UseCaseViewModel(
     @Assisted private val domainPackage: String,
     @Assisted private val scope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher,
     private val generator: UseCaseGenerator,
     private val loadRepositories: LoadRepositories
 ) {
@@ -51,15 +71,17 @@ class UseCaseViewModel(
                 )
                 _state.update { it.copy(isGenerating = true, errorMessage = null, lastGeneratedPath = null) }
                 scope.launch {
-                    val result = generator(params)
-                    val path = result.getOrNull()
-                    val error = result.exceptionOrNull()?.message
-                    _state.update {
-                        it.copy(
-                            isGenerating = false,
-                            lastGeneratedPath = path,
-                            errorMessage = error,
-                        )
+                    withContext(ioDispatcher) {
+                        val result = generator(params)
+                        val path = result.getOrNull()
+                        val error = result.exceptionOrNull()?.message
+                        _state.update {
+                            it.copy(
+                                isGenerating = false,
+                                lastGeneratedPath = path,
+                                errorMessage = error,
+                            )
+                        }
                     }
                 }
             }
@@ -67,14 +89,16 @@ class UseCaseViewModel(
             is UseCaseIntent.SetName -> _state.update { it.copy(name = intent.value) }
             is UseCaseIntent.SetDomainPackage -> {
                 val newPath = intent.value
-                val err = validateDomainPath(newPath)
+                val err = validateModulePath(newPath, "domain")
                 _state.update { it.copy(domainPackage = newPath, errorMessage = err) }
                 if (err == null && newPath.isNotBlank()) {
                     scope.launch {
-                        val repos = loadRepositories(newPath)
-                        _state.update { current ->
-                            val selected = current.selectedRepositories.filter { it in repos }.toSet()
-                            current.copy(availableRepositories = repos, selectedRepositories = selected)
+                        withContext(ioDispatcher) {
+                            val repos = loadRepositories(newPath)
+                            _state.update { current ->
+                                val selected = current.selectedRepositories.filter { it in repos }.toSet()
+                                current.copy(availableRepositories = repos, selectedRepositories = selected)
+                            }
                         }
                     }
                 } else {
@@ -116,15 +140,7 @@ class UseCaseViewModel(
         if (s.name.isBlank()) return "Name is required"
         val path = s.domainPackage
         if (path.isBlank()) return "Domain directory is required"
-        val err = validateDomainPath(path)
-        if (err != null) return err
-        return null
-    }
-
-    private fun validateDomainPath(path: String): String? {
-        val trimmed = path.trimEnd('/', '\\')
-        val last = trimmed.substringAfterLast('/').substringAfterLast('\\')
-        return if (!last.equals("domain", ignoreCase = true)) "Selected directory must be a domain module" else null
+        return validateModulePath(path, "domain")
     }
 
     private fun normalizeName(raw: String): String {

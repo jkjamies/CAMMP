@@ -1,8 +1,16 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# IntelliJ Platform Plugin Template Changelog
+# CAMMP Changelog
 
 ## [Unreleased]
+
+### Added
+
+- Metro DI Option
+
+### Changed
+
+- Updated dependencies
 
 ## [0.0.7-alpha] - 2026-01-22
 
