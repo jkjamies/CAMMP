@@ -1,6 +1,6 @@
-# GEMINI.md
+# CAMMP Guidelines
 
-This file provides guidance to Google Gemini when working with code in this repository.
+This file provides guidance to JetBrains Junie when working with code in this repository.
 
 ## Project Overview
 

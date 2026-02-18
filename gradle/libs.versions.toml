@@ -12,6 +12,9 @@ turbine = "1.2.1"
 composeuitest = "1.11.0-alpha02"
 jewelstandalone = "0.33.0-253.29795"
 skikoAwtRuntimeAll = "0.9.22"
+mcp-sdk = "0.8.3"
+slf4j = "2.0.17"
+coroutines = "1.10.2"
 
 # plugins
 changelog = "2.5.0"
@@ -19,6 +22,8 @@ intelliJPlatform = "2.11.0"
 kotlin = "2.3.10"
 kover = "0.9.7"
 metro = "0.10.4"
+shadow = "9.0.0"
+kotlinSerialization = "2.3.10"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -34,6 +39,10 @@ kotest-property = { group = "io.kotest", name = "kotest-property", version.ref =
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 junit-vintage-engine = { group = "org.junit.vintage", name = "junit-vintage-engine", version = "junit-vintage" }
+mcp-sdk = { group = "io.modelcontextprotocol", name = "kotlin-sdk", version.ref = "mcp-sdk" }
+slf4j-nop = { group = "org.slf4j", name = "slf4j-nop", version.ref = "slf4j" }
+coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
@@ -42,3 +51,5 @@ kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerialization" }

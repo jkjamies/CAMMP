@@ -66,11 +66,21 @@ jobs:
           PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
         run: ./gradlew publishPlugin
 
-      # Upload artifact as a release asset
-      - name: Upload Release Asset
+      # Build MCP server shadow JAR
+      - name: Build MCP Server
+        run: ./gradlew :mcp-server:shadowJar
+
+      # Upload plugin artifact as a release asset
+      - name: Upload Plugin Release Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
+        run: gh release upload ${{ github.event.release.tag_name }} ./plugin/build/distributions/*
+
+      # Upload MCP server JAR as a release asset
+      - name: Upload MCP Server Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.release.tag_name }} ./mcp-server/build/libs/cammp-mcp.jar
 
       # Create a pull request
       - name: Create Pull Request

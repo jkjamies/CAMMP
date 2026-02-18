@@ -7,8 +7,4 @@ build
 *.iml
 out/
 .qodana
-
-# AI Context Files
-CLAUDE.md
-.github/copilot-instructions.md
-.junie/guidelines.md
+bin/

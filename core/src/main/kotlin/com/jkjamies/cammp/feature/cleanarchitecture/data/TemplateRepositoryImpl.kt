@@ -14,10 +14,18 @@
  * limitations under the License.
  */
 
-rootProject.name = "CAMMP"
+package com.jkjamies.cammp.feature.cleanarchitecture.data
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.repository.TemplateRepository
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+
+@ContributesBinding(AppScope::class)
+class TemplateRepositoryImpl : TemplateRepository {
+    override fun getTemplateText(resourcePath: String): String {
+        val url = this::class.java.classLoader.getResource(resourcePath)
+            ?: error("Template not found: $resourcePath")
+        return url.readText()
+    }
 }
-
-include(":core", ":plugin", ":mcp-server")

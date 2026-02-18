@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-rootProject.name = "CAMMP"
+package com.jkjamies.cammp.feature.cleanarchitecture.di
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+import com.jkjamies.cammp.feature.cleanarchitecture.domain.step.CleanArchitectureStep
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Multibinds
+
+@ContributesTo(AppScope::class)
+interface CleanArchitectureGraph {
+    @Multibinds(allowEmpty = true)
+    val cleanArchitectureSteps: Set<CleanArchitectureStep>
 }
-
-include(":core", ":plugin", ":mcp-server")
