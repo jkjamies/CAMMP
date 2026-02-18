@@ -1,7 +1,23 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.presentationgenerator.presentation
 
 import app.cash.turbine.test
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.usecase.PresentationGenerator
@@ -30,7 +46,7 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 vm.state.test {
                     awaitItem() // initial
@@ -54,7 +70,7 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 val fqn = "com.example.UseCase"
 
@@ -77,15 +93,15 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 vm.state.test {
                     val initial = awaitItem()
                     initial.patternMVI shouldBe true
                     initial.patternMVVM shouldBe false
                     initial.patternCircuit shouldBe false
-                    initial.diMetro shouldBe false
-                    initial.diHilt shouldBe true
+                    initial.diMetro shouldBe true
+                    initial.diHilt shouldBe false
                     initial.diKoin shouldBe false
 
                     vm.handleIntent(PresentationIntent.SetPatternMVVM(true))
@@ -139,7 +155,7 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 vm.state.test {
                     awaitItem()
@@ -157,13 +173,13 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 val expectedParams = PresentationParams(
                     moduleDir = Paths.get("/tmp"),
                     screenName = "Home",
                     patternStrategy = PresentationPatternStrategy.MVI,
-                    diStrategy = DiStrategy.Hilt,
+                    diStrategy = DiStrategy.Metro,
                     includeNavigation = true,
                     useFlowStateHolder = true,
                     useScreenStateHolder = true,
@@ -216,7 +232,7 @@ class PresentationViewModelTest : BehaviorSpec({
                 val dispatcher = StandardTestDispatcher()
                 val scope = TestScope(dispatcher)
                 val generator = mockk<PresentationGenerator>()
-                val vm = PresentationViewModel(directory = "", scope = scope, generator = generator)
+                val vm = PresentationViewModel(directory = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
                 vm.handleIntent(PresentationIntent.SetDirectory("/tmp"))
                 vm.handleIntent(PresentationIntent.SetScreenName("Home"))
@@ -225,7 +241,7 @@ class PresentationViewModelTest : BehaviorSpec({
                     moduleDir = Paths.get("/tmp"),
                     screenName = "Home",
                     patternStrategy = PresentationPatternStrategy.MVI,
-                    diStrategy = DiStrategy.Hilt,
+                    diStrategy = DiStrategy.Metro,
                 )
 
                 coEvery { generator(expectedParams) } returns Result.failure(IllegalStateException("boom"))

@@ -1,4 +1,20 @@
-package org.jetbrains.plugins.template.util
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.jkjamies.cammp.util
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
@@ -67,11 +83,7 @@ fun refreshUseCases(project: Project): Map<String, List<String>>? {
                 val moduleDir = findModuleDir(child) ?: baseVf
                 val gradlePath = toGradlePath(moduleDir)
                 val fqn = deriveFqn(child)
-                
-                // If this is an implementation in a 'domain' module, and we already have an entry
-                // for this feature's 'api' module, we might want to skip it if it's the same use case.
-                // However, the current structure groups by gradlePath.
-                
+
                 itemsByModule.computeIfAbsent(gradlePath) { mutableListOf() }.add(fqn)
             }
         }
@@ -82,27 +94,23 @@ fun refreshUseCases(project: Project): Map<String, List<String>>? {
     // Post-process to handle api vs domain preference within the same feature
     val result = linkedMapOf<String, List<String>>()
     val allModules = itemsByModule.keys.toList()
-    
+
     for (modulePath in allModules) {
         if (modulePath.endsWith(":domain")) {
             val featurePath = modulePath.removeSuffix(":domain")
             val apiPath = "$featurePath:api"
             if (itemsByModule.containsKey(apiPath)) {
-                // If api module exists, we only include use cases from api, 
-                // unless it's empty (unlikely if domain has some, but safety first)
                 val apiUseCases = itemsByModule[apiPath] ?: emptyList()
                 if (apiUseCases.isNotEmpty()) {
                     result[apiPath] = apiUseCases
-                    // Skip adding domain module for this feature
                     continue
                 }
             }
         } else if (modulePath.endsWith(":api")) {
-            // Handled by the :domain check above or just added directly if no :domain exists
             result[modulePath] = itemsByModule[modulePath] ?: emptyList()
             continue
         }
-        
+
         result[modulePath] = itemsByModule[modulePath] ?: emptyList()
     }
 

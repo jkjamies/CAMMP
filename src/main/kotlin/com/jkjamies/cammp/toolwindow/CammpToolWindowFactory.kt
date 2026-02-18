@@ -1,4 +1,20 @@
-package org.jetbrains.plugins.template.toolWindow
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.jkjamies.cammp.toolwindow
 
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -11,45 +27,40 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import com.jkjamies.cammp.di.CammpGraph
 import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesIntent
 import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesScreen
-import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesUiState
-import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesViewModel
 import com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationGeneratorScreen
 import com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationIntent
-import com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationUiState
 import com.jkjamies.cammp.feature.presentationgenerator.presentation.PresentationViewModel
 import com.jkjamies.cammp.feature.repositorygenerator.presentation.RepositoryGeneratorScreen
 import com.jkjamies.cammp.feature.repositorygenerator.presentation.RepositoryIntent
-import com.jkjamies.cammp.feature.repositorygenerator.presentation.RepositoryUiState
 import com.jkjamies.cammp.feature.repositorygenerator.presentation.RepositoryViewModel
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseGeneratorScreen
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseIntent
-import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseUiState
 import com.jkjamies.cammp.feature.usecasegenerator.presentation.UseCaseViewModel
 import com.jkjamies.cammp.feature.welcome.presentation.WelcomeScreen
+import com.jkjamies.cammp.util.chooseDirectoryPath
+import com.jkjamies.cammp.util.refreshUseCases
 import dev.zacsweers.metro.createGraph
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import org.jetbrains.jewel.bridge.addComposeTab
-import org.jetbrains.plugins.template.util.chooseDirectoryPath
-import org.jetbrains.plugins.template.util.refreshUseCases
 
-class ComposeSamplesToolWindowFactory : ToolWindowFactory, DumbAware {
+class CammpToolWindowFactory : ToolWindowFactory, DumbAware {
     override fun shouldBeAvailable(project: Project) = true
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        cleanArchitecture(project, toolWindow)
+        setupTabs(project, toolWindow)
     }
 
-    private fun cleanArchitecture(project: Project, toolWindow: ToolWindow) {
+    private fun setupTabs(project: Project, toolWindow: ToolWindow) {
         val basePath = project.basePath ?: ""
-        
+
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
         Disposer.register(toolWindow.disposable) { scope.cancel() }
 
         val graph = createGraph<CammpGraph>()
-        
+
         val vm = graph.generateModulesViewModelFactory.create(basePath, scope)
         val presentationVm = graph.presentationViewModelFactory.create(basePath, scope)
         val repositoryVm = graph.repositoryViewModelFactory.create(basePath, scope)

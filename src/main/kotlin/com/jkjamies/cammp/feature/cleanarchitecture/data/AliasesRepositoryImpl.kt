@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.cleanarchitecture.data
 
 import dev.zacsweers.metro.AppScope
@@ -14,7 +30,7 @@ import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
 @ContributesBinding(AppScope::class)
-class AliasesRepositoryImpl(
+internal class AliasesRepositoryImpl(
     private val fs: FileSystemRepository,
     private val versionCatalogDataSource: VersionCatalogDataSource
 ) : AliasesRepository {
@@ -100,6 +116,7 @@ class AliasesRepositoryImpl(
         dependencies.add(DependencyDefinition.Plugin("PARCELIZE", "parcelize", "org.jetbrains.kotlin.plugin.parcelize", "2.3.0", "kotlin"))
         dependencies.add(DependencyDefinition.Plugin("KOTLIN_SERIALIZATION", "kotlin-serialization", "org.jetbrains.kotlin.plugin.serialization", "2.3.0", "kotlin"))
         dependencies.add(DependencyDefinition.Plugin("COMPOSE_COMPILER", "compose-compiler", "org.jetbrains.kotlin.plugin.compose", "2.3.0", "kotlin"))
+        dependencies.add(DependencyDefinition.Plugin("METRO", "metro", "dev.zacsweers.metro", "0.10.2"))
 
         // DI Specific
         when (diMode) {
@@ -120,6 +137,10 @@ class AliasesRepositoryImpl(
                 dependencies.add(DependencyDefinition.Library("KOIN_KSP_COMPILER", "koin-ksp-compiler", "io.insert-koin", "koin-ksp-compiler", "1.3.0"))
                 dependencies.add(DependencyDefinition.Library("KOIN_NAVIGATION", "compose-koin-navigation", "io.insert-koin", "koin-androidx-compose", "3.5.0"))
                 dependencies.add(DependencyDefinition.Plugin("KSP", "ksp", "com.google.devtools.ksp", "2.3.4"))
+            }
+
+            DiMode.METRO -> {
+                dependencies.add(DependencyDefinition.Library("METRO_VIEWMODEL_COMPOSE", "metro-viewmodel-compose", "dev.zacsweers.metro", "metrox-viewmodel-compose", "0.10.2"))
             }
         }
 
@@ -146,6 +167,7 @@ class AliasesRepositoryImpl(
             .addProperty(buildConstProperty("PARCELIZE", resolvedAliases["PARCELIZE"] ?: "parcelize"))
             .addProperty(buildConstProperty("KOTLIN_SERIALIZATION", resolvedAliases["KOTLIN_SERIALIZATION"] ?: "kotlin-serialization"))
             .addProperty(buildConstProperty("COMPOSE_COMPILER", resolvedAliases["COMPOSE_COMPILER"] ?: "compose-compiler"))
+            .addProperty(buildConstProperty("METRO", resolvedAliases["METRO"] ?: "metro"))
 
         if (diMode == DiMode.HILT || diMode == DiMode.KOIN_ANNOTATIONS) {
             builder.addProperty(buildConstProperty("KSP", resolvedAliases["KSP"] ?: "ksp"))
@@ -211,6 +233,7 @@ class AliasesRepositoryImpl(
                 builder.addProperty(buildConstProperty("KOIN_ANNOTATIONS", resolvedAliases["KOIN_ANNOTATIONS"] ?: "koin-annotations"))
                 builder.addProperty(buildConstProperty("KOIN_KSP_COMPILER", resolvedAliases["KOIN_KSP_COMPILER"] ?: "koin-ksp-compiler"))
             }
+            DiMode.METRO -> Unit
         }
         return builder.build()
     }
@@ -227,10 +250,16 @@ class AliasesRepositoryImpl(
             .addProperty(buildConstProperty("PREVIEW", resolvedAliases["PREVIEW"] ?: "androidx-compose-ui-tooling-preview"))
             .addProperty(buildConstProperty("UI_TEST_MANIFEST", resolvedAliases["UI_TEST_MANIFEST"] ?: "androidx-compose-ui-test-manifest"))
 
-        if (diMode == DiMode.HILT) {
-            builder.addProperty(buildConstProperty("HILT_NAVIGATION", resolvedAliases["HILT_NAVIGATION"] ?: "compose-hilt-navigation"))
-        } else {
-            builder.addProperty(buildConstProperty("KOIN_NAVIGATION", resolvedAliases["KOIN_NAVIGATION"] ?: "compose-koin-navigation"))
+        when (diMode) {
+            DiMode.HILT -> {
+                builder.addProperty(buildConstProperty("HILT_NAVIGATION", resolvedAliases["HILT_NAVIGATION"] ?: "compose-hilt-navigation"))
+            }
+            DiMode.METRO -> {
+                builder.addProperty(buildConstProperty("METRO_VIEWMODEL_COMPOSE", resolvedAliases["METRO_VIEWMODEL_COMPOSE"] ?: "metro-viewmodel-compose"))
+            }
+            DiMode.KOIN, DiMode.KOIN_ANNOTATIONS -> {
+                builder.addProperty(buildConstProperty("KOIN_NAVIGATION", resolvedAliases["KOIN_NAVIGATION"] ?: "compose-koin-navigation"))
+            }
         }
         return builder.build()
     }

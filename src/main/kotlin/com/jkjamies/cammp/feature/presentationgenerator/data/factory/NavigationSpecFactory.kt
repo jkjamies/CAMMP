@@ -1,5 +1,22 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.presentationgenerator.data.factory
 
+import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -18,13 +35,13 @@ interface NavigationSpecFactory {
 }
 
 @ContributesBinding(AppScope::class)
-class NavigationSpecFactoryImpl : NavigationSpecFactory {
+internal class NavigationSpecFactoryImpl : NavigationSpecFactory {
 
     override fun createHost(packageName: String, navHostName: String): FileSpec {
-        val composableAnnotation = ClassName("androidx.compose.runtime", "Composable")
-        val navHostController = ClassName("androidx.navigation", "NavHostController")
-        val navHost = MemberName("androidx.navigation.compose", "NavHost")
-        val rememberNavController = MemberName("androidx.navigation.compose", "rememberNavController")
+        val composableAnnotation = GeneratedAnnotations.COMPOSABLE
+        val navHostController = GeneratedAnnotations.NAV_HOST_CONTROLLER
+        val navHost = GeneratedAnnotations.NAV_HOST
+        val rememberNavController = GeneratedAnnotations.REMEMBER_NAV_CONTROLLER
 
         val funSpec = FunSpec.builder(navHostName)
             .addAnnotation(composableAnnotation)
@@ -50,10 +67,10 @@ class NavigationSpecFactoryImpl : NavigationSpecFactory {
         val destinationName = "${screenName}Destination"
         val destinationPackage = "$packageName.navigation.destinations"
 
-        val serializableAnnotation = ClassName("kotlinx.serialization", "Serializable")
-        val navGraphBuilder = ClassName("androidx.navigation", "NavGraphBuilder")
+        val serializableAnnotation = GeneratedAnnotations.SERIALIZABLE
+        val navGraphBuilder = GeneratedAnnotations.NAV_GRAPH_BUILDER
 
-        val composableMember = MemberName("androidx.navigation.compose", "composable")
+        val composableMember = GeneratedAnnotations.COMPOSABLE_DESTINATION
         val screenComposable = MemberName("$packageName.$screenFolder", screenName)
 
         val destinationObject = TypeSpec.objectBuilder(destinationName)
@@ -69,9 +86,9 @@ class NavigationSpecFactoryImpl : NavigationSpecFactory {
             .build()
 
         return FileSpec.builder(destinationPackage, destinationName)
-            .addImport("kotlinx.serialization", "Serializable")
             .addType(destinationObject)
             .addFunction(navGraphExtension)
+            // Convenience imports for commented-out example code in destination comments
             .addImport("androidx.navigation", "NavController", "NavOptionsBuilder", "navOptions", "toRoute")
             .build()
     }

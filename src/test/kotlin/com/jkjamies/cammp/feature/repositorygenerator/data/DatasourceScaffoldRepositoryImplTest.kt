@@ -1,5 +1,22 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.repositorygenerator.data
 
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.cleanarchitecture.testutil.TestFiles.withTempDir
 import com.jkjamies.cammp.feature.repositorygenerator.data.factory.DataSourceSpecFactory
 import com.squareup.kotlinpoet.FileSpec
@@ -55,7 +72,7 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
                     val className = "UserDataSourceImpl"
                     val interfacePackage = "com.example"
                     val interfaceName = "UserDataSource"
-                    val useKoin = true
+                    val diStrategy = DiStrategy.Koin(useAnnotations = false)
 
                     val dummySpec = FileSpec.builder(packageName, className)
                         .addType(TypeSpec.classBuilder(className).build())
@@ -67,7 +84,7 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
                             className = className,
                             interfacePackage = interfacePackage,
                             interfaceName = interfaceName,
-                            useKoin = useKoin,
+                            diStrategy = diStrategy,
                         )
                     } returns dummySpec
 
@@ -77,7 +94,7 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
                         className = className,
                         interfacePackage = interfacePackage,
                         interfaceName = interfaceName,
-                        useKoin = useKoin,
+                        diStrategy = diStrategy,
                     )
 
                     result.exists() shouldBe true
@@ -90,7 +107,7 @@ class DatasourceScaffoldRepositoryImplTest : BehaviorSpec({
                             className = className,
                             interfacePackage = interfacePackage,
                             interfaceName = interfaceName,
-                            useKoin = useKoin,
+                            diStrategy = diStrategy,
                         )
                     }
                 }

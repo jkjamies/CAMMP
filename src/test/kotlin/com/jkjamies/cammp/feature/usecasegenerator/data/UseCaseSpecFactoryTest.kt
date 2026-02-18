@@ -1,7 +1,23 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.usecasegenerator.data
 
 import com.jkjamies.cammp.feature.usecasegenerator.data.factory.UseCaseSpecFactoryImpl
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.string.shouldContain
@@ -49,6 +65,40 @@ class UseCaseSpecFactoryTest : BehaviorSpec({
 
                 content shouldContain "import javax.inject.Inject"
                 content shouldContain "class MyUseCase @Inject constructor()"
+            }
+        }
+
+        When("creating a spec for Metro without interface") {
+            Then("it should include Metro @Inject on class") {
+                val spec = factory.create(
+                    "com.example.usecase",
+                    params(di = DiStrategy.Metro),
+                    "com.example.domain"
+                )
+                val content = spec.toString()
+
+                content shouldContain "import dev.zacsweers.metro.Inject"
+                content shouldContain "@Inject"
+                content shouldNotContain "javax.inject"
+                content shouldNotContain "ContributesBinding"
+            }
+        }
+
+        When("creating a spec for Metro with interface") {
+            Then("it should include @ContributesBinding and no explicit @Inject") {
+                val spec = factory.create(
+                    "com.example.usecase",
+                    params(di = DiStrategy.Metro),
+                    "com.example.domain",
+                    interfaceFqn = "com.example.api.usecase.MyUseCase"
+                )
+                val content = spec.toString()
+
+                content shouldContain "import dev.zacsweers.metro.ContributesBinding"
+                content shouldContain "@ContributesBinding"
+                content shouldContain "AppScope"
+                content shouldNotContain "import dev.zacsweers.metro.Inject"
+                content shouldNotContain "javax.inject"
             }
         }
 

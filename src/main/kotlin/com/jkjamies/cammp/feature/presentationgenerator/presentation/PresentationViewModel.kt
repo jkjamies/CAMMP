@@ -1,24 +1,43 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.presentationgenerator.presentation
 
-import com.jkjamies.cammp.feature.presentationgenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationParams
 import com.jkjamies.cammp.feature.presentationgenerator.domain.model.PresentationPatternStrategy
 import com.jkjamies.cammp.feature.presentationgenerator.domain.usecase.PresentationGenerator
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.nio.file.Paths
 
 @AssistedInject
 class PresentationViewModel(
     @Assisted private val directory: String,
     @Assisted private val scope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher,
     private val generator: PresentationGenerator,
 ) {
     private val _state = MutableStateFlow(PresentationUiState(directory = directory))
@@ -73,7 +92,7 @@ class PresentationViewModel(
         }
 
         scope.launch {
-            val result = run {
+            val result = withContext(ioDispatcher) {
                 val patternStrategy = when {
                     s.patternMVI -> PresentationPatternStrategy.MVI
                     s.patternCircuit -> PresentationPatternStrategy.Circuit

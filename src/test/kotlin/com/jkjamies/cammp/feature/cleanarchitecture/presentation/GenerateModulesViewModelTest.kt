@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.cleanarchitecture.presentation
 
 import app.cash.turbine.test
@@ -25,7 +41,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
 
         When("Generate is invoked with missing project base") {
             val generator = mockk<CleanArchitectureGenerator>()
-            val vm = GenerateModulesViewModel(projectBasePath = "", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
             vm.handleIntent(GenerateModulesIntent.Generate)
 
@@ -36,7 +52,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
 
         When("Generate is invoked for KMP") {
             val generator = mockk<CleanArchitectureGenerator>()
-            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
             vm.handleIntent(GenerateModulesIntent.SetPlatformKmp(true))
             vm.handleIntent(GenerateModulesIntent.Generate)
@@ -61,14 +77,14 @@ class GenerateModulesViewModelTest : BehaviorSpec({
                 generator.invoke(any<CleanArchitectureParams>())
             } returns Result.success(result)
 
-            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
             vm.state.test {
                 // initial
                 awaitItem().let {
                     it.projectBasePath shouldBe "/project"
-                    it.diHilt shouldBe true
-                    it.diMetro shouldBe false
+                    it.diHilt shouldBe false
+                    it.diMetro shouldBe true
                 }
 
                 vm.handleIntent(GenerateModulesIntent.SetRoot("/project/app"))
@@ -98,7 +114,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
             val generator = mockk<CleanArchitectureGenerator>()
             coEvery { generator.invoke(any()) } returns Result.failure(IllegalStateException("boom"))
 
-            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, ioDispatcher = dispatcher, generator = generator)
             vm.handleIntent(GenerateModulesIntent.SetRoot("app"))
             vm.handleIntent(GenerateModulesIntent.SetFeature("my-feature"))
 
@@ -112,7 +128,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
 
         When("non-generate intents are dispatched") {
             val generator = mockk<CleanArchitectureGenerator>(relaxed = true)
-            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, generator = generator)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, ioDispatcher = dispatcher, generator = generator)
 
             vm.handleIntent(GenerateModulesIntent.SetOrgCenter("com.example"))
             vm.handleIntent(GenerateModulesIntent.SetIncludePresentation(true))
@@ -147,8 +163,7 @@ class GenerateModulesViewModelTest : BehaviorSpec({
                 vm.state.value.includeDiModule shouldBe true
 
                 vm.handleIntent(GenerateModulesIntent.SelectDiMetro(true))
-                // Note: Even if we try to set Metro via intent, the UI would prevent it if it was bound to a disabled radio,
-                // but the VM still handles the intent. However, the requirement is that it SHOULD default to Hilt.
+
                 vm.state.value.diMetro shouldBe true
                 vm.state.value.includeDiModule shouldBe false
 
@@ -157,6 +172,50 @@ class GenerateModulesViewModelTest : BehaviorSpec({
                 vm.state.value.includeDiModule shouldBe true
 
                 s.errorMessage shouldBe null
+            }
+        }
+
+        When("verifying DI Module Checkbox Logic") {
+            val generator = mockk<CleanArchitectureGenerator>(relaxed = true)
+            val vm = GenerateModulesViewModel(projectBasePath = "/project", scope = scope, ioDispatcher = dispatcher, generator = generator)
+
+            Then("it should match the requirements for all DI strategies") {
+                // Initial State: Metro selected by default
+                val initial = vm.state.value
+                initial.diMetro shouldBe true
+                initial.includeDiModule shouldBe false // Metro defaults to false
+
+                // 1. Select Hilt -> Forced True
+                vm.handleIntent(GenerateModulesIntent.SelectDiHilt(true))
+                vm.state.value.diHilt shouldBe true
+                vm.state.value.includeDiModule shouldBe true
+
+                // 2. Select Koin (No Annotations) -> Forced True
+                vm.handleIntent(GenerateModulesIntent.SelectDiKoin(true))
+                val koinState = vm.state.value
+                koinState.diKoin shouldBe true
+                koinState.diKoinAnnotations shouldBe false
+                koinState.includeDiModule shouldBe true
+
+                // 3. Toggle Koin Annotations ON -> Selectable (Defaults to false currently due to !intent.selected logic)
+                vm.handleIntent(GenerateModulesIntent.SetKoinAnnotations(true))
+                val koinAnnoState = vm.state.value
+                koinAnnoState.diKoinAnnotations shouldBe true
+                koinAnnoState.includeDiModule shouldBe false // Logic sets it to !selected
+
+                // Can toggle it
+                vm.handleIntent(GenerateModulesIntent.SetIncludeDiModule(true))
+                vm.state.value.includeDiModule shouldBe true
+
+                // 4. Select Metro -> Selectable (Defaults to false when selected via intent)
+                vm.handleIntent(GenerateModulesIntent.SelectDiMetro(true))
+                val metroState = vm.state.value
+                metroState.diMetro shouldBe true
+                metroState.includeDiModule shouldBe false
+
+                // Can toggle it
+                vm.handleIntent(GenerateModulesIntent.SetIncludeDiModule(true))
+                vm.state.value.includeDiModule shouldBe true
             }
         }
     }

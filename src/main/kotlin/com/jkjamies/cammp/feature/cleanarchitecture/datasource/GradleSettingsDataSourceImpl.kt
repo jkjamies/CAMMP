@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.cleanarchitecture.datasource
 
 import com.jkjamies.cammp.feature.cleanarchitecture.data.datasource.GradleSettingsDataSource
@@ -18,7 +34,7 @@ import kotlin.io.path.writeText
  * repositories call datasources; datasources do IO/merges.
  */
 @ContributesBinding(AppScope::class)
-class GradleSettingsDataSourceImpl : GradleSettingsDataSource {
+internal class GradleSettingsDataSourceImpl : GradleSettingsDataSource {
 
     override fun ensureIncludes(projectBase: Path, root: String, feature: String, modules: List<String>): Boolean {
         val settings = projectBase.resolve("settings.gradle.kts")
@@ -69,6 +85,13 @@ class GradleSettingsDataSourceImpl : GradleSettingsDataSource {
         val requiredLayers = buildList {
             add("domain"); add("data")
             if (enabledModules.contains("di")) add("di")
+            // Metro generates DI module same as Hilt for now, so "di" is sufficient, 
+            // but we need to ensure the catalog gets Metro settings if DiMode is Metro. 
+            // However, this list is for CONVENTION PLUGINS. Metro is passed via DI mode.
+            // We need to inject Metro library/plugin into the catalog separately if it's not a convention plugin but a direct dependency.
+            // But wait, the task is to enable dependency injection for metro for the generators.
+            // The user request says: "we must have our code that checks the consumers version catalog to add the dependency under plugins"
+            // So we need to ensure metro plugin is added to catalog.
             if (enabledModules.contains("presentation")) add("presentation")
             if (enabledModules.contains("dataSource")) add("dataSource")
             if (enabledModules.contains("remoteDataSource")) add("remoteDataSource")

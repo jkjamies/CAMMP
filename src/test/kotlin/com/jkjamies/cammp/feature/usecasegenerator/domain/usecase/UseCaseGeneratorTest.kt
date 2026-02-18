@@ -1,8 +1,24 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.usecasegenerator.domain.usecase
 
-import com.jkjamies.cammp.feature.usecasegenerator.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
 import com.jkjamies.cammp.feature.usecasegenerator.domain.model.UseCaseParams
-import com.jkjamies.cammp.feature.usecasegenerator.domain.step.StepResult
+import com.jkjamies.cammp.domain.step.StepResult
 import com.jkjamies.cammp.feature.usecasegenerator.testutil.UseCaseStepFake
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.result.shouldBeFailure
@@ -25,8 +41,8 @@ class UseCaseGeneratorTest : BehaviorSpec({
 
         When("all steps succeed and one returns a path") {
             Then("it should return success and normalize className passed to steps") {
-                val step1 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(null, "Step 1 done"))))
-                val step2 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success(Paths.get("domain/TestUseCase.kt"), "Step 2 done"))))
+                val step1 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success("Step 1 done"))))
+                val step2 = UseCaseStepFake(ArrayDeque(listOf(StepResult.Success("Step 2 done"))))
                 val generator = UseCaseGenerator(setOf(step1, step2))
 
                 val result = generator(params)

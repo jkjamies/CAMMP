@@ -1,5 +1,22 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.usecasegenerator.datasource
 
+import com.jkjamies.cammp.domain.codegen.GeneratedAnnotations
 import com.jkjamies.cammp.feature.usecasegenerator.data.datasource.DiModuleDataSource
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -14,7 +31,7 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 
 @ContributesBinding(AppScope::class)
-class DiModuleDataSourceImpl : DiModuleDataSource {
+internal class DiModuleDataSourceImpl : DiModuleDataSource {
     override fun generateKoinModuleContent(
         existingContent: String?,
         diPackage: String,
@@ -85,7 +102,7 @@ class DiModuleDataSourceImpl : DiModuleDataSource {
 
         val fileSpec = fileSpecBuilder
             .addProperty(
-                PropertySpec.builder("useCaseModule", ClassName("org.koin.core.module", "Module"))
+                PropertySpec.builder("useCaseModule", GeneratedAnnotations.KOIN_MODULE)
                     .initializer(moduleBlockBuilder.build())
                     .build()
             )
@@ -108,7 +125,7 @@ class DiModuleDataSourceImpl : DiModuleDataSource {
 
         val bindFunName = "binds$useCaseSimpleName"
         val bindFun = FunSpec.builder(bindFunName)
-            .addAnnotation(ClassName("dagger", "Binds"))
+            .addAnnotation(GeneratedAnnotations.DAGGER_BINDS)
             .addModifiers(KModifier.ABSTRACT)
             .addParameter("impl", useCaseClassName)
             .returns(interfaceClassName)
@@ -116,10 +133,10 @@ class DiModuleDataSourceImpl : DiModuleDataSource {
 
         val moduleBuilder = TypeSpec.classBuilder("UseCaseModule")
             .addModifiers(KModifier.ABSTRACT)
-            .addAnnotation(ClassName("dagger", "Module"))
+            .addAnnotation(GeneratedAnnotations.DAGGER_MODULE)
             .addAnnotation(
-                AnnotationSpec.builder(ClassName("dagger.hilt", "InstallIn"))
-                    .addMember("%T::class", ClassName("dagger.hilt.components", "SingletonComponent"))
+                AnnotationSpec.builder(GeneratedAnnotations.HILT_INSTALL_IN)
+                    .addMember("%T::class", GeneratedAnnotations.SINGLETON_COMPONENT)
                     .build()
             )
             .addFunction(bindFun)

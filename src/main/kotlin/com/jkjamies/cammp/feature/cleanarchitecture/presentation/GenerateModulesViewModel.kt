@@ -1,24 +1,43 @@
+/*
+ * Copyright 2025-2026 Jason Jamieson
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.jkjamies.cammp.feature.cleanarchitecture.presentation
 
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.CleanArchitectureParams
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DiStrategy
-import com.jkjamies.cammp.feature.cleanarchitecture.domain.model.DatasourceStrategy
+import com.jkjamies.cammp.domain.model.DiStrategy
+import com.jkjamies.cammp.domain.model.DatasourceStrategy
 import com.jkjamies.cammp.feature.cleanarchitecture.domain.usecase.CleanArchitectureGenerator
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.nio.file.Paths
 
 @AssistedInject
 class GenerateModulesViewModel(
     @Assisted private val projectBasePath: String,
     @Assisted private val scope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher,
     private val generator: CleanArchitectureGenerator,
 ) {
     private val _state = MutableStateFlow(
@@ -26,9 +45,9 @@ class GenerateModulesViewModel(
             projectBasePath = projectBasePath,
             root = projectBasePath,
             orgCenter = projectBasePath.substringAfterLast('/').ifBlank { "cammp" },
-            diMetro = false,
-            diHilt = true,
-            includeDiModule = true,
+            diMetro = true,
+            diHilt = false,
+            includeDiModule = false,
         )
     )
     val state: StateFlow<GenerateModulesUiState> = _state.asStateFlow()
@@ -105,17 +124,9 @@ class GenerateModulesViewModel(
 
     private fun generate() {
         val s = _state.value
-        val base = s.projectBasePath ?: ""
-        if (base.isBlank()) {
-            _state.update { it.copy(errorMessage = "Project base path is required") }
-            return
-        }
-        if (s.platformKmp) {
-            _state.update { it.copy(errorMessage = "KMP generation is not supported yet in CAMMP") }
-            return
-        }
-        if (s.root.isBlank() || s.feature.isBlank()) {
-            _state.update { it.copy(errorMessage = "Root and Feature are required") }
+        val validationError = validateState(s)
+        if (validationError != null) {
+            _state.update { it.copy(errorMessage = validationError) }
             return
         }
         _state.update {
@@ -131,82 +142,92 @@ class GenerateModulesViewModel(
         }
 
         scope.launch {
-            fun normalizeRoot(projectBase: String, rootInput: String): String {
-                val trimmed = rootInput.trim()
-                if (trimmed.isEmpty()) return ""
-                return try {
-                    val basePath = Paths.get(projectBase)
-                    val rootPath = Paths.get(trimmed)
-                    val rel = if (rootPath.isAbsolute) {
-                        if (rootPath.startsWith(basePath)) basePath.relativize(rootPath)
-                            .toString() else rootPath.fileName.toString()
-                    } else trimmed
-                    rel.replace('\\', '/').split('/').filter { it.isNotBlank() }.joinToString("/")
-                } catch (_: Throwable) {
-                    trimmed.replace('\\', '/').substringAfterLast('/')
-                }
-            }
-
-            fun normalizeFeature(featureInput: String): String {
-                val trimmed = featureInput.trim()
-                if (trimmed.isEmpty()) return ""
-                return trimmed.replace('\\', '/').substringAfterLast('/')
-            }
-
-            val rootNormalized = normalizeRoot(base, s.root)
-            val featureNormalized = normalizeFeature(s.feature)
-
-            val datasourceStrategy = when {
-                !s.includeDatasource -> DatasourceStrategy.None
-                s.datasourceCombined -> DatasourceStrategy.Combined
-                s.datasourceRemote && s.datasourceLocal -> DatasourceStrategy.RemoteAndLocal
-                s.datasourceRemote -> DatasourceStrategy.RemoteOnly
-                s.datasourceLocal -> DatasourceStrategy.LocalOnly
-                else -> DatasourceStrategy.None
-            }
-
-            val result = generator(
-                CleanArchitectureParams(
-                    projectBasePath = Paths.get(base),
-                    root = rootNormalized,
-                    feature = featureNormalized,
-                    orgCenter = s.orgCenter.ifBlank { "cammp" },
-                    includePresentation = s.includePresentation,
-                    includeApiModule = s.includeApiModule,
-                    includeDiModule = s.includeDiModule,
-                    datasourceStrategy = datasourceStrategy,
-                    diStrategy = when {
-                        s.diKoin -> DiStrategy.Koin(useAnnotations = s.diKoinAnnotations)
-                        s.diMetro -> DiStrategy.Metro
-                        else -> DiStrategy.Hilt
+            withContext(ioDispatcher) {
+                val params = buildParams(s)
+                generator(params).fold(
+                    onSuccess = { r ->
+                        _state.update {
+                            it.copy(
+                                isGenerating = false,
+                                lastMessage = r.message,
+                                errorMessage = null,
+                                lastCreated = r.created,
+                                lastSkipped = r.skipped,
+                                settingsUpdated = r.settingsUpdated,
+                                buildLogicCreated = r.buildLogicCreated,
+                            )
+                        }
                     },
+                    onFailure = { t ->
+                        _state.update {
+                            it.copy(
+                                isGenerating = false,
+                                errorMessage = t.message ?: t.toString(),
+                                lastMessage = null
+                            )
+                        }
+                    }
                 )
-            )
-            result.fold(
-                onSuccess = { r ->
-                    _state.update {
-                        it.copy(
-                            isGenerating = false,
-                            lastMessage = r.message,
-                            errorMessage = null,
-                            lastCreated = r.created,
-                            lastSkipped = r.skipped,
-                            settingsUpdated = r.settingsUpdated,
-                            buildLogicCreated = r.buildLogicCreated,
-                        )
-                    }
-                },
-                onFailure = { t ->
-                    _state.update {
-                        it.copy(
-                            isGenerating = false,
-                            errorMessage = t.message ?: t.toString(),
-                            lastMessage = null
-                        )
-                    }
-                }
-            )
+            }
         }
+    }
+
+    private fun validateState(s: GenerateModulesUiState): String? {
+        val base = s.projectBasePath ?: ""
+        if (base.isBlank()) return "Project base path is required"
+        if (s.platformKmp) return "KMP generation is not supported yet in CAMMP"
+        if (s.root.isBlank() || s.feature.isBlank()) return "Root and Feature are required"
+        return null
+    }
+
+    private fun buildParams(s: GenerateModulesUiState): CleanArchitectureParams {
+        val base = s.projectBasePath ?: ""
+        return CleanArchitectureParams(
+            projectBasePath = Paths.get(base),
+            root = normalizeRoot(base, s.root),
+            feature = normalizeFeature(s.feature),
+            orgCenter = s.orgCenter.ifBlank { "cammp" },
+            includePresentation = s.includePresentation,
+            includeApiModule = s.includeApiModule,
+            includeDiModule = s.includeDiModule,
+            datasourceStrategy = resolveDatasourceStrategy(s),
+            diStrategy = when {
+                s.diKoin -> DiStrategy.Koin(useAnnotations = s.diKoinAnnotations)
+                s.diMetro -> DiStrategy.Metro
+                else -> DiStrategy.Hilt
+            },
+        )
+    }
+
+    private fun resolveDatasourceStrategy(s: GenerateModulesUiState): DatasourceStrategy = when {
+        !s.includeDatasource -> DatasourceStrategy.None
+        s.datasourceCombined -> DatasourceStrategy.Combined
+        s.datasourceRemote && s.datasourceLocal -> DatasourceStrategy.RemoteAndLocal
+        s.datasourceRemote -> DatasourceStrategy.RemoteOnly
+        s.datasourceLocal -> DatasourceStrategy.LocalOnly
+        else -> DatasourceStrategy.None
+    }
+
+    private fun normalizeRoot(projectBase: String, rootInput: String): String {
+        val trimmed = rootInput.trim()
+        if (trimmed.isEmpty()) return ""
+        return try {
+            val basePath = Paths.get(projectBase)
+            val rootPath = Paths.get(trimmed)
+            val rel = if (rootPath.isAbsolute) {
+                if (rootPath.startsWith(basePath)) basePath.relativize(rootPath)
+                    .toString() else rootPath.fileName.toString()
+            } else trimmed
+            rel.replace('\\', '/').split('/').filter { it.isNotBlank() }.joinToString("/")
+        } catch (_: Throwable) {
+            trimmed.replace('\\', '/').substringAfterLast('/')
+        }
+    }
+
+    private fun normalizeFeature(featureInput: String): String {
+        val trimmed = featureInput.trim()
+        if (trimmed.isEmpty()) return ""
+        return trimmed.replace('\\', '/').substringAfterLast('/')
     }
 
     @AssistedFactory
