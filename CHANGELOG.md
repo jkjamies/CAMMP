@@ -6,10 +6,23 @@
 
 ### Added
 
-- Metro DI Option
+- MCP (Model Context Protocol) server for AI-assisted Clean Architecture scaffolding
+  - `generate_feature` tool for creating full module structures via MCP clients
+  - Strategy resources (`cammp://strategies/di`, `cammp://strategies/datasource`) for discoverability
+  - Shadow JAR packaging (`cammp-mcp.jar`) for standalone stdio transport
+- Multi-module project architecture (`:core`, `:plugin`, `:mcp-server`)
+  - `:core` - Pure Kotlin shared code (generators, domain models, KotlinPoet factories)
+  - `:plugin` - IntelliJ plugin (UI, toolwindow, IDE-specific generators)
+  - `:mcp-server` - MCP server with Metro DI and kotlinx-serialization
+- Metro DI Option now adds plugin to version catalog and convention plugins
+- Metro-specific annotations for generated code (`@ContributesBinding`, `@ContributesIntoMap`, `@ViewModelKey`)
+- `metroViewModel()` Compose integration for generated presentation modules
 
 ### Changed
 
+- Refactored from single-module to multi-module project structure
+- Clean Architecture generator shared between plugin and MCP server via `:core`
+- Metro DI classes are non-internal for cross-module wiring
 - Updated dependencies
 
 ## [0.0.7-alpha] - 2026-01-22

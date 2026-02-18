@@ -4,42 +4,64 @@ This file provides guidance to JetBrains Junie when working with code in this re
 
 ## Project Overview
 
-CAMMP (Clean Architecture Multi-Module Plugin) is an IntelliJ plugin that automates Clean Architecture scaffolding for Android/KMP projects. It generates fully wired module structures with dependency injection, testing harnesses, and Gradle configurations. Published on the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/29447) (v0.0.8-alpha).
+CAMMP (Clean Architecture Multi-Module Plugin) is an IntelliJ plugin + MCP server that automates Clean Architecture scaffolding for Android/KMP projects. It generates fully wired module structures with dependency injection, testing harnesses, and Gradle configurations. Published on the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/29447) (v0.0.8-alpha).
+
+### Multi-Module Architecture
+
+The project is split into three Gradle modules:
+
+- **`:core`** - Pure Kotlin shared code (Clean Architecture generator, domain models, KotlinPoet factories). No IntelliJ dependencies. Uses `java-library` + `java-test-fixtures` plugins. Exposes `api(kotlinpoet)` and `api(coroutines-core)` for downstream modules. Metro DI classes must NOT be `internal` (cross-module wiring).
+- **`:plugin`** - IntelliJ plugin (UI, toolwindow, IDE-specific generators). Depends on `implementation(project(":core"))` + `testFixtures(project(":core"))`.
+- **`:mcp-server`** - MCP (Model Context Protocol) server for AI-assisted scaffolding. Communicates via stdio transport, packaged as a shadow JAR (`cammp-mcp.jar`). Uses `createGraph<McpGraph>()` for Metro DI.
 
 ## Build & Development Commands
 
 ```bash
-# Build the plugin
+# Build all modules
 ./gradlew build
 
 # Run all tests (Kotest + JUnit, concurrent execution)
 ./gradlew test
 
 # Run a single test class
-./gradlew test --tests "com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesViewModelTest"
-
-# Run a single test by full path pattern
-./gradlew test --tests "*GenerateModulesViewModelTest"
+./gradlew :core:test --tests "*CleanArchitectureGeneratorTest"
+./gradlew :plugin:test --tests "*GenerateModulesViewModelTest"
+./gradlew :mcp-server:test --tests "*GenerateFeatureToolTest"
 
 # Code coverage report (Kover, XML output)
 ./gradlew koverXmlReport
 
 # Run the plugin in a sandboxed IDE instance
-./gradlew runIde
+./gradlew :plugin:runIde
 
 # Verify plugin compatibility
-./gradlew verifyPlugin
+./gradlew :plugin:verifyPlugin
+
+# Build MCP server shadow JAR
+./gradlew :mcp-server:shadowJar
+# Output: mcp-server/build/libs/cammp-mcp.jar
 ```
 
 **Note:** JVM toolchain is 21. Gradle 9.2.1 with configuration cache and build cache enabled. Tests use JUnit Platform runner with `kotest.framework.config.fqn=com.jkjamies.cammp.ProjectConfig` for concurrent spec/test execution.
 
 ## Architecture
 
+### Key Paths
+
+- Core: `core/src/main/kotlin/com/jkjamies/cammp/`
+- Plugin: `plugin/src/main/kotlin/com/jkjamies/cammp/`
+- MCP Server: `mcp-server/src/main/kotlin/com/jkjamies/cammp/mcp/`
+- Version catalog: `gradle/libs.versions.toml`
+- Plugin manifest: `plugin/src/main/resources/META-INF/plugin.xml`
+
 ### Feature Vertical Slices
 
-Each feature under `src/main/kotlin/com/jkjamies/cammp/feature/` is a self-contained vertical slice following Clean Architecture:
+Each feature is a self-contained vertical slice following Clean Architecture. Core features (shared between plugin and MCP server) live in `:core`, while plugin-specific features live in `:plugin`:
 
+**`:core` features** (under `core/src/main/kotlin/com/jkjamies/cammp/feature/`):
 - **cleanarchitecture** - Full module generation (settings.gradle, build.gradle, all layers)
+
+**`:plugin` features** (under `plugin/src/main/kotlin/com/jkjamies/cammp/feature/`):
 - **repositorygenerator** - Repository interface + implementation generation
 - **usecasegenerator** - Use Case scaffolding
 - **presentationgenerator** - MVI presentation layer generation
@@ -67,10 +89,21 @@ To add a new generation step: create a class implementing the feature's Step int
 
 ### Metro Dependency Injection
 
-- Root graph: `src/main/kotlin/com/jkjamies/cammp/di/CammpGraph.kt` (`@DependencyGraph(AppScope::class)`)
+- Plugin graph: `plugin/src/main/kotlin/com/jkjamies/cammp/di/CammpGraph.kt` (`@DependencyGraph(AppScope::class)`)
+- MCP graph: `mcp-server/src/main/kotlin/com/jkjamies/cammp/mcp/di/McpGraph.kt` (`@DependencyGraph(AppScope::class)`)
 - Each feature contributes via `@ContributesTo(AppScope::class)` interfaces in its `di/` package
 - Steps contributed via `@ContributesIntoSet`, consumed as `Set<Step>` by generators
-- `CoroutineModule` provides `CoroutineDispatcher` (Dispatchers.Default)
+- Each graph entry point provides its own `CoroutineDispatcher` (Dispatchers.Default)
+
+### MCP Server
+
+The `:mcp-server` module exposes CAMMP's Clean Architecture generator via the [Model Context Protocol](https://modelcontextprotocol.io/):
+
+- **Transport**: stdio (stdin/stdout JSON-RPC)
+- **Tool**: `generate_feature` - Creates a full Clean Architecture module structure with configurable DI strategy, datasource strategy, and optional modules (presentation, API, DI)
+- **Resources**: `cammp://strategies/di` and `cammp://strategies/datasource` - Markdown descriptions of available strategies for AI client discoverability
+- **Packaging**: Shadow JAR (`./gradlew :mcp-server:shadowJar` → `cammp-mcp.jar`)
+- **Usage**: `java -jar cammp-mcp.jar` (runs as stdio MCP server)
 
 ### MVI Pattern
 
@@ -103,6 +136,8 @@ All presentation logic follows strict MVI/UDF:
 - **Compose Desktop** with Jewel theme for plugin UI
 - **Metro** (`dev.zacsweers.metro`) for compile-time DI
 - **KotlinPoet** for code generation
+- **MCP Kotlin SDK** (`io.modelcontextprotocol:sdk`) for MCP server
+- **Shadow** plugin for MCP server fat JAR packaging
 - **Kotest** 6.x, **MockK**, **Turbine** for testing
 - **Kover** for code coverage
 - Version catalog: `gradle/libs.versions.toml`
