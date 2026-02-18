@@ -1,6 +1,6 @@
-# GEMINI.md
+# Copilot Instructions
 
-This file provides guidance to Google Gemini when working with code in this repository.
+This file provides guidance to GitHub Copilot when working with code in this repository.
 
 ## Project Overview
 

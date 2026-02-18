@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-rootProject.name = "CAMMP"
+package com.jkjamies.cammp.feature.cleanarchitecture.di
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+import com.jkjamies.cammp.feature.cleanarchitecture.presentation.GenerateModulesViewModel
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesTo
+
+@ContributesTo(AppScope::class)
+interface CleanArchitecturePluginGraph {
+    val generateModulesViewModelFactory: GenerateModulesViewModel.Factory
 }
-
-include(":core", ":plugin", ":mcp-server")
