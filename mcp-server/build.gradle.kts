@@ -43,6 +43,7 @@ dependencies {
 
 tasks.shadowJar {
     archiveBaseName.set("cammp-mcp")
+    archiveVersion.set("")
     archiveClassifier.set("")
     manifest {
         attributes["Main-Class"] = "com.jkjamies.cammp.mcp.MainKt"
