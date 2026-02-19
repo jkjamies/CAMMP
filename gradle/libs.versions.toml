@@ -22,7 +22,7 @@ intelliJPlatform = "2.11.0"
 kotlin = "2.3.10"
 kover = "0.9.7"
 metro = "0.10.4"
-shadow = "9.0.0"
+shadow = "9.3.1"
 kotlinSerialization = "2.3.10"
 
 [libraries]
