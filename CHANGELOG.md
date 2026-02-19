@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [0.0.8-alpha] - 2026-02-19
+
 ### Added
 
 - MCP (Model Context Protocol) server for AI-assisted Clean Architecture scaffolding
@@ -148,7 +150,8 @@
 
 Initial Alpha Release
 
-[Unreleased]: https://github.com/jkjamies/CAMMP/compare/v0.0.7-alpha...HEAD
+[Unreleased]: https://github.com/jkjamies/CAMMP/compare/v0.0.8-alpha...HEAD
+[0.0.8-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.7-alpha...v0.0.8-alpha
 [0.0.7-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.6-alpha...v0.0.7-alpha
 [0.0.6-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.5-alpha...v0.0.6-alpha
 [0.0.5-alpha]: https://github.com/jkjamies/CAMMP/compare/v0.0.4-alpha...v0.0.5-alpha
