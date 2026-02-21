@@ -130,12 +130,30 @@ feature-name/
 2.  Restart your IDE.
 
 ### Usage
+
+#### IntelliJ Plugin
 1.  Open the **CAMMP** tab in the IDE tool window.
 2.  Navigate to the **Generate Feature** tab.
 3.  Enter your feature name (e.g., `Authentication`).
 4.  Select your **Data Source Strategy** and other options.
 5.  Click **Generate**.
-6.  Sync Gradle. 🚀
+6.  Sync Gradle.
+
+#### Claude Code Skills
+CAMMP provides two Claude Code skills for generating Clean Architecture modules directly from your terminal:
+
+1.  **`/cammp-mcp`** - Uses the CAMMP MCP server (requires `cammp-mcp.jar` configured as an MCP server).
+2.  **`/cammp`** - Standalone skill that generates all files directly (no MCP server required).
+
+**Installation:**
+1.  Download `cammp-skill.zip` or `cammp-mcp-skill.zip` from the [latest release](https://github.com/jkjamies/CAMMP/releases).
+2.  Extract into your project's `.claude/skills/` directory or `~/.claude/skills/` for global access.
+3.  Use `/cammp login` or `/cammp-mcp login` in Claude Code to generate a feature.
+
+#### MCP Server
+1.  Download `cammp-mcp.jar` from the [latest release](https://github.com/jkjamies/CAMMP/releases).
+2.  Configure it as an MCP server with stdio transport: `java -jar cammp-mcp.jar`
+3.  Use the `generate_feature` tool from any MCP client.
 
 ---
 

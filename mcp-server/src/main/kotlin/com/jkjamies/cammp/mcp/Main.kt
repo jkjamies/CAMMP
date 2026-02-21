@@ -41,7 +41,7 @@ fun main() {
     val server = Server(
         serverInfo = Implementation(
             name = "cammp",
-            version = "0.0.8-alpha",
+            version = CAMMP_VERSION,
         ),
         options = ServerOptions(
             capabilities = ServerCapabilities(

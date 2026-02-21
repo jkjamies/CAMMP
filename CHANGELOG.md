@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- Claude Code skills for CAMMP Clean Architecture scaffolding
+  - `/cammp-mcp` skill - Delegates to CAMMP MCP server's `generate_feature` tool
+  - `/cammp` skill - Standalone skill that generates files directly without MCP server
+  - Reference documentation for strategies, naming conventions, module templates, settings, and build-logic
+- CI/CD packaging and release of skill zip artifacts (`cammp-skill.zip`, `cammp-mcp-skill.zip`)
+
 ## [0.0.8-alpha] - 2026-02-19
 
 ### Added

@@ -110,6 +110,21 @@ jobs:
           name: cammp-mcp
           path: ./mcp-server/build/libs/cammp-mcp.jar
 
+      # Package Claude Code skills as zip artifacts
+      - name: Package Skills
+        run: |
+          cd .claude/skills
+          zip -r ../../cammp-skill.zip cammp/
+          zip -r ../../cammp-mcp-skill.zip cammp-mcp/
+
+      - name: Upload Skills Artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: cammp-skills
+          path: |
+            cammp-skill.zip
+            cammp-mcp-skill.zip
+
   # Run tests and upload a code coverage report
   test:
     name: Test
