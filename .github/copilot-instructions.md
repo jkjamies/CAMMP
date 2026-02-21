@@ -4,7 +4,7 @@ This file provides guidance to GitHub Copilot when working with code in this rep
 
 ## Project Overview
 
-CAMMP (Clean Architecture Multi-Module Plugin) is an IntelliJ plugin + MCP server that automates Clean Architecture scaffolding for Android/KMP projects. It generates fully wired module structures with dependency injection, testing harnesses, and Gradle configurations. Published on the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/29447) (v0.0.8-alpha).
+CAMMP (Clean Architecture Multi-Module Plugin) is an IntelliJ plugin + MCP server + Claude Code skills that automates Clean Architecture scaffolding for Android/KMP projects. It generates fully wired module structures with dependency injection, testing harnesses, and Gradle configurations. Published on the [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/29447).
 
 ### Multi-Module Architecture
 
@@ -104,6 +104,15 @@ The `:mcp-server` module exposes CAMMP's Clean Architecture generator via the [M
 - **Resources**: `cammp://strategies/di` and `cammp://strategies/datasource` - Markdown descriptions of available strategies for AI client discoverability
 - **Packaging**: Shadow JAR (`./gradlew :mcp-server:shadowJar` → `cammp-mcp.jar`)
 - **Usage**: `java -jar cammp-mcp.jar` (runs as stdio MCP server)
+
+### Claude Code Skills
+
+CAMMP provides two Claude Code skills in `.claude/skills/` for generating Clean Architecture modules directly:
+
+- **`/cammp-mcp`** (`.claude/skills/cammp-mcp/SKILL.md`) - Delegates to the CAMMP MCP server's `generate_feature` tool. Requires MCP server configured.
+- **`/cammp`** (`.claude/skills/cammp/SKILL.md`) - Standalone skill that generates files directly. References in `.claude/skills/cammp/references/` provide strategy docs, naming conventions, module templates, settings.gradle instructions, and build-logic scaffolding details.
+
+Skills are packaged as zip artifacts (`cammp-skill.zip`, `cammp-mcp-skill.zip`) in CI builds and releases.
 
 ### MVI Pattern
 

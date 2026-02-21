@@ -82,6 +82,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload ${{ github.event.release.tag_name }} ./mcp-server/build/libs/cammp-mcp.jar
 
+      # Package and upload Claude Code skills as release assets
+      - name: Package Skills
+        run: |
+          cd .claude/skills
+          zip -r ../../cammp-skill.zip cammp/
+          zip -r ../../cammp-mcp-skill.zip cammp-mcp/
+
+      - name: Upload Skills Release Assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.event.release.tag_name }} cammp-skill.zip
+          gh release upload ${{ github.event.release.tag_name }} cammp-mcp-skill.zip
+
       # Create a pull request
       - name: Create Pull Request
         if: ${{ steps.properties.outputs.changelog != '' }}

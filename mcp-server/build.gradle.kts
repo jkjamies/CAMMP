@@ -41,6 +41,24 @@ dependencies {
     testImplementation(libs.coroutines.test)
 }
 
+val generateVersion by tasks.registering {
+    val version = providers.gradleProperty("pluginVersion")
+    val outputDir = layout.buildDirectory.dir("generated/version")
+    inputs.property("version", version)
+    outputs.dir(outputDir)
+    doLast {
+        val dir = outputDir.get().asFile.resolve("com/jkjamies/cammp/mcp")
+        dir.mkdirs()
+        dir.resolve("Version.kt").writeText(
+            "package com.jkjamies.cammp.mcp\n\ninternal const val CAMMP_VERSION = \"${version.get()}\"\n"
+        )
+    }
+}
+
+sourceSets.main {
+    kotlin.srcDir(generateVersion)
+}
+
 tasks.shadowJar {
     archiveBaseName.set("cammp-mcp")
     archiveVersion.set("")
